@@ -22,6 +22,21 @@ export default function Home() {
     if (!hasLang) {
       setShowLanguageOnboarding(true);
     }
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      const registerSW = () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+          .catch(err => console.error('Service worker registration failed:', err));
+      };
+
+      if (document.readyState === 'complete') {
+        registerSW();
+      } else {
+        window.addEventListener('load', registerSW);
+      }
+    }
   }, []);
 
   const selectLanguageAndContinue = (lang: 'en' | 'hi') => {
