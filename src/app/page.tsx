@@ -83,13 +83,13 @@ export default function Home() {
           <div className="w-full grid grid-cols-1 gap-3.5 pt-4">
             <button
               onClick={() => selectLanguageAndContinue('en')}
-              className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base rounded-2xl transition-all shadow-lg shadow-emerald-500/25 cursor-pointer"
+              className="py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-lg rounded-2xl transition-all shadow-lg shadow-emerald-500/25 cursor-pointer"
             >
               English
             </button>
             <button
               onClick={() => selectLanguageAndContinue('hi')}
-              className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base rounded-2xl transition-all shadow-lg shadow-emerald-500/25 cursor-pointer"
+              className="py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-lg rounded-2xl transition-all shadow-lg shadow-emerald-500/25 cursor-pointer"
             >
               हिन्दी (Hindi)
             </button>
@@ -109,7 +109,7 @@ export default function Home() {
       <Sidebar isOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} />
 
       {/* Main Content Area */}
-      <main className="flex-1 md:ml-64 max-w-7xl h-screen overflow-y-auto flex flex-col">
+      <main className="flex-1 md:ml-64 max-w-7xl min-h-screen md:h-screen md:overflow-y-auto flex flex-col">
         {/* Top bar header */}
         <header className="sticky top-0 z-20 flex justify-between items-center px-4 md:px-8 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 mb-6 transition-colors duration-200">
           <div className="flex items-center gap-3">

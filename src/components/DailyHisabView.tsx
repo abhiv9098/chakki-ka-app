@@ -107,7 +107,7 @@ export const DailyHisabView: React.FC = () => {
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -124,7 +124,7 @@ export const DailyHisabView: React.FC = () => {
                 placeholder="0.0 kg"
                 value={wheatWeight}
                 onChange={(e) => setWheatWeight(e.target.value)}
-                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -140,7 +140,7 @@ export const DailyHisabView: React.FC = () => {
                 step="0.1"
                 value={rate}
                 onChange={(e) => setRate(e.target.value)}
-                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -156,7 +156,7 @@ export const DailyHisabView: React.FC = () => {
                 placeholder="₹0"
                 value={expenses}
                 onChange={(e) => setExpenses(e.target.value)}
-                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -171,7 +171,7 @@ export const DailyHisabView: React.FC = () => {
                   placeholder="e.g. Electricity bill, rent, labour"
                   value={expenseDesc}
                   onChange={(e) => setExpenseDesc(e.target.value)}
-                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100"
+                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100"
                 />
               </div>
             )}
@@ -185,7 +185,7 @@ export const DailyHisabView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsProfit(true)}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`py-2.5 px-3 rounded-xl border text-sm font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     isProfit
                       ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/15'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850'
@@ -197,7 +197,7 @@ export const DailyHisabView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsProfit(false)}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`py-2.5 px-3 rounded-xl border text-sm font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                     !isProfit
                       ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/15'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850'
@@ -222,7 +222,7 @@ export const DailyHisabView: React.FC = () => {
                 placeholder="₹ Amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className={`w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 font-bold transition-all ${
+                className={`w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 font-bold transition-all ${
                   isProfit
                     ? 'text-emerald-600 border-emerald-350 focus:border-emerald-500'
                     : 'text-rose-600 border-rose-350 focus:border-rose-500'
@@ -233,7 +233,7 @@ export const DailyHisabView: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/10 cursor-pointer active:scale-98"
+              className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-base transition-all shadow-lg shadow-emerald-500/10 cursor-pointer active:scale-98"
             >
               {t('saveHisab')}
             </button>

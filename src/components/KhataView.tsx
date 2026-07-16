@@ -126,7 +126,7 @@ export const KhataView: React.FC = () => {
               placeholder={t('searchCustomer')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 h-10 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-colors text-slate-850 dark:text-slate-200"
+              className="w-full pl-10 pr-4 h-12 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-colors text-slate-850 dark:text-slate-200"
             />
           </div>
         </div>
@@ -165,13 +165,13 @@ export const KhataView: React.FC = () => {
                       <div className="flex flex-wrap sm:flex-nowrap gap-1.5 justify-center">
                         <button
                           onClick={() => openTxModal(cust, 'PAID')}
-                          className="h-8 px-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer whitespace-nowrap"
+                          className="h-9 px-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-extrabold transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer whitespace-nowrap"
                         >
                           {language === 'hi' ? 'जमा' : 'Receive'}
                         </button>
                         <button
                           onClick={() => openTxModal(cust, 'DUE')}
-                          className="h-8 px-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer whitespace-nowrap"
+                          className="h-9 px-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-extrabold transition-all shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer whitespace-nowrap"
                         >
                           {language === 'hi' ? 'उधार' : 'Credit'}
                         </button>
@@ -184,7 +184,7 @@ export const KhataView: React.FC = () => {
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="h-8 w-8 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-xl border border-emerald-500/10 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all"
+                            className="h-9 w-9 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-xl border border-emerald-500/10 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-all"
                             title={t('sendReminder')}
                           >
                             <WhatsAppIcon size={14} />
@@ -234,7 +234,7 @@ export const KhataView: React.FC = () => {
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
                   placeholder="₹ Amount"
-                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-1">
@@ -244,12 +244,12 @@ export const KhataView: React.FC = () => {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="e.g. Cash received"
-                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <button
                 type="submit"
-                className={`w-full py-3 text-white font-bold rounded-xl text-sm transition-all shadow-lg cursor-pointer ${
+                className={`w-full py-3 text-white font-extrabold rounded-xl text-base transition-all shadow-lg cursor-pointer ${
                   txType === 'PAID'
                     ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/10'
                     : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/10'

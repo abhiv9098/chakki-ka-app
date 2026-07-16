@@ -130,7 +130,7 @@ export const GrindingView: React.FC = () => {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder={language === 'hi' ? 'जैसे: रमेश कुमार' : 'e.g. Ramesh Kumar'}
-                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
+                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
             <div className="space-y-1.5">
@@ -142,7 +142,7 @@ export const GrindingView: React.FC = () => {
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder={t('phonePlaceholder')}
-                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
+                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
           </div>
@@ -150,11 +150,11 @@ export const GrindingView: React.FC = () => {
           {/* Grinding Details Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{t('grainType')} *</label>
+              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider block">{t('grainType')} *</label>
               <select
                 value={grainType}
                 onChange={(e) => setGrainType(e.target.value)}
-                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
+                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
               >
                 {Object.keys(grainRates).map((grain) => (
                   <option key={grain} value={grain}>
@@ -174,7 +174,7 @@ export const GrindingView: React.FC = () => {
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
                 placeholder="0.00"
-                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
+                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -188,7 +188,7 @@ export const GrindingView: React.FC = () => {
                 value={rate}
                 onChange={(e) => setRate(e.target.value)}
                 placeholder="Rate per kg"
-                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
+                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -206,7 +206,7 @@ export const GrindingView: React.FC = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-2xl text-base tracking-wide transition-all shadow-xl shadow-emerald-500/15 cursor-pointer hover:-translate-y-0.5"
+            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl text-lg tracking-wide transition-all shadow-xl shadow-emerald-500/15 cursor-pointer hover:-translate-y-0.5"
           >
             {t('logOrderBtn')}
           </button>

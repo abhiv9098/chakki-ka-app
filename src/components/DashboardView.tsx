@@ -121,7 +121,7 @@ export const DashboardView: React.FC = () => {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => setActiveView('grinding')}
-                className="flex items-center gap-3.5 w-full h-[68px] px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm tracking-wide transition-all shadow-lg shadow-emerald-500/15 group cursor-pointer"
+                className="flex items-center gap-3.5 w-full h-14 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base tracking-wide transition-all shadow-lg shadow-emerald-500/15 group cursor-pointer"
               >
                 <div className="p-2 rounded-xl bg-white/20 text-white">
                   <PlusIcon size={16} />
@@ -132,7 +132,7 @@ export const DashboardView: React.FC = () => {
 
               <button
                 onClick={() => setActiveView('daily-hisab')}
-                className="flex items-center gap-3.5 w-full h-[68px] px-5 rounded-2xl bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm tracking-wide transition-all group cursor-pointer"
+                className="flex items-center gap-3.5 w-full h-14 px-5 rounded-2xl bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-base tracking-wide transition-all group cursor-pointer"
               >
                 <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-700 text-emerald-500">
                   <ReportsIcon size={16} />
@@ -143,7 +143,7 @@ export const DashboardView: React.FC = () => {
 
               <button
                 onClick={() => setActiveView('khata')}
-                className="flex items-center gap-3.5 w-full h-[68px] px-5 rounded-2xl bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm tracking-wide transition-all group cursor-pointer"
+                className="flex items-center gap-3.5 w-full h-14 px-5 rounded-2xl bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-base tracking-wide transition-all group cursor-pointer"
               >
                 <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-700 text-amber-500">
                   <KhataIcon size={16} />
@@ -211,7 +211,7 @@ export const DashboardView: React.FC = () => {
                 </p>
                 <button
                   onClick={() => setActiveView('daily-hisab')}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
+                  className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm rounded-xl transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
                 >
                   {language === 'hi' ? 'हिसाब दर्ज करें' : 'Log Hisab Now'}
                 </button>

@@ -134,7 +134,7 @@ export const CustomersView: React.FC = () => {
             placeholder={t('searchCustomer')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 h-11 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-200"
+            className="w-full pl-10 pr-4 h-12 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-200"
           />
         </div>
 
@@ -215,7 +215,7 @@ export const CustomersView: React.FC = () => {
                         setEditCustPhone('');
                         setShowEditModal(true);
                       }}
-                      className="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-amber-500/10 cursor-pointer"
+                      className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg text-sm font-extrabold transition-all flex items-center gap-1 border border-amber-500/10 cursor-pointer"
                     >
                       ➕ Add Phone / फ़ोन जोड़ें
                     </button>
@@ -223,7 +223,7 @@ export const CustomersView: React.FC = () => {
                     <div className="flex flex-wrap gap-2 items-center">
                       <a
                         href={`tel:${selectedCustomer.phone}`}
-                        className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-blue-500/10 cursor-pointer whitespace-nowrap shrink-0"
+                        className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg text-sm font-extrabold transition-all flex items-center gap-1 border border-blue-500/10 cursor-pointer whitespace-nowrap shrink-0"
                       >
                         📞 Call {selectedCustomer.phone}
                       </a>
@@ -233,7 +233,7 @@ export const CustomersView: React.FC = () => {
                             ? `नमस्ते ${selectedCustomer.name}, चक्की मित्र से आपका संपर्क करने के लिए धन्यवाद।`
                             : `Hello ${selectedCustomer.name}, thank you for contacting Chakki Mitra.`
                         )}`}
-                        className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-indigo-500/10 cursor-pointer whitespace-nowrap shrink-0"
+                        className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg text-sm font-extrabold transition-all flex items-center gap-1 border border-indigo-500/10 cursor-pointer whitespace-nowrap shrink-0"
                         title={t('sms')}
                       >
                         💬 SMS
@@ -247,7 +247,7 @@ export const CustomersView: React.FC = () => {
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-500/10 cursor-pointer whitespace-nowrap shrink-0"
+                          className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg text-sm font-extrabold transition-all flex items-center gap-1 border border-emerald-500/10 cursor-pointer whitespace-nowrap shrink-0"
                           title={t('sendReminder')}
                         >
                           <WhatsAppIcon size={12} /> {t('sendReminder')}
@@ -271,13 +271,13 @@ export const CustomersView: React.FC = () => {
                 <div className="flex gap-2 ml-4">
                   <button
                     onClick={() => setShowPaymentModal(true)}
-                    className="h-[36px] px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
+                    className="h-[40px] px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-extrabold transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
                   >
                     Receive
                   </button>
                   <button
                     onClick={() => setShowDueModal(true)}
-                    className="h-[36px] px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-amber-500/10 cursor-pointer"
+                    className="h-[40px] px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-extrabold transition-all shadow-md shadow-amber-500/10 cursor-pointer"
                   >
                     Add Due
                   </button>
@@ -389,7 +389,7 @@ export const CustomersView: React.FC = () => {
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
                   placeholder="e.g. Rajesh Sharma"
-                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4.5 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-1">
@@ -399,12 +399,12 @@ export const CustomersView: React.FC = () => {
                   value={newCustPhone}
                   onChange={(e) => setNewCustPhone(e.target.value)}
                   placeholder={t('phonePlaceholder')}
-                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4.5 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/10 cursor-pointer"
+                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl text-base transition-all shadow-lg shadow-emerald-500/10 cursor-pointer"
               >
                 {t('addCustomerBtn')}
               </button>
@@ -434,7 +434,7 @@ export const CustomersView: React.FC = () => {
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
                   placeholder="₹ Amount to pay"
-                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-1">
@@ -444,12 +444,12 @@ export const CustomersView: React.FC = () => {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="e.g. Cash paid directly"
-                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/10 cursor-pointer"
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl text-base transition-all shadow-lg shadow-emerald-500/10 cursor-pointer"
               >
                 {t('save')}
               </button>
@@ -479,7 +479,7 @@ export const CustomersView: React.FC = () => {
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
                   placeholder="₹ Amount to add as due"
-                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <div className="space-y-1">
@@ -489,12 +489,12 @@ export const CustomersView: React.FC = () => {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="e.g. Flour purchased on credit"
-                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
+                className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-xl text-base transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
               >
                 {t('save')}
               </button>
@@ -525,7 +525,7 @@ export const CustomersView: React.FC = () => {
                   required
                   value={editCustName}
                   onChange={(e) => setEditCustName(e.target.value)}
-                  className="w-full h-11 px-4 bg-slate-55 dark:bg-slate-800 border border-slate-200 dark:border-slate-855 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 transition-all"
+                  className="w-full h-11 px-4 bg-slate-55 dark:bg-slate-800 border border-slate-200 dark:border-slate-855 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -535,12 +535,12 @@ export const CustomersView: React.FC = () => {
                   value={editCustPhone}
                   onChange={(e) => setEditCustPhone(e.target.value)}
                   placeholder={t('phonePlaceholder')}
-                  className="w-full h-11 px-4 bg-slate-55 dark:bg-slate-800 border border-slate-200 dark:border-slate-855 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 transition-all"
+                  className="w-full h-11 px-4 bg-slate-55 dark:bg-slate-800 border border-slate-200 dark:border-slate-855 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 transition-all"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/10 cursor-pointer active:scale-98"
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-base transition-all shadow-lg shadow-emerald-500/10 cursor-pointer active:scale-98"
               >
                 Save / सुरक्षित करें
               </button>

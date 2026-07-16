@@ -126,7 +126,7 @@ export const SettingsView: React.FC = () => {
             <div className="flex gap-2.5">
               <button
                 onClick={() => setLanguage('en')}
-                className={`w-32 h-[44px] rounded-xl text-sm font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
+                className={`w-32 h-[46px] rounded-xl text-base font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
                   language === 'en'
                     ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
                     : 'bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-450 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -136,7 +136,7 @@ export const SettingsView: React.FC = () => {
               </button>
               <button
                 onClick={() => setLanguage('hi')}
-                className={`w-32 h-[44px] rounded-xl text-sm font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
+                className={`w-32 h-[46px] rounded-xl text-base font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
                   language === 'hi'
                     ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
                     : 'bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-450 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -159,7 +159,7 @@ export const SettingsView: React.FC = () => {
             </div>
             <button
               onClick={toggleTheme}
-              className="h-[44px] min-w-[140px] bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-black text-slate-750 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 cursor-pointer transition-all uppercase tracking-wider"
+              className="h-[46px] min-w-[140px] bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-750 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 cursor-pointer transition-all uppercase tracking-wider"
             >
               {theme === 'light' ? (
                 <>
@@ -191,7 +191,7 @@ export const SettingsView: React.FC = () => {
                 value={upiId}
                 onChange={(e) => setUpiId(e.target.value)}
                 placeholder={t('upiIdPlaceholder')}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-semibold"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-semibold"
               />
             </div>
           </div>
@@ -209,13 +209,13 @@ export const SettingsView: React.FC = () => {
             <div className="flex gap-2.5">
               <button
                 onClick={handleExport}
-                className="px-4.5 h-[44px] bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-500/10 transition-all cursor-pointer flex items-center justify-center"
+                className="px-4.5 h-[46px] bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-base font-extrabold shadow-md shadow-emerald-500/10 transition-all cursor-pointer flex items-center justify-center"
               >
                 {t('exportBackup')}
               </button>
               <button
                 onClick={triggerImportFile}
-                className="px-4.5 h-[44px] bg-slate-200 hover:bg-slate-300 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center"
+                className="px-4.5 h-[46px] bg-slate-200 hover:bg-slate-300 dark:bg-slate-850 dark:hover:bg-slate-805 text-slate-800 dark:text-slate-200 rounded-xl text-base font-extrabold transition-all cursor-pointer flex items-center justify-center"
               >
                 {t('restoreBackup')}
               </button>

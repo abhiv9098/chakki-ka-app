@@ -159,7 +159,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex gap-3">
           <button
             onClick={handlePrint}
-            className="flex-1 py-3 px-4 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            className="flex-1 py-3 px-4 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-base rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <PrinterIcon size={18} />
             {t('printBill')}
@@ -168,7 +168,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
             href={getWhatsAppLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:shadow-emerald-500/25 cursor-pointer"
+            className="flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base rounded-xl flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:shadow-emerald-500/25 cursor-pointer"
           >
             <WhatsAppIcon size={18} />
             {t('shareWhatsApp')}
