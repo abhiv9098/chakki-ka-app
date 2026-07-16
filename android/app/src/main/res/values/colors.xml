@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- M3 Green Theme Light Palette -->
+    <color name="primary_light">#006C47</color>
+    <color name="onPrimary_light">#FFFFFF</color>
+    <color name="primaryContainer_light">#8EF7C1</color>
+    <color name="onPrimaryContainer_light">#002112</color>
+    
+    <color name="secondary_light">#4E6355</color>
+    <color name="onSecondary_light">#FFFFFF</color>
+    <color name="secondaryContainer_light">#D1E8D6</color>
+    <color name="onSecondaryContainer_light">#0C1F14</color>
+    
+    <color name="tertiary_light">#3C6472</color>
+    <color name="onTertiary_light">#FFFFFF</color>
+    <color name="tertiaryContainer_light">#C0E9F9</color>
+    <color name="onTertiaryContainer_light">#001F29</color>
+    
+    <color name="background_light">#FBFDF9</color>
+    <color name="onBackground_light">#191C1A</color>
+    <color name="surface_light">#FBFDF9</color>
+    <color name="onSurface_light">#191C1A</color>
+    <color name="surfaceVariant_light">#DCE5DD</color>
+    <color name="onSurfaceVariant_light">#404943</color>
+    
+    <color name="outline_light">#707973</color>
+    <color name="error_light">#BA1A1A</color>
+    <color name="onError_light">#FFFFFF</color>
+    <color name="errorContainer_light">#FFDAD6</color>
+    <color name="onErrorContainer_light">#410002</color>
+
+    <!-- M3 Green Theme Dark Palette -->
+    <color name="primary_dark">#72DAA6</color>
+    <color name="onPrimary_dark">#003822</color>
+    <color name="primaryContainer_dark">#005234</color>
+    <color name="onPrimaryContainer_dark">#8EF7C1</color>
+    
+    <color name="secondary_dark">#B5CCBA</color>
+    <color name="onSecondary_dark">#213528</color>
+    <color name="secondaryContainer_dark">#374B3E</color>
+    <color name="onSecondaryContainer_dark">#D1E8D6</color>
+    
+    <color name="tertiary_dark">#A4CDDD</color>
+    <color name="onTertiary_dark">#053542</color>
+    <color name="tertiaryContainer_dark">#234C5A</color>
+    <color name="onTertiaryContainer_dark">#C0E9F9</color>
+    
+    <color name="background_dark">#191C1A</color>
+    <color name="onBackground_dark">#E1E3DF</color>
+    <color name="surface_dark">#191C1A</color>
+    <color name="onSurface_dark">#E1E3DF</color>
+    <color name="surfaceVariant_dark">#404943</color>
+    <color name="onSurfaceVariant_dark">#C0C9C1</color>
+    
+    <color name="outline_dark">#8A938C</color>
+    <color name="error_dark">#FFB4AB</color>
+    <color name="onError_dark">#690005</color>
+    <color name="errorContainer_dark">#93000A</color>
+    <color name="onErrorContainer_dark">#FFDAD6</color>
+
+    <!-- Card and Khata indicator Colors -->
+    <color name="credit_red">#D32F2F</color>
+    <color name="payment_green">#388E3C</color>
+    <color name="card_orders">#E8F5E9</color>
+    <color name="card_earnings">#E0F2F1</color>
+    <color name="card_customers">#E3F2FD</color>
+    <color name="card_pending">#FFEBEE</color>
+</resources>

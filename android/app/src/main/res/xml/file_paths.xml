@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Exposes the app's cache directory for sharing generated PDF invoices -->
+    <cache-path name="invoice_cache" path="." />
+    <!-- Exposes the app's external files directory for backup access -->
+    <external-files-path name="backup_files" path="." />
+</paths>

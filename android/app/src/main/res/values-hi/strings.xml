@@ -1,0 +1,107 @@
+<resources>
+    <string name="app_name">चक्की मित्र</string>
+    
+    <!-- Language Selection Screen -->
+    <string name="choose_language">भाषा चुनें / Choose App Language</string>
+    <string name="lang_english">English</string>
+    <string name="lang_hindi">हिंदी (Hindi)</string>
+    <string name="btn_continue">आगे बढ़ें / Continue</string>
+
+    <!-- Navigation / General -->
+    <string name="nav_dashboard">डैशबोर्ड</string>
+    <string name="nav_new_order">नया ऑर्डर</string>
+    <string name="nav_customers">ग्राहक सूची</string>
+    <string name="nav_credit">खाता (उधार)</string>
+    <string name="nav_reports">रिपोर्ट्स</string>
+    <string name="nav_settings">सेटिंग्स</string>
+    <string name="btn_save">सुरक्षित करें</string>
+    <string name="btn_cancel">रद्द करें</string>
+    <string name="btn_share">साझा करें</string>
+    <string name="btn_download">बिल डाउनलोड करें</string>
+    <string name="action_search">खोजें...</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dash_title">चक्की मित्र डैशबोर्ड</string>
+    <string name="dash_today_orders">आज के ऑर्डर्स</string>
+    <string name="dash_today_earnings">आज की कमाई</string>
+    <string name="dash_total_customers">कुल ग्राहक</string>
+    <string name="dash_pending_credit">बकाया खाता (उधार)</string>
+    <string name="dash_quick_actions">त्वरित विकल्प</string>
+    <string name="dash_recent_orders">हाल के ऑर्डर्स</string>
+
+    <!-- New Order Screen -->
+    <string name="order_title">नया पिसाई ऑर्डर दर्ज करें</string>
+    <string name="order_cust_name">ग्राहक का नाम</string>
+    <string name="order_cust_phone">मोबाइल नंबर (वैकल्पिक)</string>
+    <string name="order_grain_type">अनाज का प्रकार</string>
+    <string name="order_weight">वजन (किग्रा)</string>
+    <string name="order_rate">दर प्रति किग्रा (₹)</string>
+    <string name="order_total_amount">कुल राशि (₹)</string>
+    <string name="order_success">ऑर्डर सफलतापूर्वक सहेज लिया गया!</string>
+    <string name="order_error_fields">कृपया सभी आवश्यक फ़ील्ड सही ढंग से भरें।</string>
+    
+    <!-- Grain Types -->
+    <string name="grain_wheat">गेहूं (Wheat)</string>
+    <string name="grain_maize">मक्का (Maize)</string>
+    <string name="grain_millet">बाजरा (Millet)</string>
+    <string name="grain_sorghum">ज्वार (Sorghum)</string>
+    <string name="grain_barley">जौ (Barley)</string>
+    <string name="grain_gram">चना (Gram)</string>
+    <string name="grain_rice">चावल (Rice)</string>
+    <string name="grain_other">अन्य (Other)</string>
+
+    <!-- Customer Management -->
+    <string name="cust_title">ग्राहक निर्देशिका</string>
+    <string name="cust_add_title">नया ग्राहक जोड़ें</string>
+    <string name="cust_details">ग्राहक विवरण</string>
+    <string name="cust_order_history">ऑर्डर का इतिहास</string>
+    <string name="cust_credit_history">खाता लेनदेन</string>
+    <string name="cust_no_history">कोई इतिहास नहीं मिला</string>
+    <string name="cust_name_req">ग्राहक का नाम आवश्यक है</string>
+    <string name="cust_empty_list">अभी तक कोई ग्राहक पंजीकृत नहीं है।</string>
+
+    <!-- Credit Management -->
+    <string name="credit_title">खाता प्रबंधन</string>
+    <string name="credit_add_label">बकाया जोड़ें (₹)</string>
+    <string name="credit_record_payment">जमा दर्ज करें (₹)</string>
+    <string name="credit_balance">शेष राशि</string>
+    <string name="credit_amount">राशि (₹)</string>
+    <string name="credit_type">लेनदेन का प्रकार</string>
+    <string name="credit_type_due">उधार (Due)</string>
+    <string name="credit_type_paid">जमा (Paid)</string>
+    <string name="credit_desc">विवरण / टिप्पणी</string>
+    <string name="credit_success">खाता सफलतापूर्वक अपडेट किया गया!</string>
+    <string name="credit_no_balance">कोई बकाया राशि नहीं है।</string>
+
+    <!-- Reports Screen -->
+    <string name="rep_title">व्यवसाय रिपोर्ट्स</string>
+    <string name="rep_daily">दैनिक कमाई</string>
+    <string name="rep_weekly">साप्ताहिक कमाई</string>
+    <string name="rep_monthly">मासिक कमाई</string>
+    <string name="rep_total_orders_label">कुल ऑर्डर्स की संख्या</string>
+    <string name="rep_total_sales_label">कुल अनाज पिसाई (किग्रा)</string>
+    <string name="rep_chart_placeholder">यहाँ ग्राफिक चार्ट दिखाई देगा</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">ऐप सेटिंग्स</string>
+    <string name="settings_language">ऐप की भाषा / Language</string>
+    <string name="settings_dark_mode">डार्क मोड (रात्रि मोड)</string>
+    <string name="settings_backup">डेटा बैकअप और पुनर्प्राप्ति</string>
+    <string name="settings_btn_backup">बैकअप लें</string>
+    <string name="settings_btn_restore">पुनर्प्राप्त करें</string>
+    <string name="backup_success">डेटा बैकअप सफल रहा!</string>
+    <string name="backup_fail">डेटा बैकअप विफल रहा!</string>
+    <string name="restore_success">डेटा सफलतापूर्वक पुनर्प्राप्त! ऐप रीस्टार्ट हो रहा है...</string>
+    <string name="restore_fail">पुनर्प्राप्ति विफल! अमान्य फ़ाइल।</string>
+
+    <!-- Bill Generation & Sharing -->
+    <string name="bill_heading">बिल - चक्की मित्र</string>
+    <string name="bill_date">दिनांक</string>
+    <string name="bill_invoice_no">बिल संख्या</string>
+    <string name="bill_item">सामग्री</string>
+    <string name="bill_qty">मात्रा</string>
+    <string name="bill_rate">दर</string>
+    <string name="bill_total">कुल योग</string>
+    <string name="bill_thanks">हमारे पास आने के लिए धन्यवाद!</string>
+    <string name="bill_share_message">नमस्ते! चक्की मित्र से आपका बिल इस प्रकार है:\nबिल नंबर: %1$s\nग्राहक: %2$s\nअनाज: %3$s\nवजन: %4$s किग्रा\nदर: ₹%5$s/किग्रा\nकुल राशि: ₹%6$s.\nधन्यवाद!</string>
+</resources>

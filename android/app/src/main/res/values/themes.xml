@@ -1,0 +1,72 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.ChakkiMitra" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary_light</item>
+        <item name="colorOnPrimary">@color/onPrimary_light</item>
+        <item name="colorPrimaryContainer">@color/primaryContainer_light</item>
+        <item name="colorOnPrimaryContainer">@color/onPrimaryContainer_light</item>
+        
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/secondary_light</item>
+        <item name="colorOnSecondary">@color/onSecondary_light</item>
+        <item name="colorSecondaryContainer">@color/secondaryContainer_light</item>
+        <item name="colorOnSecondaryContainer">@color/onSecondaryContainer_light</item>
+        
+        <!-- Tertiary brand color. -->
+        <item name="colorTertiary">@color/tertiary_light</item>
+        <item name="colorOnTertiary">@color/onTertiary_light</item>
+        <item name="colorTertiaryContainer">@color/tertiaryContainer_light</item>
+        <item name="colorOnTertiaryContainer">@color/onTertiaryContainer_light</item>
+        
+        <!-- Background and Surface colors. -->
+        <item name="android:background">@color/background_light</item>
+        <item name="colorSurface">@color/surface_light</item>
+        <item name="colorOnSurface">@color/onSurface_light</item>
+        <item name="colorSurfaceVariant">@color/surfaceVariant_light</item>
+        <item name="colorOnSurfaceVariant">@color/onSurfaceVariant_light</item>
+        
+        <item name="colorOutline">@color/outline_light</item>
+        <item name="colorError">@color/error_light</item>
+        <item name="colorOnError">@color/onError_light</item>
+        <item name="colorErrorContainer">@color/errorContainer_light</item>
+        <item name="colorOnErrorContainer">@color/onErrorContainer_light</item>
+
+        <!-- Status bar and navigation bar styling -->
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+
+    <!-- Dark theme overrides -->
+    <style name="Theme.ChakkiMitra.Dark" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/primary_dark</item>
+        <item name="colorOnPrimary">@color/onPrimary_dark</item>
+        <item name="colorPrimaryContainer">@color/primaryContainer_dark</item>
+        <item name="colorOnPrimaryContainer">@color/onPrimaryContainer_dark</item>
+        
+        <item name="colorSecondary">@color/secondary_dark</item>
+        <item name="colorOnSecondary">@color/onSecondary_dark</item>
+        <item name="colorSecondaryContainer">@color/secondaryContainer_dark</item>
+        <item name="colorOnSecondaryContainer">@color/onSecondaryContainer_dark</item>
+        
+        <item name="colorTertiary">@color/tertiary_dark</item>
+        <item name="colorOnTertiary">@color/onTertiary_dark</item>
+        <item name="colorTertiaryContainer">@color/tertiaryContainer_dark</item>
+        <item name="colorOnTertiaryContainer">@color/onTertiaryContainer_dark</item>
+        
+        <item name="android:background">@color/background_dark</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/onSurface_dark</item>
+        <item name="colorSurfaceVariant">@color/surfaceVariant_dark</item>
+        <item name="colorOnSurfaceVariant">@color/onSurfaceVariant_dark</item>
+        
+        <item name="colorOutline">@color/outline_dark</item>
+        <item name="colorError">@color/error_dark</item>
+        <item name="colorOnError">@color/onError_dark</item>
+        <item name="colorErrorContainer">@color/errorContainer_dark</item>
+        <item name="colorOnErrorContainer">@color/onErrorContainer_dark</item>
+
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+</resources>
