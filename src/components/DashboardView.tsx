@@ -118,38 +118,41 @@ export const DashboardView: React.FC = () => {
               </h3>
               <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">Common daily operations</p>
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => setActiveView('grinding')}
-                className="flex items-center gap-3.5 w-full h-14 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base tracking-wide transition-all shadow-lg shadow-emerald-500/15 group cursor-pointer"
+                className="flex flex-col items-center justify-center gap-2 p-2 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer h-26 border border-emerald-400/20"
               >
                 <div className="p-2 rounded-xl bg-white/20 text-white">
-                  <PlusIcon size={16} />
+                  <PlusIcon size={18} />
                 </div>
-                <span className="flex-1 text-left">{t('logNewGrinding')}</span>
-                <ChevronRightIcon className="opacity-70 group-hover:translate-x-1 transition-transform" size={16} />
+                <span className="text-[10px] sm:text-xs leading-tight text-center font-bold">
+                  {t('logNewGrinding')}
+                </span>
               </button>
 
               <button
                 onClick={() => setActiveView('daily-hisab')}
-                className="flex items-center gap-3.5 w-full h-14 px-5 rounded-2xl bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-base tracking-wide transition-all group cursor-pointer"
+                className="flex flex-col items-center justify-center gap-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-26"
               >
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-700 text-emerald-500">
-                  <ReportsIcon size={16} />
+                <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500">
+                  <ReportsIcon size={18} />
                 </div>
-                <span className="flex-1 text-left">{t('dailyHisab')}</span>
-                <ChevronRightIcon className="opacity-50 group-hover:translate-x-1 transition-transform" size={16} />
+                <span className="text-[10px] sm:text-xs leading-tight text-center font-bold">
+                  {t('dailyHisab')}
+                </span>
               </button>
 
               <button
                 onClick={() => setActiveView('khata')}
-                className="flex items-center gap-3.5 w-full h-14 px-5 rounded-2xl bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-extrabold text-base tracking-wide transition-all group cursor-pointer"
+                className="flex flex-col items-center justify-center gap-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-26"
               >
-                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-700 text-amber-500">
-                  <KhataIcon size={16} />
+                <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-500">
+                  <KhataIcon size={18} />
                 </div>
-                <span className="flex-1 text-left">{t('receivePayment')}</span>
-                <ChevronRightIcon className="opacity-50 group-hover:translate-x-1 transition-transform" size={16} />
+                <span className="text-[10px] sm:text-xs leading-tight text-center font-bold">
+                  {t('receivePayment')}
+                </span>
               </button>
             </div>
           </div>
