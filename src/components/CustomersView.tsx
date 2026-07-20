@@ -114,16 +114,10 @@ export const CustomersView: React.FC = () => {
       {/* Customer List Pane */}
       <div className="md:col-span-1 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 flex flex-col h-auto md:h-full shadow-sm overflow-hidden min-h-[350px]">
         {/* Header Actions */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4">
           <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">
             {t('customerList')}
           </h3>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="p-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-500/10 flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95"
-          >
-            <PlusIcon size={18} />
-          </button>
         </div>
 
         {/* Search Input */}
