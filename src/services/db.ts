@@ -10,23 +10,9 @@ const STORAGE_KEYS = {
 
 // Generate realistic mock data for initial load
 const getMockData = () => {
-  const now = Date.now();
-  const oneDay = 24 * 60 * 60 * 1000;
-
-  const mockCustomers: Customer[] = [
-    { id: 1, name: "Ramesh Kumar", phone: "9876543210", outstandingBalance: 0, createdAt: now - 15 * oneDay },
-    { id: 2, name: "Sita Sharma", phone: "9812345678", outstandingBalance: 0, createdAt: now - 12 * oneDay },
-    { id: 3, name: "Amit Singh", phone: "9988776655", outstandingBalance: 0, createdAt: now - 10 * oneDay },
-    { id: 4, name: "Sunita Devi", phone: "9555444333", outstandingBalance: 0, createdAt: now - 8 * oneDay },
-    { id: 5, name: "Rajesh Patel", phone: "9444333222", outstandingBalance: 0, createdAt: now - 5 * oneDay }
-  ];
-
-  // Grinding orders logged over the last 10 days
+  const mockCustomers: Customer[] = [];
   const mockOrders: Order[] = [];
-
-  // Credit ledger (Khata)
   const mockCreditRecords: CreditRecord[] = [];
-
   return { mockCustomers, mockOrders, mockCreditRecords };
 };
 
@@ -36,11 +22,11 @@ export const dbService = {
 
     // Check version to handle migration/clearance of old mock data
     const version = localStorage.getItem('chakkimitra_db_version');
-    if (version !== '2.0') {
+    if (version !== '2.1') {
       localStorage.removeItem(STORAGE_KEYS.CUSTOMERS);
       localStorage.removeItem(STORAGE_KEYS.ORDERS);
       localStorage.removeItem(STORAGE_KEYS.CREDIT_RECORDS);
-      localStorage.setItem('chakkimitra_db_version', '2.0');
+      localStorage.setItem('chakkimitra_db_version', '2.1');
     }
 
     const customers = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);

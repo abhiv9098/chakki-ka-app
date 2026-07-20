@@ -23,18 +23,32 @@ export default function Home() {
       setShowLanguageOnboarding(true);
     }
 
-    // Register Service Worker for PWA
+    // Handle Service Worker for PWA
     if ('serviceWorker' in navigator) {
-      const registerSW = () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('Service Worker registered successfully:', reg.scope))
-          .catch(err => console.error('Service worker registration failed:', err));
-      };
-
-      if (document.readyState === 'complete') {
-        registerSW();
+      if (process.env.NODE_ENV === 'development') {
+        // Unregister service worker in development to avoid caching/HMR issues
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.unregister().then((success) => {
+              if (success) {
+                console.log('Unregistered service worker in development mode');
+                window.location.reload();
+              }
+            });
+          }
+        });
       } else {
-        window.addEventListener('load', registerSW);
+        const registerSW = () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+            .catch(err => console.error('Service worker registration failed:', err));
+        };
+
+        if (document.readyState === 'complete') {
+          registerSW();
+        } else {
+          window.addEventListener('load', registerSW);
+        }
       }
     }
   }, []);

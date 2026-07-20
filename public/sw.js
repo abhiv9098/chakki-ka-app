@@ -18,6 +18,14 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Only handle GET requests, and skip chrome-extension/HMR/Next.js dev files
+  if (event.request.method !== 'GET' || 
+      event.request.url.includes('_next') || 
+      event.request.url.includes('webpack') ||
+      !event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
