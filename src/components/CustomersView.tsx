@@ -169,14 +169,14 @@ export const CustomersView: React.FC = () => {
       </div>
 
       {/* Customer Detail Pane */}
-      <div className="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col h-auto md:h-full overflow-hidden min-h-[450px]">
+      <div className="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 md:p-6 shadow-sm flex flex-col h-auto md:h-full overflow-hidden min-h-[450px]">
         {selectedCustomer ? (
           <div className="flex flex-col h-auto md:h-full overflow-hidden">
             {/* Header info */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/60 pb-5 gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 dark:border-slate-800/60 pb-4 md:pb-5 gap-3.5 md:gap-4">
               <div>
-                <div className="flex items-center gap-2.5">
-                  <h3 className="font-black text-2xl text-slate-850 dark:text-slate-50">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-xl md:text-2xl text-slate-850 dark:text-slate-50">
                     {selectedCustomer.name}
                   </h3>
                   <button
@@ -188,18 +188,18 @@ export const CustomersView: React.FC = () => {
                     className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                     title="Edit Name/Phone / विवरण बदलें"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                   </button>
                   <button
                     onClick={() => handleDeleteCustomer(selectedCustomer.id)}
                     className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 text-slate-400 hover:text-rose-600 dark:hover:text-rose-450 transition-colors cursor-pointer"
                     title="Delete Customer / ग्राहक हटाएं"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                   </button>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 mt-2">
-                  <p className="text-xs font-bold text-slate-400 dark:text-slate-550">
+                <div className="flex flex-wrap items-center gap-2.5 mt-1.5">
+                  <p className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-550">
                     Registered: {new Date(selectedCustomer.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN')}
                   </p>
                   {selectedCustomer.phone === 'N/A' ? (
@@ -209,15 +209,15 @@ export const CustomersView: React.FC = () => {
                         setEditCustPhone('');
                         setShowEditModal(true);
                       }}
-                      className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg text-sm font-extrabold transition-all flex items-center gap-1 border border-amber-500/10 cursor-pointer"
+                      className="px-2 py-1 bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 border border-amber-500/10 cursor-pointer"
                     >
                       ➕ Add Phone / फ़ोन जोड़ें
                     </button>
                   ) : (
-                    <div className="flex flex-wrap gap-2 items-center">
+                    <div className="flex flex-wrap gap-1.5 items-center">
                       <a
                         href={`tel:${selectedCustomer.phone}`}
-                        className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg text-sm font-extrabold transition-all flex items-center gap-1 border border-blue-500/10 cursor-pointer whitespace-nowrap shrink-0"
+                        className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 border border-blue-500/10 cursor-pointer whitespace-nowrap shrink-0"
                       >
                         📞 Call {selectedCustomer.phone}
                       </a>
@@ -227,7 +227,7 @@ export const CustomersView: React.FC = () => {
                             ? `नमस्ते ${selectedCustomer.name}, चक्की मित्र से आपका संपर्क करने के लिए धन्यवाद।`
                             : `Hello ${selectedCustomer.name}, thank you for contacting Chakki Mitra.`
                         )}`}
-                        className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg text-sm font-extrabold transition-all flex items-center gap-1 border border-indigo-500/10 cursor-pointer whitespace-nowrap shrink-0"
+                        className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 border border-indigo-500/10 cursor-pointer whitespace-nowrap shrink-0"
                         title={t('sms')}
                       >
                         💬 SMS
@@ -241,10 +241,10 @@ export const CustomersView: React.FC = () => {
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg text-sm font-extrabold transition-all flex items-center gap-1 border border-emerald-500/10 cursor-pointer whitespace-nowrap shrink-0"
+                          className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 border border-emerald-500/10 cursor-pointer whitespace-nowrap shrink-0"
                           title={t('sendReminder')}
                         >
-                          <WhatsAppIcon size={12} /> {t('sendReminder')}
+                          <WhatsAppIcon size={11} /> {t('sendReminder')}
                         </a>
                       )}
                     </div>
@@ -253,25 +253,25 @@ export const CustomersView: React.FC = () => {
               </div>
 
               {/* Outstanding Card */}
-              <div className="bg-slate-50 dark:bg-slate-800/30 p-3.5 rounded-2xl border border-slate-150 dark:border-slate-800 flex items-center justify-between min-w-[240px]">
+              <div className="bg-slate-50 dark:bg-slate-800/30 p-2.5 md:p-3.5 rounded-xl border border-slate-150 dark:border-slate-800 flex items-center justify-between w-full sm:w-auto sm:min-w-[240px]">
                 <div>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-wider">{t('outstanding')}</span>
-                  <p className={`font-black text-xl mt-0.5 ${
+                  <span className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-550 font-extrabold uppercase tracking-wider">{t('outstanding')}</span>
+                  <p className={`font-black text-lg md:text-xl mt-0.5 ${
                     selectedCustomer.outstandingBalance > 0 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-450'
                   }`}>
                     {hideAmounts ? '₹••••' : `₹${selectedCustomer.outstandingBalance.toFixed(1)}`}
                   </p>
                 </div>
-                <div className="flex gap-2 ml-4">
+                <div className="flex gap-1.5 ml-4">
                   <button
                     onClick={() => setShowPaymentModal(true)}
-                    className="h-[40px] px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-extrabold transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
+                    className="h-9 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-extrabold transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer"
                   >
                     Receive
                   </button>
                   <button
                     onClick={() => setShowDueModal(true)}
-                    className="h-[40px] px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-extrabold transition-all shadow-md shadow-amber-500/10 cursor-pointer"
+                    className="h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-extrabold transition-all shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer"
                   >
                     Add Due
                   </button>
