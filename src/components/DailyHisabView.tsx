@@ -99,15 +99,6 @@ export const DailyHisabView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Form Panel */}
         <div className="md:col-span-1 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm h-fit">
-          <div className="flex items-center gap-3 mb-5 border-b border-slate-50 dark:border-slate-800 pb-3">
-            <span className="text-xl">📊</span>
-            <div>
-              <h3 className="font-extrabold text-slate-800 dark:text-slate-105 text-base">
-                {language === 'hi' ? 'नया डेली हिसाब जोड़ें' : 'Log Daily Summary'}
-              </h3>
-              <p className="text-[10px] text-slate-400 font-semibold">Enter end-of-day mill summaries</p>
-            </div>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Date */}

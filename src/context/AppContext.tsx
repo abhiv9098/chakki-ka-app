@@ -5,7 +5,7 @@ import { Customer, Order, CreditRecord, DailyHisab } from '../types';
 import { dbService } from '../services/db';
 import { translations } from '../data/translations';
 
-type ViewType = 'dashboard' | 'customers' | 'grinding' | 'khata' | 'settings' | 'daily-hisab';
+type ViewType = 'dashboard' | 'customers' | 'grinding' | 'settings' | 'daily-hisab';
 
 interface AppContextType {
   language: 'en' | 'hi';

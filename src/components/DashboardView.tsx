@@ -144,14 +144,14 @@ export const DashboardView: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setActiveView('khata')}
+                onClick={() => setActiveView('customers')}
                 className="flex flex-col items-center justify-center gap-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-26"
               >
-                <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-500">
-                  <KhataIcon size={18} />
+                <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-500">
+                  <CustomersIcon size={18} />
                 </div>
                 <span className="text-[10px] sm:text-xs leading-tight text-center font-bold">
-                  {t('receivePayment')}
+                  {t('customers')}
                 </span>
               </button>
             </div>

@@ -7,7 +7,6 @@ import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon } from '@/components/Icons';
 import { DashboardView } from '@/components/DashboardView';
 import { GrindingView } from '@/components/GrindingView';
 import { CustomersView } from '@/components/CustomersView';
-import { KhataView } from '@/components/KhataView';
 import { SettingsView } from '@/components/SettingsView';
 import { DailyHisabView } from '@/components/DailyHisabView';
 
@@ -67,8 +66,6 @@ export default function Home() {
         return <GrindingView />;
       case 'customers':
         return <CustomersView />;
-      case 'khata':
-        return <KhataView />;
       case 'settings':
         return <SettingsView />;
       case 'daily-hisab':

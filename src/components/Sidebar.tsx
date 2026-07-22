@@ -27,7 +27,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { view: 'dashboard' as const, label: t('dashboard'), icon: DashboardIcon },
     { view: 'grinding' as const, label: t('grindingOrders'), icon: GrindingIcon },
     { view: 'customers' as const, label: t('customers'), icon: CustomersIcon },
-    { view: 'khata' as const, label: t('khataLedger'), icon: KhataIcon },
     { view: 'daily-hisab' as const, label: t('dailyHisab'), icon: FileTextIcon },
   ];
 
