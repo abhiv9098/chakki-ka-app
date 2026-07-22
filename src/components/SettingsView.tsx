@@ -14,7 +14,11 @@ export const SettingsView: React.FC = () => {
     restoreBackup,
     t,
     upiId,
-    setUpiId
+    setUpiId,
+    defaultGrindingRate,
+    setDefaultGrindingRate,
+    dailyHisabs,
+    deleteDailyHisab
   } = useApp();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -107,7 +111,7 @@ export const SettingsView: React.FC = () => {
               {t('settings')}
             </h3>
             <p className="text-xs text-slate-400 font-semibold mt-0.5">
-              Manage shop language preference, appearance theme, and data backups.
+              Manage shop language preference, appearance theme, daily logs, and data backups.
             </p>
           </div>
         </div>
@@ -194,6 +198,69 @@ export const SettingsView: React.FC = () => {
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-semibold"
               />
             </div>
+          </div>
+
+          {/* Default Grinding Rate setting */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                {language === 'hi' ? 'डिफॉल्ट पिसाई रेट (₹/KG)' : 'Default Grinding Rate (₹/KG)'}
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                {language === 'hi' ? 'डेली हिसाब की ऑटो-गणना के लिए उपयोग होने वाला पिसाई रेट।' : 'Default rate used for daily summary calculations.'}
+              </p>
+            </div>
+            <div className="w-full sm:max-w-xs">
+              <input
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={defaultGrindingRate}
+                onChange={(e) => setDefaultGrindingRate(e.target.value)}
+                placeholder="5"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-bold"
+              />
+            </div>
+          </div>
+
+          {/* Delete Daily Hisab Records Section */}
+          <div className="pt-6 space-y-4">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                {language === 'hi' ? 'डेली हिसाब डिलीट करें' : 'Delete Daily Hisab Records'}
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                {language === 'hi' ? 'यहाँ से आप पुराने दर्ज किए गए डेली हिसाब रिकॉर्ड्स को डिलीट कर सकते हैं।' : 'Manage and delete saved daily mill summaries.'}
+              </p>
+            </div>
+            {dailyHisabs.length === 0 ? (
+              <p className="text-xs text-slate-400 font-semibold italic">
+                {language === 'hi' ? 'कोई डेली हिसाब दर्ज नहीं है।' : 'No daily logs recorded yet.'}
+              </p>
+            ) : (
+              <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                {dailyHisabs.map((hisab) => (
+                  <div key={hisab.id} className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold">
+                    <div className="space-x-3">
+                      <span className="font-black text-slate-800 dark:text-slate-100">{hisab.date}</span>
+                      <span className="text-slate-500">{hisab.wheatWeight} kg</span>
+                      <span className="text-emerald-600 font-extrabold">+ ₹{hisab.amount}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(language === 'hi' ? `क्या आप वाकई ${hisab.date} का हिसाब हटाना चाहते हैं?` : `Are you sure you want to delete daily log for ${hisab.date}?`)) {
+                          deleteDailyHisab(hisab.id);
+                        }
+                      }}
+                      className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-extrabold rounded-xl text-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>🗑️</span>
+                      <span>{language === 'hi' ? 'डिलीट करें' : 'Delete'}</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Backup Restore */}

@@ -34,6 +34,8 @@ interface AppContextType {
   t: (key: keyof typeof translations.en) => string;
   upiId: string;
   setUpiId: (id: string) => void;
+  defaultGrindingRate: string;
+  setDefaultGrindingRate: (rate: string) => void;
   hideAmounts: boolean;
   toggleHideAmounts: () => void;
 }
@@ -51,6 +53,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [creditRecords, setCreditRecords] = useState<CreditRecord[]>([]);
   const [dailyHisabs, setDailyHisabs] = useState<DailyHisab[]>([]);
   const [upiId, setUpiIdState] = useState<string>('');
+  const [defaultGrindingRate, setDefaultGrindingRateState] = useState<string>('5');
   const [hideAmounts, setHideAmounts] = useState<boolean>(false);
 
   // Load language and theme preference from localStorage on mount
@@ -62,6 +65,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const storedTheme = localStorage.getItem('chakkimitra_theme') as 'light' | 'dark';
       const storedUpi = localStorage.getItem('chakkimitra_upi_id') || '';
       setUpiIdState(storedUpi);
+      const storedRate = localStorage.getItem('chakkimitra_default_rate') || '5';
+      setDefaultGrindingRateState(storedRate);
       const storedHide = localStorage.getItem('chakkimitra_hide_amounts') === 'true';
       setHideAmounts(storedHide);
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -181,6 +186,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('chakkimitra_upi_id', id);
   };
 
+  const setDefaultGrindingRate = (rate: string) => {
+    setDefaultGrindingRateState(rate);
+    localStorage.setItem('chakkimitra_default_rate', rate);
+  };
+
   const toggleHideAmounts = () => {
     const nextVal = !hideAmounts;
     setHideAmounts(nextVal);
@@ -222,6 +232,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         t,
         upiId,
         setUpiId,
+        defaultGrindingRate,
+        setDefaultGrindingRate,
         hideAmounts,
         toggleHideAmounts
       }}
