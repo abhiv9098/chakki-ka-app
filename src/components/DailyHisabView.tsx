@@ -8,14 +8,25 @@ import { CloseIcon } from './Icons';
 export const DailyHisabView: React.FC = () => {
   const { dailyHisabs, addDailyHisab, deleteDailyHisab, t, language, defaultGrindingRate } = useApp();
 
+  // Calculate today and 7 days ago date strings for date picker range restriction
+  const { todayStr, minDateStr } = (() => {
+    const todayObj = new Date();
+    const yyyy = todayObj.getFullYear();
+    const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(todayObj.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    const minObj = new Date(todayObj.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const minYyyy = minObj.getFullYear();
+    const minMm = String(minObj.getMonth() + 1).padStart(2, '0');
+    const minDd = String(minObj.getDate()).padStart(2, '0');
+    const minDateStr = `${minYyyy}-${minMm}-${minDd}`;
+
+    return { todayStr, minDateStr };
+  })();
+
   // Form states
-  const [date, setDate] = useState(() => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  });
+  const [date, setDate] = useState(todayStr);
   const [wheatWeight, setWheatWeight] = useState('');
   const [revenue, setRevenue] = useState(0);
   const [expenses, setExpenses] = useState('');
@@ -43,6 +54,15 @@ export const DailyHisabView: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (date < minDateStr || date > todayStr) {
+      alert(
+        language === 'hi'
+          ? 'केवल पिछले 7 दिनों के भीतर का हिसाब ही दर्ज किया जा सकता है!'
+          : 'You can only log summaries for the last 7 days!'
+      );
+      return;
+    }
 
     if (isDateAlreadyLogged) {
       alert(
@@ -109,10 +129,15 @@ export const DailyHisabView: React.FC = () => {
               <input
                 type="date"
                 required
+                min={minDateStr}
+                max={todayStr}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
+              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
+                {language === 'hi' ? 'केवल पिछले 7 दिनों का हिसाब दर्ज कर सकते हैं' : 'Only last 7 days allowed'}
+              </span>
               {isDateAlreadyLogged && (
                 <p className="text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-xl border border-amber-200 dark:border-amber-900/40 mt-1">
                   ⚠️ {language === 'hi' ? 'इस तारीख का हिसाब पहले ही दर्ज है!' : 'Summary already logged for this date!'}
