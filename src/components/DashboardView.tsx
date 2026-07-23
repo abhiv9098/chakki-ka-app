@@ -156,32 +156,75 @@ export const DashboardView: React.FC = () => {
           </span>
         </div>
 
-        {/* Wide SVG Bar Chart */}
-        <div className="w-full h-[135px] flex items-end justify-between gap-3 sm:gap-6 px-2 pt-5 relative">
-          {/* Gridlines */}
-          <div className="absolute inset-x-0 bottom-[25%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
-          <div className="absolute inset-x-0 bottom-[50%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
-          <div className="absolute inset-x-0 bottom-[75%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
-
-          {last7DaysData.map((d, idx) => {
+        {/* Wide SVG Line / Area Chart */}
+        {(() => {
+          const chartPoints = last7DaysData.map((d, idx) => {
+            const x = 35 + idx * (430 / 6);
             const pct = (d.amount / maxEarning) * 100;
-            const barHeight = Math.max(pct, 8);
-            return (
-              <div key={idx} className="flex-1 flex flex-col items-center group h-full justify-end relative z-10">
-                <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded shadow-sm border border-emerald-500/10 whitespace-nowrap">
-                  {hideAmounts ? '₹••••' : `₹${d.amount.toFixed(0)}`}
-                </span>
-                <div
-                  style={{ height: `${barHeight}%` }}
-                  className="w-full max-w-[44px] bg-gradient-to-t from-emerald-500 via-teal-500 to-emerald-400 dark:from-emerald-500 dark:to-teal-350 rounded-t-lg group-hover:scale-y-[1.03] origin-bottom transition-all duration-200 shadow-md shadow-emerald-500/10 cursor-pointer"
-                ></div>
-                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-2">
-                  {d.name}
-                </span>
+            const y = 105 - (pct * 0.8);
+            return { x, y, data: d };
+          });
+
+          const linePathD = chartPoints.reduce((acc, pt, idx) => {
+            return idx === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`;
+          }, '');
+
+          const areaPathD = `${linePathD} L ${chartPoints[chartPoints.length - 1].x} 115 L ${chartPoints[0].x} 115 Z`;
+
+          return (
+            <div className="w-full relative pt-1">
+              <div className="w-full h-[120px] relative">
+                <svg className="w-full h-full overflow-visible" viewBox="0 0 500 125" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                    </linearGradient>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#059669" />
+                      <stop offset="50%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#14b8a6" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Horizontal Gridlines */}
+                  <line x1="25" y1="25" x2="475" y2="25" stroke="currentColor" className="text-slate-100 dark:text-slate-800/60" strokeDasharray="4 4" strokeWidth="1" />
+                  <line x1="25" y1="65" x2="475" y2="65" stroke="currentColor" className="text-slate-100 dark:text-slate-800/60" strokeDasharray="4 4" strokeWidth="1" />
+                  <line x1="25" y1="110" x2="475" y2="110" stroke="currentColor" className="text-slate-100 dark:text-slate-800/60" strokeWidth="1" />
+
+                  {/* Area Gradient */}
+                  <path d={areaPathD} fill="url(#areaGradient)" />
+
+                  {/* Main Trend Line */}
+                  <path d={linePathD} fill="none" stroke="url(#lineGradient)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+
+                  {/* Data Points */}
+                  {chartPoints.map((pt, idx) => (
+                    <g key={idx} className="group cursor-pointer">
+                      <circle cx={pt.x} cy={pt.y} r="10" fill="transparent" />
+                      <circle cx={pt.x} cy={pt.y} r="5" className="fill-emerald-500/20 dark:fill-emerald-400/20 group-hover:scale-150 transition-transform origin-center" />
+                      <circle cx={pt.x} cy={pt.y} r="3.5" className="fill-white dark:fill-slate-900 stroke-emerald-600 dark:stroke-emerald-400" strokeWidth="2.5" />
+                    </g>
+                  ))}
+                </svg>
               </div>
-            );
-          })}
-        </div>
+
+              {/* Day Labels and Hover Values */}
+              <div className="flex justify-between items-center px-3.5 mt-1">
+                {chartPoints.map((pt, idx) => (
+                  <div key={idx} className="flex flex-col items-center group cursor-pointer">
+                    <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity -mt-4 mb-0.5 bg-emerald-50 dark:bg-emerald-950/90 px-1.5 py-0.5 rounded shadow-sm border border-emerald-500/20 whitespace-nowrap">
+                      {hideAmounts ? '₹••••' : `₹${pt.data.amount.toFixed(0)}`}
+                    </span>
+                    <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      {pt.data.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Quick Actions & Recent Orders Grid */}
