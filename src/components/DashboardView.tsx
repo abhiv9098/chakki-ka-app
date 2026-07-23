@@ -101,26 +101,26 @@ export const DashboardView: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Grid Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {stats.map((s, idx) => {
           const Icon = s.icon;
           return (
             <div
               key={idx}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:border-slate-200 dark:hover:border-slate-750"
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:border-slate-200 dark:hover:border-slate-750"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-normal">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-normal">
                   {s.label}
                 </span>
-                <div className={`p-2 rounded-xl shrink-0 ${s.bgClass}`}>
-                  <Icon className={s.iconColor} size={18} />
+                <div className={`p-1.5 rounded-lg shrink-0 ${s.bgClass}`}>
+                  <Icon className={s.iconColor} size={16} />
                 </div>
               </div>
-              <div className="mt-4">
-                <p className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
+              <div className="mt-2">
+                <p className="text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
                   {s.value}
                 </p>
               </div>
@@ -130,50 +130,50 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Quick Actions & Recent Orders Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column: Quick Actions & Weekly Graph */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-4">
           {/* Quick Actions Panel */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-sm">
             <div>
-              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">
+              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-base">
                 {t('quickActions')}
               </h3>
-              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">Common daily operations</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-550 font-medium">Common daily operations</p>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2.5">
               <button
                 onClick={() => setActiveView('grinding')}
-                className="flex flex-col items-center justify-center gap-2 p-2 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer h-26 border border-emerald-400/20"
+                className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer h-20 border border-emerald-400/20"
               >
-                <div className="p-2 rounded-xl bg-white/20 text-white">
-                  <PlusIcon size={18} />
+                <div className="p-1.5 rounded-lg bg-white/20 text-white">
+                  <PlusIcon size={16} />
                 </div>
-                <span className="text-[10px] sm:text-xs leading-tight text-center font-bold">
+                <span className="text-[10px] leading-tight text-center font-bold">
                   {t('logNewGrinding')}
                 </span>
               </button>
 
               <button
                 onClick={() => setActiveView('daily-hisab')}
-                className="flex flex-col items-center justify-center gap-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-26"
+                className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-20"
               >
-                <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500">
-                  <ReportsIcon size={18} />
+                <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500">
+                  <ReportsIcon size={16} />
                 </div>
-                <span className="text-[10px] sm:text-xs leading-tight text-center font-bold">
+                <span className="text-[10px] leading-tight text-center font-bold">
                   {t('dailyHisab')}
                 </span>
               </button>
 
               <button
                 onClick={() => setActiveView('customers')}
-                className="flex flex-col items-center justify-center gap-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-26"
+                className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-20"
               >
-                <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-500">
-                  <CustomersIcon size={18} />
+                <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-500">
+                  <CustomersIcon size={16} />
                 </div>
-                <span className="text-[10px] sm:text-xs leading-tight text-center font-bold">
+                <span className="text-[10px] leading-tight text-center font-bold">
                   {t('customers')}
                 </span>
               </button>
@@ -181,21 +181,21 @@ export const DashboardView: React.FC = () => {
           </div>
 
           {/* Weekly Earnings Graph Card */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col">
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-50 dark:border-slate-800/40">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-50 dark:border-slate-800/40">
               <div>
-                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-base">
+                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">
                   {language === 'hi' ? 'साप्ताहिक कमाई का ग्राफ' : 'Weekly Earnings Graph'}
                 </h3>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">Last 7 days revenue trend</p>
+                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">Last 7 days revenue trend</p>
               </div>
-              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+              <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-emerald-500/20">
                 7 Days
               </span>
             </div>
 
             {/* SVG Bar Chart */}
-            <div className="h-[180px] flex items-end justify-between gap-2 px-1 pt-6 relative">
+            <div className="h-[125px] flex items-end justify-between gap-2 px-1 pt-4 relative">
               {/* Gridlines */}
               <div className="absolute inset-x-0 bottom-[25%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
               <div className="absolute inset-x-0 bottom-[50%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
@@ -206,14 +206,14 @@ export const DashboardView: React.FC = () => {
                 const barHeight = Math.max(pct, 6);
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center group h-full justify-end relative z-10">
-                    <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.5 rounded shadow-sm border border-emerald-500/10 whitespace-nowrap">
+                    <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.5 rounded shadow-sm border border-emerald-500/10 whitespace-nowrap">
                       {hideAmounts ? '₹••••' : `₹${d.amount.toFixed(0)}`}
                     </span>
                     <div
                       style={{ height: `${barHeight}%` }}
-                      className="w-full max-w-[28px] bg-gradient-to-t from-emerald-600 to-teal-400 dark:from-emerald-500 dark:to-teal-350 rounded-t-lg group-hover:scale-y-[1.04] origin-bottom transition-all duration-200 shadow-md shadow-emerald-500/10 cursor-pointer"
+                      className="w-full max-w-[24px] bg-gradient-to-t from-emerald-600 to-teal-400 dark:from-emerald-500 dark:to-teal-350 rounded-t-md group-hover:scale-y-[1.04] origin-bottom transition-all duration-200 shadow-md shadow-emerald-500/10 cursor-pointer"
                     ></div>
-                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-2">
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1.5">
                       {d.name}
                     </span>
                   </div>
@@ -224,14 +224,14 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Recent Orders Panel */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-5 border-b border-slate-50 dark:border-slate-800/40 pb-4">
+            <div className="flex items-center justify-between mb-3 border-b border-slate-50 dark:border-slate-800/40 pb-2.5">
               <div>
-                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">
+                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-base">
                   {t('recentOrders')}
                 </h3>
-                <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">Last 5 processing records</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-550 font-medium">Last 5 processing records</p>
               </div>
               <button
                 onClick={() => setActiveView('grinding')}
@@ -242,11 +242,11 @@ export const DashboardView: React.FC = () => {
             </div>
 
             {recentOrders.length === 0 ? (
-              <div className="py-14 text-center text-slate-400 text-sm font-semibold">
+              <div className="py-10 text-center text-slate-400 text-xs font-semibold">
                 🌾 {t('noOrdersYet')}
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800/40 overflow-hidden -mx-2">
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/40 overflow-hidden -mx-1">
                 {recentOrders.map((order) => {
                   const dateStr = new Date(order.createdAt).toLocaleDateString(
                     language === 'hi' ? 'hi-IN' : 'en-IN',
@@ -256,26 +256,26 @@ export const DashboardView: React.FC = () => {
                     <div
                       key={order.id}
                       onClick={() => setSelectedOrderForBill(order)}
-                      className="py-3 px-3 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/30 rounded-xl transition-all duration-200 cursor-pointer group"
+                      className="py-2.5 px-2 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/30 rounded-xl transition-all duration-200 cursor-pointer group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-extrabold text-xs flex items-center justify-center border border-slate-100/50 dark:border-slate-750">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8.5 h-8.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-extrabold text-[11px] flex items-center justify-center border border-slate-100/50 dark:border-slate-750">
                           {order.grainType.slice(0, 2)}
                         </div>
                         <div>
-                          <p className="font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors text-sm">
+                          <p className="font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors text-xs sm:text-sm">
                             {order.customerName}
                           </p>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
                             {order.grainType} • {order.weight} kg @ ₹{order.rate}/kg
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-extrabold text-slate-900 dark:text-slate-55 text-sm">
+                        <p className="font-extrabold text-slate-900 dark:text-slate-55 text-xs sm:text-sm">
                           {hideAmounts ? '₹••••' : `₹${order.totalAmount}`}
                         </p>
-                        <span className={`inline-block text-[9px] px-2 py-0.5 rounded-full font-black uppercase mt-1.5 ${
+                        <span className={`inline-block text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase mt-1 ${
                           order.paymentType === 'CASH'
                             ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/30 dark:text-emerald-400'
                             : 'bg-amber-50 text-amber-650 dark:bg-amber-950/30 dark:text-amber-400'
