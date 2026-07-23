@@ -18,20 +18,18 @@ export const SettingsView: React.FC = () => {
     defaultGrindingRate,
     setDefaultGrindingRate,
     dailyHisabs,
-    deleteDailyHisab,
-    orders,
-    customers
+    deleteDailyHisab
   } = useApp();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'general' | 'hisab' | 'backup'>('general');
 
   const handleExport = () => {
     try {
       const dataStr = exportBackup();
       
+      // 1. Download file
       const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -42,6 +40,7 @@ export const SettingsView: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
+      // 2. Show success banner
       setBackupMessage(t('backupSuccess'));
       setErrorMessage(null);
       setTimeout(() => setBackupMessage(null), 4000);
@@ -55,6 +54,7 @@ export const SettingsView: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Confirm overwrite
     const confirmRestore = window.confirm(t('confirmRestore'));
     if (!confirmRestore) {
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -77,6 +77,7 @@ export const SettingsView: React.FC = () => {
     };
     reader.readAsText(file);
     
+    // Clear input
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -85,256 +86,166 @@ export const SettingsView: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-6 animate-fade-in">
-      {/* Top Banner Card */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-emerald-500/10 relative overflow-hidden">
-        <div className="absolute -right-10 -bottom-10 opacity-10 text-9xl pointer-events-none select-none">⚙️</div>
-        
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur border border-white/30 flex items-center justify-center text-3xl shadow-lg shrink-0">
-              🌾
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-black tracking-tight">
-                {language === 'hi' ? 'चक्की मित्र प्रोफ़ाइल एवं सेटिंग्स' : 'Chakki Mitra Settings & Profile'}
-              </h2>
-              <p className="text-emerald-100 text-xs md:text-sm font-medium mt-1">
-                {language === 'hi' ? 'अपनी आटा चक्की की प्राथमिकताएँ, पिसाई रेट और बैकअप प्रबंधित करें' : 'Manage your flour mill preferences, default rates, and data backups.'}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Metrics Badges */}
-          <div className="flex items-center gap-3 bg-white/10 backdrop-blur p-2.5 rounded-2xl border border-white/15">
-            <div className="px-3 py-1.5 text-center">
-              <span className="text-[10px] uppercase font-extrabold text-emerald-100 block">Orders</span>
-              <span className="text-base font-black">{orders.length}</span>
-            </div>
-            <div className="w-px h-8 bg-white/20"></div>
-            <div className="px-3 py-1.5 text-center">
-              <span className="text-[10px] uppercase font-extrabold text-emerald-100 block">Customers</span>
-              <span className="text-base font-black">{customers.length}</span>
-            </div>
-            <div className="w-px h-8 bg-white/20"></div>
-            <div className="px-3 py-1.5 text-center">
-              <span className="text-[10px] uppercase font-extrabold text-emerald-100 block">Logs</span>
-              <span className="text-base font-black">{dailyHisabs.length}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Notifications */}
+    <div className="w-full space-y-6">
+      {/* Messages */}
       {backupMessage && (
-        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30 rounded-2xl text-emerald-600 dark:text-emerald-400 font-extrabold text-sm flex items-center gap-2 transition-all">
-          <CheckIcon size={18} />
+        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-500/25 rounded-2xl text-emerald-600 dark:text-emerald-400 font-extrabold text-sm flex items-center gap-2 transition-all">
+          <CheckIcon size={16} />
           <span>{backupMessage}</span>
         </div>
       )}
       {errorMessage && (
-        <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-500/30 rounded-2xl text-rose-600 dark:text-rose-400 font-extrabold text-sm flex items-center gap-2 transition-all">
+        <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-500/25 rounded-2xl text-rose-600 dark:text-rose-400 font-extrabold text-sm flex items-center gap-2 transition-all">
           <span>⚠️ {errorMessage}</span>
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit">
-        <button
-          onClick={() => setActiveTab('general')}
-          className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'general'
-              ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-md'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <span>⚙️</span>
-          <span>{language === 'hi' ? 'सामान्य सेटिंग्स' : 'General Settings'}</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('hisab')}
-          className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'hisab'
-              ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-md'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <span>📊</span>
-          <span>{language === 'hi' ? 'डेली हिसाब रिकॉर्ड्स' : 'Daily Logs Data'}</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('backup')}
-          className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer flex items-center gap-2 ${
-            activeTab === 'backup'
-              ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-md'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <span>💾</span>
-          <span>{language === 'hi' ? 'बैकअप और डेटा' : 'Backup & Reset'}</span>
-        </button>
-      </div>
-
-      {/* Main Settings Panel */}
-      {activeTab === 'general' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-8 shadow-sm">
-          <div className="divide-y divide-slate-100 dark:divide-slate-800/60 space-y-6">
-            {/* Language Preference */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6 first:pt-0">
-              <div>
-                <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
-                  <span>🌐</span>
-                  <span>{t('language')} / Language Preference</span>
-                </h4>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
-                  Select your preferred interface language (Hindi or English).
-                </p>
-              </div>
-              <div className="flex gap-2.5">
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`w-32 h-[46px] rounded-xl text-sm font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                    language === 'en'
-                      ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/15'
-                      : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <span>🇬🇧</span>
-                  <span>English</span>
-                </button>
-                <button
-                  onClick={() => setLanguage('hi')}
-                  className={`w-32 h-[46px] rounded-xl text-sm font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                    language === 'hi'
-                      ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/15'
-                      : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <span>🇮🇳</span>
-                  <span>हिन्दी</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Dark Mode / Appearance */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
-              <div>
-                <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
-                  <span>🎨</span>
-                  <span>{t('darkMode')} / App Appearance</span>
-                </h4>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
-                  Switch between light and dark visual themes.
-                </p>
-              </div>
-              <button
-                onClick={toggleTheme}
-                className="h-[46px] min-w-[150px] bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-750 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 cursor-pointer transition-all uppercase tracking-wider"
-              >
-                {theme === 'light' ? (
-                  <>
-                    <SunIcon size={16} className="text-amber-500" />
-                    <span>Light Mode</span>
-                  </>
-                ) : (
-                  <>
-                    <MoonIcon size={16} className="text-indigo-400" />
-                    <span>Dark Mode</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Default Grinding Rate */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
-              <div>
-                <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
-                  <span>🌾</span>
-                  <span>{language === 'hi' ? 'डिफॉल्ट पिसाई रेट (₹/KG)' : 'Default Grinding Rate (₹/KG)'}</span>
-                </h4>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
-                  {language === 'hi' ? 'डेली हिसाब की ऑटो-गणना के लिए उपयोग होने वाला रेट।' : 'Default rate used for auto-calculating daily summary revenue.'}
-                </p>
-              </div>
-              <div className="w-full sm:max-w-xs flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0.1"
-                  step="0.1"
-                  value={defaultGrindingRate}
-                  onChange={(e) => setDefaultGrindingRate(e.target.value)}
-                  placeholder="5"
-                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-bold"
-                />
-                <span className="text-xs font-black text-slate-400 shrink-0">₹ / kg</span>
-              </div>
-            </div>
-
-            {/* UPI ID Setting */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
-              <div>
-                <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2">
-                  <span>📱</span>
-                  <span>{t('upiIdSetting')}</span>
-                </h4>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
-                  Used to generate UPI payment QR codes on customer invoices.
-                </p>
-              </div>
-              <div className="w-full sm:max-w-xs">
-                <input
-                  type="text"
-                  value={upiId}
-                  onChange={(e) => setUpiId(e.target.value)}
-                  placeholder={t('upiIdPlaceholder')}
-                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-semibold"
-                />
-              </div>
-            </div>
+      {/* Settings Panel */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-8 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-500 flex items-center justify-center text-lg">
+            ⚙️
           </div>
-        </div>
-      )}
-
-      {/* Daily Hisab Records Tab */}
-      {activeTab === 'hisab' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
           <div>
-            <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-lg flex items-center gap-2">
-              <span>📊</span>
-              <span>{language === 'hi' ? 'डेली हिसाब रिकॉर्ड्स (प्रबंधन)' : 'Daily Hisab Records Management'}</span>
+            <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-xl">
+              {t('settings')}
             </h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
-              {language === 'hi' ? 'यहाँ से आप पुराने दर्ज किए गए डेली हिसाब रिकॉर्ड्स को देख और हटा सकते हैं।' : 'View and delete saved daily summary records.'}
+            <p className="text-xs text-slate-400 font-semibold mt-0.5">
+              Manage shop language preference, appearance theme, daily logs, and data backups.
             </p>
           </div>
+        </div>
 
-          {dailyHisabs.length === 0 ? (
-            <div className="py-16 text-center text-slate-400 text-sm font-semibold space-y-2">
-              <span className="text-4xl block">📊</span>
-              <p>{language === 'hi' ? 'कोई डेली हिसाब दर्ज नहीं है।' : 'No daily logs recorded yet.'}</p>
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/60 space-y-6">
+          {/* Language select */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6 first:pt-0">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                {t('language')} / Language Preference
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                Set billing strings and menu actions to Hindi or English.
+              </p>
             </div>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-              {dailyHisabs.map((hisab) => (
-                <div
-                  key={hisab.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 transition-all hover:border-slate-300 dark:hover:border-slate-700"
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-xl">📅</span>
-                    <div>
-                      <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">{hisab.date}</h4>
-                      <p className="text-xs text-slate-400 font-semibold mt-0.5">
-                        Weight: {hisab.wheatWeight} kg • Expenses: ₹{hisab.expenses}
-                      </p>
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setLanguage('en')}
+                className={`w-32 h-[46px] rounded-xl text-base font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
+                  language === 'en'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-450 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                English
+              </button>
+              <button
+                onClick={() => setLanguage('hi')}
+                className={`w-32 h-[46px] rounded-xl text-base font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
+                  language === 'hi'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-450 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                हिन्दी
+              </button>
+            </div>
+          </div>
+
+          {/* Theme setting */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                {t('darkMode')} / App Appearance
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                Toggle between light and dark themes for comfortable reading.
+              </p>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className="h-[46px] min-w-[140px] bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-750 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 cursor-pointer transition-all uppercase tracking-wider"
+            >
+              {theme === 'light' ? (
+                <>
+                  <SunIcon size={15} className="text-amber-500" />
+                  <span>Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <MoonIcon size={15} className="text-indigo-400" />
+                  <span>Dark Mode</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* UPI ID setting */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                {t('upiIdSetting')}
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                Used to generate payment QR codes on invoices.
+              </p>
+            </div>
+            <div className="w-full sm:max-w-xs">
+              <input
+                type="text"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder={t('upiIdPlaceholder')}
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-semibold"
+              />
+            </div>
+          </div>
+
+          {/* Default Grinding Rate setting */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                {language === 'hi' ? 'डिफॉल्ट पिसाई रेट (₹/KG)' : 'Default Grinding Rate (₹/KG)'}
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                {language === 'hi' ? 'डेली हिसाब की ऑटो-गणना के लिए उपयोग होने वाला पिसाई रेट।' : 'Default rate used for daily summary calculations.'}
+              </p>
+            </div>
+            <div className="w-full sm:max-w-xs">
+              <input
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={defaultGrindingRate}
+                onChange={(e) => setDefaultGrindingRate(e.target.value)}
+                placeholder="5"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-bold"
+              />
+            </div>
+          </div>
+
+          {/* Delete Daily Hisab Records Section */}
+          <div className="pt-6 space-y-4">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                {language === 'hi' ? 'डेली हिसाब डिलीट करें' : 'Delete Daily Hisab Records'}
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                {language === 'hi' ? 'यहाँ से आप पुराने दर्ज किए गए डेली हिसाब रिकॉर्ड्स को डिलीट कर सकते हैं।' : 'Manage and delete saved daily mill summaries.'}
+              </p>
+            </div>
+            {dailyHisabs.length === 0 ? (
+              <p className="text-xs text-slate-400 font-semibold italic">
+                {language === 'hi' ? 'कोई डेली हिसाब दर्ज नहीं है।' : 'No daily logs recorded yet.'}
+              </p>
+            ) : (
+              <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                {dailyHisabs.map((hisab) => (
+                  <div key={hisab.id} className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold">
+                    <div className="space-x-3">
+                      <span className="font-black text-slate-800 dark:text-slate-100">{hisab.date}</span>
+                      <span className="text-slate-500">{hisab.wheatWeight} kg</span>
+                      <span className="text-emerald-600 font-extrabold">+ ₹{hisab.amount}</span>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 border-slate-200/60 dark:border-slate-800 pt-2.5 sm:pt-0">
-                    <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/20">
-                      + ₹{hisab.amount} Profit
-                    </span>
-
                     <button
                       onClick={() => {
                         if (window.confirm(language === 'hi' ? `क्या आप वाकई ${hisab.date} का हिसाब हटाना चाहते हैं?` : `Are you sure you want to delete daily log for ${hisab.date}?`)) {
@@ -347,60 +258,33 @@ export const SettingsView: React.FC = () => {
                       <span>{language === 'hi' ? 'डिलीट करें' : 'Delete'}</span>
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Backup & Data Tab */}
-      {activeTab === 'backup' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
-          <div>
-            <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-lg flex items-center gap-2">
-              <span>💾</span>
-              <span>Backup & Data Recovery</span>
-            </h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
-              Export your customer records, grinding logs, and settings to a JSON backup file or restore previously saved backups.
-            </p>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Export Card */}
-            <div className="p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
-              <div className="text-2xl">📥</div>
-              <div>
-                <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">Export Backup</h4>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">
-                  Save all mill ledger files to a single JSON backup.
-                </p>
-              </div>
+          {/* Backup Restore */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                Backup & Data Recovery
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                Save local mill ledger files to a single JSON backup.
+              </p>
+            </div>
+            <div className="flex gap-2.5">
               <button
                 onClick={handleExport}
-                className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-extrabold shadow-md shadow-emerald-500/10 transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="px-4.5 h-[46px] bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-base font-extrabold shadow-md shadow-emerald-500/10 transition-all cursor-pointer flex items-center justify-center"
               >
-                <span>💾</span>
-                <span>{t('exportBackup')}</span>
+                {t('exportBackup')}
               </button>
-            </div>
-
-            {/* Restore Card */}
-            <div className="p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
-              <div className="text-2xl">📤</div>
-              <div>
-                <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">Restore Backup</h4>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">
-                  Restore data from a JSON backup file.
-                </p>
-              </div>
               <button
                 onClick={triggerImportFile}
-                className="w-full h-11 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-200 rounded-xl text-sm font-extrabold transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="px-4.5 h-[46px] bg-slate-200 hover:bg-slate-300 dark:bg-slate-850 dark:hover:bg-slate-805 text-slate-800 dark:text-slate-200 rounded-xl text-base font-extrabold transition-all cursor-pointer flex items-center justify-center"
               >
-                <span>🔄</span>
-                <span>{t('restoreBackup')}</span>
+                {t('restoreBackup')}
               </button>
               <input
                 type="file"
@@ -412,7 +296,7 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
