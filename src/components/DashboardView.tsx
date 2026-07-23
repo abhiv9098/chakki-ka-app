@@ -42,6 +42,29 @@ export const DashboardView: React.FC = () => {
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, 5);
 
+  // 7 days earnings data for Graph
+  const nowTs = Date.now();
+  const oneDay = 24 * 60 * 60 * 1000;
+  const last7DaysData = Array.from({ length: 7 }).map((_, idx) => {
+    const dayTimestamp = nowTs - (6 - idx) * oneDay;
+    const dayDate = new Date(dayTimestamp);
+    const dayName = dayDate.toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'short' });
+    
+    const dayOrders = orders.filter((o) => {
+      const oDate = new Date(o.createdAt);
+      return (
+        oDate.getDate() === dayDate.getDate() &&
+        oDate.getMonth() === dayDate.getMonth() &&
+        oDate.getFullYear() === dayDate.getFullYear()
+      );
+    });
+
+    const earnings = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+    return { name: dayName, amount: earnings };
+  });
+
+  const maxEarning = Math.max(...last7DaysData.map(d => d.amount)) || 100;
+
   const stats = [
     {
       label: t('todayOrders'),
@@ -108,7 +131,7 @@ export const DashboardView: React.FC = () => {
 
       {/* Quick Actions & Recent Orders Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Quick Actions & Today's Hisab */}
+        {/* Left Column: Quick Actions & Weekly Graph */}
         <div className="lg:col-span-1 space-y-6">
           {/* Quick Actions Panel */}
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 space-y-5 shadow-sm">
@@ -157,69 +180,46 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Today's Daily Hisab Card */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4 pb-2.5 border-b border-slate-50 dark:border-slate-800/40">
+          {/* Weekly Earnings Graph Card */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-50 dark:border-slate-800/40">
               <div>
-                <h3 className="font-extrabold text-slate-800 dark:text-slate-105 text-base">
-                  {language === 'hi' ? 'आज का डेली हिसाब' : "Today's Daily Summary"}
+                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-base">
+                  {language === 'hi' ? 'साप्ताहिक कमाई का ग्राफ' : 'Weekly Earnings Graph'}
                 </h3>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">End-of-day P&L stats</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">Last 7 days revenue trend</p>
               </div>
-              <button
-                onClick={() => setActiveView('daily-hisab')}
-                className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 hover:underline cursor-pointer"
-              >
-                {language === 'hi' ? 'सभी देखें' : 'View All'}
-              </button>
+              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                7 Days
+              </span>
             </div>
 
-            {todayHisab ? (
-              <div className="space-y-3.5">
-                <div className="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <div>
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-wider block">
-                      {t('netResult')}
-                    </span>
-                    <p className={`text-xl font-black mt-1 ${
-                      todayHisab.isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                    }`}>
-                      {todayHisab.isProfit ? '+' : '-'} ₹{hideAmounts ? '••••' : todayHisab.amount}
-                    </p>
-                  </div>
-                  <span className={`text-[10px] px-2.5 py-1 rounded-full font-black uppercase ${
-                    todayHisab.isProfit
-                      ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/30 dark:text-emerald-400'
-                      : 'bg-rose-50 text-rose-650 dark:bg-rose-950/30 dark:text-rose-450'
-                  }`}>
-                    {todayHisab.isProfit ? t('profit') : t('loss')}
-                  </span>
-                </div>
+            {/* SVG Bar Chart */}
+            <div className="h-[180px] flex items-end justify-between gap-2 px-1 pt-6 relative">
+              {/* Gridlines */}
+              <div className="absolute inset-x-0 bottom-[25%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
+              <div className="absolute inset-x-0 bottom-[50%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
+              <div className="absolute inset-x-0 bottom-[75%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
 
-                <div className="grid grid-cols-2 gap-3 text-center">
-                  <div className="p-2.5 bg-slate-50/30 dark:bg-slate-800/10 border border-slate-100 dark:border-slate-800 rounded-xl">
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold block">{t('wheatWeight')}</span>
-                    <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 mt-1 block">{todayHisab.wheatWeight} kg</span>
+              {last7DaysData.map((d, idx) => {
+                const pct = (d.amount / maxEarning) * 100;
+                const barHeight = Math.max(pct, 6);
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center group h-full justify-end relative z-10">
+                    <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.5 rounded shadow-sm border border-emerald-500/10 whitespace-nowrap">
+                      {hideAmounts ? '₹••••' : `₹${d.amount.toFixed(0)}`}
+                    </span>
+                    <div
+                      style={{ height: `${barHeight}%` }}
+                      className="w-full max-w-[28px] bg-gradient-to-t from-emerald-600 to-teal-400 dark:from-emerald-500 dark:to-teal-350 rounded-t-lg group-hover:scale-y-[1.04] origin-bottom transition-all duration-200 shadow-md shadow-emerald-500/10 cursor-pointer"
+                    ></div>
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-2">
+                      {d.name}
+                    </span>
                   </div>
-                  <div className="p-2.5 bg-slate-50/30 dark:bg-slate-800/10 border border-slate-100 dark:border-slate-800 rounded-xl">
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold block">{t('expenses')}</span>
-                    <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 mt-1 block">₹{todayHisab.expenses}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-6 space-y-3">
-                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold">
-                  {language === 'hi' ? 'आज का हिसाब अभी दर्ज नहीं किया गया है।' : "Today's summary not logged yet."}
-                </p>
-                <button
-                  onClick={() => setActiveView('daily-hisab')}
-                  className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm rounded-xl transition-all shadow-md shadow-emerald-500/10 cursor-pointer"
-                >
-                  {language === 'hi' ? 'हिसाब दर्ज करें' : 'Log Hisab Now'}
-                </button>
-              </div>
-            )}
+                );
+              })}
+            </div>
           </div>
         </div>
 

@@ -54,7 +54,7 @@ export const DailyHisabView: React.FC = () => {
   const [wheatWeight, setWheatWeight] = useState('');
   const [revenue, setRevenue] = useState(0);
   const [extraIncome, setExtraIncome] = useState('');
-  const [incomeDesc, setIncomeDesc] = useState('');
+  const [reasonForLoss, setReasonForLoss] = useState('');
   const [isProfit, setIsProfit] = useState<boolean>(true);
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
@@ -114,9 +114,9 @@ export const DailyHisabView: React.FC = () => {
       rate: rateVal,
       revenue,
       expenses: 0,
-      expenseDescription: '',
+      expenseDescription: reasonForLoss.trim(),
       extraIncome: incomeVal,
-      incomeDescription: incomeDesc.trim(),
+      incomeDescription: '',
       isProfit: true,
       amount: netAmount,
       notes: notes.trim() || `${grainType} Income`
@@ -125,7 +125,7 @@ export const DailyHisabView: React.FC = () => {
     // Reset fields
     setWheatWeight('');
     setExtraIncome('');
-    setIncomeDesc('');
+    setReasonForLoss('');
     setNotes('');
     
     alert(t('hisabSaved'));
@@ -223,39 +223,24 @@ export const DailyHisabView: React.FC = () => {
               />
             </div>
 
-            {/* Income Description */}
-            {parseFloat(extraIncome) > 0 && (
-              <div className="space-y-1 animate-fade-in">
-                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                  {language === 'hi' ? 'आय का विवरण' : 'Income Description'}
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Flour sales, choker sales, extra service"
-                  value={incomeDesc}
-                  onChange={(e) => setIncomeDesc(e.target.value)}
-                  disabled={isDateAlreadyLogged}
-                  className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-              </div>
-            )}
-
-            {/* Financial Result (Profit only) */}
-            <div className="space-y-2.5 pt-2">
+            {/* Reason for Loss */}
+            <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                {t('profitOrLossOption')}
+                {language === 'hi' ? 'नुकसान का कारण (Reason for Loss)' : 'Reason for Loss'}
               </label>
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setIsProfit(true)}
-                  className="w-full py-2.5 px-3 rounded-xl border border-emerald-500 bg-emerald-500 text-white text-sm font-extrabold transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/15"
-                >
-                  <span className="text-sm">📈</span>
-                  <span>{t('profit')}</span>
-                </button>
-              </div>
+              <input
+                type="text"
+                placeholder={language === 'hi' ? 'जैसे - बिजली बिल, खराबी, नुकसान...' : 'e.g. Electricity bill, repair, loss reason...'}
+                value={reasonForLoss}
+                onChange={(e) => setReasonForLoss(e.target.value)}
+                disabled={isDateAlreadyLogged}
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
             </div>
+
+
+
+
 
             {/* Net Amount (Read-only / Auto-calculated) */}
             <div className="space-y-1">
@@ -370,11 +355,11 @@ export const DailyHisabView: React.FC = () => {
       {/* Grain Selection Modal matching Image 2 */}
       {showGrainModal && (
         <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in"
           onClick={() => setShowGrainModal(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden"
+            className="bg-white dark:bg-slate-900 w-[90%] max-w-sm rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
