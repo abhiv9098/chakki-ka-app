@@ -36,6 +36,8 @@ interface AppContextType {
   setUpiId: (id: string) => void;
   defaultGrindingRate: string;
   setDefaultGrindingRate: (rate: string) => void;
+  grainRates: Record<string, number>;
+  updateGrainRate: (grain: string, rate: number) => void;
   hideAmounts: boolean;
   toggleHideAmounts: () => void;
 }
@@ -56,6 +58,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [defaultGrindingRate, setDefaultGrindingRateState] = useState<string>('5');
   const [hideAmounts, setHideAmounts] = useState<boolean>(false);
 
+  const defaultGrainRatesMap: Record<string, number> = {
+    "Wheat": 5,
+    "Maize": 10,
+    "Gram/Chana": 8,
+    "Rice": 6,
+    "Barley": 7,
+    "Bajra": 6,
+    "Multigrain": 10,
+    "Other": 5
+  };
+
+  const [grainRates, setGrainRatesState] = useState<Record<string, number>>(defaultGrainRatesMap);
+
   // Load language and theme preference from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -67,6 +82,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUpiIdState(storedUpi);
       const storedRate = localStorage.getItem('chakkimitra_default_rate') || '5';
       setDefaultGrindingRateState(storedRate);
+
+      const storedGrainRates = localStorage.getItem('chakkimitra_grain_rates');
+      if (storedGrainRates) {
+        try {
+          const parsed = JSON.parse(storedGrainRates);
+          setGrainRatesState({ ...defaultGrainRatesMap, ...parsed });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
       const storedHide = localStorage.getItem('chakkimitra_hide_amounts') === 'true';
       setHideAmounts(storedHide);
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -84,6 +110,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshData();
     }
   }, []);
+
+  const updateGrainRate = (grain: string, rate: number) => {
+    const updated = { ...grainRates, [grain]: rate };
+    setGrainRatesState(updated);
+    localStorage.setItem('chakkimitra_grain_rates', JSON.stringify(updated));
+  };
 
   const setLanguage = (lang: 'en' | 'hi') => {
     setLanguageState(lang);
@@ -234,6 +266,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setUpiId,
         defaultGrindingRate,
         setDefaultGrindingRate,
+        grainRates,
+        updateGrainRate,
         hideAmounts,
         toggleHideAmounts
       }}

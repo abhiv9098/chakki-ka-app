@@ -5,17 +5,6 @@ import { useApp } from '../context/AppContext';
 import { DailyHisab } from '../types';
 import { CloseIcon } from './Icons';
 
-const grainRates: Record<string, number> = {
-  "Wheat": 5,
-  "Maize": 6,
-  "Gram/Chana": 8,
-  "Rice": 6,
-  "Barley": 7,
-  "Bajra": 6,
-  "Multigrain": 10,
-  "Other": 5
-};
-
 const grainOptions = [
   "Wheat",
   "Maize",
@@ -28,7 +17,7 @@ const grainOptions = [
 ];
 
 export const DailyHisabView: React.FC = () => {
-  const { dailyHisabs, addDailyHisab, deleteDailyHisab, t, language, defaultGrindingRate } = useApp();
+  const { dailyHisabs, addDailyHisab, deleteDailyHisab, t, language, defaultGrindingRate, grainRates } = useApp();
 
   // Calculate today and 7 days ago date strings for date picker range restriction
   const { todayStr, minDateStr } = (() => {
@@ -71,7 +60,7 @@ export const DailyHisabView: React.FC = () => {
     const net = calculatedRevenue + inc;
     setIsProfit(true);
     setAmount(net.toFixed(1));
-  }, [wheatWeight, grainType, defaultGrindingRate, extraIncome]);
+  }, [wheatWeight, grainType, defaultGrindingRate, extraIncome, grainRates]);
 
   // Check if summary is already logged for the selected date
   const isDateAlreadyLogged = dailyHisabs.some(h => h.date === date);

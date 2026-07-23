@@ -17,6 +17,8 @@ export const SettingsView: React.FC = () => {
     setUpiId,
     defaultGrindingRate,
     setDefaultGrindingRate,
+    grainRates,
+    updateGrainRate,
     dailyHisabs,
     deleteDailyHisab
   } = useApp();
@@ -200,26 +202,55 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
 
-          {/* Default Grinding Rate setting */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
+          {/* Grain Grinding Rates setting */}
+          <div className="pt-6 space-y-4">
             <div>
               <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
-                {language === 'hi' ? 'डिफॉल्ट पिसाई रेट (₹/KG)' : 'Default Grinding Rate (₹/KG)'}
+                {language === 'hi' ? 'अनाज पिसाई दरें (₹/KG)' : 'Grain Grinding Rates (₹/KG)'}
               </h4>
               <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
-                {language === 'hi' ? 'डेली हिसाब की ऑटो-गणना के लिए उपयोग होने वाला पिसाई रेट।' : 'Default rate used for daily summary calculations.'}
+                {language === 'hi'
+                  ? 'प्रत्येक अनाज (गेहूं, मक्का, चना आदि) के लिए पिसाई की दर (₹/किलो) तय करें।'
+                  : 'Set custom grinding rate per kg for each grain type.'}
               </p>
             </div>
-            <div className="w-full sm:max-w-xs">
-              <input
-                type="number"
-                min="0.1"
-                step="0.1"
-                value={defaultGrindingRate}
-                onChange={(e) => setDefaultGrindingRate(e.target.value)}
-                placeholder="5"
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:border-emerald-500 text-slate-850 dark:text-slate-200 font-bold"
-              />
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { key: 'Wheat', label: language === 'hi' ? 'गेहूं (Wheat)' : 'Wheat' },
+                { key: 'Maize', label: language === 'hi' ? 'मक्का (Maize)' : 'Maize' },
+                { key: 'Gram/Chana', label: language === 'hi' ? 'चना (Gram)' : 'Gram/Chana' },
+                { key: 'Rice', label: language === 'hi' ? 'चावल (Rice)' : 'Rice' },
+                { key: 'Barley', label: language === 'hi' ? 'जौ (Barley)' : 'Barley' },
+                { key: 'Bajra', label: language === 'hi' ? 'बाजरा (Bajra)' : 'Bajra' },
+                { key: 'Multigrain', label: language === 'hi' ? 'मल्टीग्रेन' : 'Multigrain' },
+                { key: 'Other', label: language === 'hi' ? 'अन्य (Other)' : 'Other' }
+              ].map((g) => {
+                const currentVal = grainRates[g.key] !== undefined ? grainRates[g.key] : 5;
+                return (
+                  <div key={g.key} className="p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-1.5">
+                    <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 block truncate">
+                      {g.label}
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 text-xs font-bold text-slate-400">₹</span>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.5"
+                        value={currentVal}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val)) {
+                            updateGrainRate(g.key, val);
+                          }
+                        }}
+                        className="w-full pl-7 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-black text-emerald-600 dark:text-emerald-400 focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

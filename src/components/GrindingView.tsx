@@ -7,19 +7,8 @@ import { InvoiceModal } from './InvoiceModal';
 import { Order } from '../types';
 import { dbService } from '../services/db';
 
-const grainRates: Record<string, number> = {
-  "Wheat (गेहूं)": 5,
-  "Maize (मक्का)": 6,
-  "Gram/Chana (चना)": 8,
-  "Rice (चावल)": 6,
-  "Barley (जौ)": 7,
-  "Bajra (बाजरा)": 6,
-  "Multigrain (मल्टीग्रेन)": 10,
-  "Other (अन्य)": 5
-};
-
 export const GrindingView: React.FC = () => {
-  const { customers, addCustomer, addOrder, t, language, setSelectedCustomer, setActiveView, defaultGrindingRate } = useApp();
+  const { customers, addCustomer, addOrder, t, language, setSelectedCustomer, setActiveView, defaultGrindingRate, grainRates } = useApp();
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -32,11 +21,18 @@ export const GrindingView: React.FC = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
 
+  const getRateForGrain = (gType: string): number => {
+    const plainName = gType.split(' ')[0];
+    if (grainRates[gType] !== undefined) return grainRates[gType];
+    if (grainRates[plainName] !== undefined) return grainRates[plainName];
+    return parseFloat(defaultGrindingRate) || 5;
+  };
+
   // Update rate automatically when grain type or defaultGrindingRate changes
   useEffect(() => {
-    const currentRate = grainRates[grainType] || parseFloat(defaultGrindingRate) || 5;
+    const currentRate = getRateForGrain(grainType);
     setRate(currentRate.toString());
-  }, [grainType, defaultGrindingRate]);
+  }, [grainType, defaultGrindingRate, grainRates]);
 
   // Calculate total amount
   useEffect(() => {
@@ -155,7 +151,16 @@ export const GrindingView: React.FC = () => {
                 onChange={(e) => setGrainType(e.target.value)}
                 className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
               >
-                {Object.keys(grainRates).map((grain) => (
+                {[
+                  "Wheat (गेहूं)",
+                  "Maize (मक्का)",
+                  "Gram/Chana (चना)",
+                  "Rice (चावल)",
+                  "Barley (जौ)",
+                  "Bajra (बाजरा)",
+                  "Multigrain (मल्टीग्रेन)",
+                  "Other (अन्य)"
+                ].map((grain) => (
                   <option key={grain} value={grain}>
                     {language === 'hi' ? grain.split(' ')[1]?.replace(/[()]/g, '') || grain : grain.split(' ')[0]}
                   </option>
