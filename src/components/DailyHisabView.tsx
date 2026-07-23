@@ -5,6 +5,28 @@ import { useApp } from '../context/AppContext';
 import { DailyHisab } from '../types';
 import { CloseIcon } from './Icons';
 
+const grainRates: Record<string, number> = {
+  "Wheat": 5,
+  "Maize": 6,
+  "Gram/Chana": 8,
+  "Rice": 6,
+  "Barley": 7,
+  "Bajra": 6,
+  "Multigrain": 10,
+  "Other": 5
+};
+
+const grainOptions = [
+  "Wheat",
+  "Maize",
+  "Gram/Chana",
+  "Rice",
+  "Barley",
+  "Bajra",
+  "Multigrain",
+  "Other"
+];
+
 export const DailyHisabView: React.FC = () => {
   const { dailyHisabs, addDailyHisab, deleteDailyHisab, t, language, defaultGrindingRate } = useApp();
 
@@ -27,6 +49,8 @@ export const DailyHisabView: React.FC = () => {
 
   // Form states
   const [date, setDate] = useState(todayStr);
+  const [grainType, setGrainType] = useState('Wheat');
+  const [showGrainModal, setShowGrainModal] = useState(false);
   const [wheatWeight, setWheatWeight] = useState('');
   const [revenue, setRevenue] = useState(0);
   const [expenses, setExpenses] = useState('');
@@ -38,7 +62,7 @@ export const DailyHisabView: React.FC = () => {
   // Auto-calculate revenue
   useEffect(() => {
     const w = parseFloat(wheatWeight) || 0;
-    const r = parseFloat(defaultGrindingRate) || 5;
+    const r = grainRates[grainType] || parseFloat(defaultGrindingRate) || 5;
     const calculatedRevenue = w * r;
     setRevenue(calculatedRevenue);
 
@@ -47,7 +71,7 @@ export const DailyHisabView: React.FC = () => {
     const net = calculatedRevenue - exp;
     setIsProfit(true);
     setAmount(net >= 0 ? net.toFixed(1) : Math.abs(net).toFixed(1));
-  }, [wheatWeight, defaultGrindingRate, expenses]);
+  }, [wheatWeight, grainType, defaultGrindingRate, expenses]);
 
   // Check if summary is already logged for the selected date
   const isDateAlreadyLogged = dailyHisabs.some(h => h.date === date);
@@ -74,17 +98,18 @@ export const DailyHisabView: React.FC = () => {
     }
 
     const weightVal = parseFloat(wheatWeight);
-    const rateVal = parseFloat(defaultGrindingRate) || 5;
+    const rateVal = grainRates[grainType] || parseFloat(defaultGrindingRate) || 5;
     const expenseVal = parseFloat(expenses) || 0;
     const netAmount = parseFloat(amount) || 0;
 
     if (isNaN(weightVal) || weightVal <= 0) {
-      alert(language === 'hi' ? 'कृपया गेहूं पिसाई का वजन लिखें!' : 'Please enter wheat weight!');
+      alert(language === 'hi' ? 'कृपया पिसाई का वजन लिखें!' : 'Please enter grain weight!');
       return;
     }
 
     addDailyHisab({
       date,
+      grainType,
       wheatWeight: weightVal,
       rate: rateVal,
       revenue,
@@ -92,7 +117,7 @@ export const DailyHisabView: React.FC = () => {
       expenseDescription: expenseDesc.trim(),
       isProfit: true,
       amount: netAmount,
-      notes: notes.trim() || 'Profit'
+      notes: notes.trim() || `${grainType} Profit`
     });
 
     // Reset fields
@@ -145,10 +170,26 @@ export const DailyHisabView: React.FC = () => {
               )}
             </div>
 
-            {/* Wheat weight in kg */}
+            {/* Grain Type Selector */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                {t('wheatWeight')} *
+                {language === 'hi' ? 'अनाज का प्रकार' : 'Grain Type'}
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowGrainModal(true)}
+                disabled={isDateAlreadyLogged}
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base text-left font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-between cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>{grainType}</span>
+                <span className="text-xs text-slate-400">▼</span>
+              </button>
+            </div>
+
+            {/* Grain weight in kg */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                {grainType.toUpperCase()} {language === 'hi' ? 'पिसाई (KG)' : 'GROUND (KG)'} *
               </label>
               <input
                 type="number"
@@ -274,7 +315,7 @@ export const DailyHisabView: React.FC = () => {
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/80 dark:bg-slate-800/40">
                     <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[25%]">{language === 'hi' ? 'दिनांक' : 'Date'}</th>
-                    <th className="py-2.5 px-1.5 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[20%]">{language === 'hi' ? 'वजन' : 'Weight'}</th>
+                    <th className="py-2.5 px-1.5 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[20%]">{language === 'hi' ? 'अनाज / वजन' : 'Grain / Wt'}</th>
                     <th className="py-2.5 px-1.5 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[20%]">{language === 'hi' ? 'कमाई' : 'Revenue'}</th>
                     <th className="py-2.5 px-1.5 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[15%]">{language === 'hi' ? 'खर्च' : 'Expense'}</th>
                     <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] text-right w-[20%]">{t('netResult')}</th>
@@ -291,7 +332,9 @@ export const DailyHisabView: React.FC = () => {
                     return (
                       <tr key={hisab.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all align-middle">
                         <td className="py-3 px-2 font-extrabold text-slate-800 dark:text-slate-100 whitespace-nowrap text-xs">{formattedDate}</td>
-                        <td className="py-3 px-1.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs">{hisab.wheatWeight}kg</td>
+                        <td className="py-3 px-1.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs">
+                          {hisab.grainType ? `${hisab.grainType.split(' ')[0]} ${hisab.wheatWeight}kg` : `${hisab.wheatWeight}kg`}
+                        </td>
                         <td className="py-3 px-1.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs">₹{hisab.revenue.toFixed(0)}</td>
                         <td className="py-3 px-1.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs">
                           {hisab.expenses > 0 ? (
@@ -320,6 +363,60 @@ export const DailyHisabView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Grain Selection Modal matching Image 2 */}
+      {showGrainModal && (
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+          onClick={() => setShowGrainModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-t-3xl sm:rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-base">
+                {language === 'hi' ? 'अनाज चुनें' : 'Select Grain'}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowGrainModal(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[60vh] overflow-y-auto">
+              {grainOptions.map((g) => {
+                const isSelected = grainType === g;
+                return (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => {
+                      setGrainType(g);
+                      setShowGrainModal(false);
+                    }}
+                    className="w-full py-3.5 px-5 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                  >
+                    <span className={`text-base font-semibold ${isSelected ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-800 dark:text-slate-100'}`}>
+                      {g}
+                    </span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-600'
+                        : 'border-slate-400 dark:border-slate-600'
+                    }`}>
+                      {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -35,6 +35,7 @@ export interface DailySummary {
 export interface DailyHisab {
   id: number;
   date: string;
+  grainType?: string;
   wheatWeight: number;
   rate: number;
   revenue: number;
