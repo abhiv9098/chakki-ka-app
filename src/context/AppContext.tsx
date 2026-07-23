@@ -135,10 +135,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const refreshData = () => {
-    setCustomers(dbService.getCustomers());
+    const custs = dbService.getCustomers();
+    setCustomers(custs);
     setOrders(dbService.getOrders());
     setCreditRecords(dbService.getCreditRecords());
     setDailyHisabs(dbService.getDailyHisabs());
+
+    setSelectedCustomer(prev => {
+      if (!prev) return null;
+      return custs.find(c => c.id === prev.id) || null;
+    });
   };
 
   const addDailyHisab = (hisab: Omit<DailyHisab, 'id' | 'createdAt'>) => {

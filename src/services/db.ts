@@ -39,6 +39,8 @@ export const dbService = {
       localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
       localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(mockCreditRecords));
     }
+
+    dbService.recalculateAllCustomerBalances();
   },
 
   getCustomers: (): Customer[] => {
@@ -114,6 +116,48 @@ export const dbService = {
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
   },
 
+  recalculateCustomerBalance: (customerId: number) => {
+    const records = JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]') as CreditRecord[];
+    const custRecords = records.filter(r => r.customerId === customerId);
+    const computedBalance = custRecords.reduce((sum, r) => {
+      return r.type === 'DUE' ? sum + r.amount : sum - r.amount;
+    }, 0);
+    const rounded = parseFloat(Math.max(0, computedBalance).toFixed(2));
+
+    const customers = dbService.getCustomers();
+    const index = customers.findIndex(c => c.id === customerId);
+    if (index !== -1) {
+      customers[index].outstandingBalance = rounded;
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+    }
+    return rounded;
+  },
+
+  recalculateAllCustomerBalances: () => {
+    if (typeof window === 'undefined') return;
+    const customers = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || '[]') as Customer[];
+    const records = JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]') as CreditRecord[];
+    
+    if (customers.length === 0) return;
+
+    let updated = false;
+    customers.forEach(cust => {
+      const custRecords = records.filter(r => r.customerId === cust.id);
+      const computedBalance = custRecords.reduce((sum, r) => {
+        return r.type === 'DUE' ? sum + r.amount : sum - r.amount;
+      }, 0);
+      const rounded = parseFloat(Math.max(0, computedBalance).toFixed(2));
+      if (cust.outstandingBalance !== rounded) {
+        cust.outstandingBalance = rounded;
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+    }
+  },
+
   saveOrder: (order: Omit<Order, 'id' | 'createdAt'>): Order => {
     const orders = dbService.getOrders();
     const newId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 1;
@@ -126,20 +170,13 @@ export const dbService = {
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
 
     if (order.paymentType === 'CREDIT') {
-      // Update outstanding balance and record credit transaction
-      const customers = dbService.getCustomers();
-      const customer = customers.find(c => c.id === order.customerId);
-      if (customer) {
-        const newBalance = customer.outstandingBalance + order.totalAmount;
-        dbService.updateCustomerBalance(customer.id, newBalance);
-
-        dbService.saveCreditRecord({
-          customerId: customer.id,
-          amount: order.totalAmount,
-          type: 'DUE',
-          description: `Order #${newId} ${order.grainType} Grinding`
-        });
-      }
+      dbService.saveCreditRecord({
+        customerId: order.customerId,
+        amount: order.totalAmount,
+        type: 'DUE',
+        description: `Order #${newId} ${order.grainType} Grinding`
+      });
+      dbService.recalculateCustomerBalance(order.customerId);
     }
 
     return newOrder;
@@ -152,7 +189,7 @@ export const dbService = {
   },
 
   saveCreditRecord: (record: Omit<CreditRecord, 'id' | 'createdAt'>): CreditRecord => {
-    const records = dbService.getCreditRecords();
+    const records = JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]') as CreditRecord[];
     const newId = records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1;
     const newRecord: CreditRecord = {
       ...record,
@@ -171,14 +208,7 @@ export const dbService = {
       type,
       description
     });
-
-    const customers = dbService.getCustomers();
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
-      const delta = type === 'DUE' ? amount : -amount;
-      const newBalance = customer.outstandingBalance + delta;
-      dbService.updateCustomerBalance(customerId, newBalance);
-    }
+    dbService.recalculateCustomerBalance(customerId);
     return record;
   },
 
