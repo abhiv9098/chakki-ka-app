@@ -41,6 +41,8 @@ export interface DailyHisab {
   revenue: number;
   expenses: number;
   expenseDescription: string;
+  extraIncome?: number;
+  incomeDescription?: string;
   isProfit: boolean;
   amount: number;
   notes: string;

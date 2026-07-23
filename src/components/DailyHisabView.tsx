@@ -53,8 +53,8 @@ export const DailyHisabView: React.FC = () => {
   const [showGrainModal, setShowGrainModal] = useState(false);
   const [wheatWeight, setWheatWeight] = useState('');
   const [revenue, setRevenue] = useState(0);
-  const [expenses, setExpenses] = useState('');
-  const [expenseDesc, setExpenseDesc] = useState('');
+  const [extraIncome, setExtraIncome] = useState('');
+  const [incomeDesc, setIncomeDesc] = useState('');
   const [isProfit, setIsProfit] = useState<boolean>(true);
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
@@ -66,12 +66,12 @@ export const DailyHisabView: React.FC = () => {
     const calculatedRevenue = w * r;
     setRevenue(calculatedRevenue);
 
-    // Auto-calculate Net Profit if weight is entered
-    const exp = parseFloat(expenses) || 0;
-    const net = calculatedRevenue - exp;
+    // Auto-calculate Net Profit (Revenue + Extra Income)
+    const inc = parseFloat(extraIncome) || 0;
+    const net = calculatedRevenue + inc;
     setIsProfit(true);
-    setAmount(net >= 0 ? net.toFixed(1) : Math.abs(net).toFixed(1));
-  }, [wheatWeight, grainType, defaultGrindingRate, expenses]);
+    setAmount(net.toFixed(1));
+  }, [wheatWeight, grainType, defaultGrindingRate, extraIncome]);
 
   // Check if summary is already logged for the selected date
   const isDateAlreadyLogged = dailyHisabs.some(h => h.date === date);
@@ -99,7 +99,7 @@ export const DailyHisabView: React.FC = () => {
 
     const weightVal = parseFloat(wheatWeight);
     const rateVal = grainRates[grainType] || parseFloat(defaultGrindingRate) || 5;
-    const expenseVal = parseFloat(expenses) || 0;
+    const incomeVal = parseFloat(extraIncome) || 0;
     const netAmount = parseFloat(amount) || 0;
 
     if (isNaN(weightVal) || weightVal <= 0) {
@@ -113,17 +113,19 @@ export const DailyHisabView: React.FC = () => {
       wheatWeight: weightVal,
       rate: rateVal,
       revenue,
-      expenses: expenseVal,
-      expenseDescription: expenseDesc.trim(),
+      expenses: 0,
+      expenseDescription: '',
+      extraIncome: incomeVal,
+      incomeDescription: incomeDesc.trim(),
       isProfit: true,
       amount: netAmount,
-      notes: notes.trim() || `${grainType} Profit`
+      notes: notes.trim() || `${grainType} Income`
     });
 
     // Reset fields
     setWheatWeight('');
-    setExpenses('');
-    setExpenseDesc('');
+    setExtraIncome('');
+    setIncomeDesc('');
     setNotes('');
     
     alert(t('hisabSaved'));
@@ -204,34 +206,34 @@ export const DailyHisabView: React.FC = () => {
               />
             </div>
 
-            {/* Expenses */}
+            {/* Extra Income */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                {t('expenses')}
+                {language === 'hi' ? 'अतिरिक्त आय / INCOME (₹)' : 'EXTRA INCOME (₹)'}
               </label>
               <input
                 type="number"
                 min="0"
                 step="1"
                 placeholder="₹0"
-                value={expenses}
-                onChange={(e) => setExpenses(e.target.value)}
+                value={extraIncome}
+                onChange={(e) => setExtraIncome(e.target.value)}
                 disabled={isDateAlreadyLogged}
                 className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
-            {/* Expense Description */}
-            {parseFloat(expenses) > 0 && (
+            {/* Income Description */}
+            {parseFloat(extraIncome) > 0 && (
               <div className="space-y-1 animate-fade-in">
                 <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                  {t('expenseDescription')}
+                  {language === 'hi' ? 'आय का विवरण' : 'Income Description'}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Electricity bill, rent, labour"
-                  value={expenseDesc}
-                  onChange={(e) => setExpenseDesc(e.target.value)}
+                  placeholder="e.g. Flour sales, choker sales, extra service"
+                  value={incomeDesc}
+                  onChange={(e) => setIncomeDesc(e.target.value)}
                   disabled={isDateAlreadyLogged}
                   className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -317,7 +319,7 @@ export const DailyHisabView: React.FC = () => {
                     <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[25%]">{language === 'hi' ? 'दिनांक' : 'Date'}</th>
                     <th className="py-2.5 px-1.5 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[20%]">{language === 'hi' ? 'अनाज / वजन' : 'Grain / Wt'}</th>
                     <th className="py-2.5 px-1.5 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[20%]">{language === 'hi' ? 'कमाई' : 'Revenue'}</th>
-                    <th className="py-2.5 px-1.5 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[15%]">{language === 'hi' ? 'खर्च' : 'Expense'}</th>
+                    <th className="py-2.5 px-1.5 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[15%]">{language === 'hi' ? 'अतिरिक्त आय' : 'Income'}</th>
                     <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] text-right w-[20%]">{t('netResult')}</th>
                   </tr>
                 </thead>
@@ -328,6 +330,7 @@ export const DailyHisabView: React.FC = () => {
                       day: '2-digit',
                       month: 'short'
                     });
+                    const incVal = hisab.extraIncome || 0;
 
                     return (
                       <tr key={hisab.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all align-middle">
@@ -337,9 +340,9 @@ export const DailyHisabView: React.FC = () => {
                         </td>
                         <td className="py-3 px-1.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs">₹{hisab.revenue.toFixed(0)}</td>
                         <td className="py-3 px-1.5 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs">
-                          {hisab.expenses > 0 ? (
-                            <span className="text-rose-600 font-bold" title={hisab.expenseDescription}>
-                              ₹{hisab.expenses.toFixed(0)}
+                          {incVal > 0 ? (
+                            <span className="text-emerald-600 font-bold" title={hisab.incomeDescription}>
+                              +₹{incVal.toFixed(0)}
                             </span>
                           ) : (
                             '—'
