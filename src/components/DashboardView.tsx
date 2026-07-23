@@ -42,7 +42,7 @@ export const DashboardView: React.FC = () => {
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, 5);
 
-  // 7 days earnings data for Graph
+  // 7 days earnings data for Graph (Roj ka cash income + daily logs, excluding Udhar customers)
   const nowTs = Date.now();
   const oneDay = 24 * 60 * 60 * 1000;
   const last7DaysData = Array.from({ length: 7 }).map((_, idx) => {
@@ -50,17 +50,30 @@ export const DashboardView: React.FC = () => {
     const dayDate = new Date(dayTimestamp);
     const dayName = dayDate.toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'short' });
     
-    const dayOrders = orders.filter((o) => {
+    const yyyy = dayDate.getFullYear();
+    const mm = String(dayDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(dayDate.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+    // Filter only CASH orders (excluding Udhar customers)
+    const dayCashOrders = orders.filter((o) => {
       const oDate = new Date(o.createdAt);
       return (
+        o.paymentType === 'CASH' &&
         oDate.getDate() === dayDate.getDate() &&
         oDate.getMonth() === dayDate.getMonth() &&
         oDate.getFullYear() === dayDate.getFullYear()
       );
     });
 
-    const earnings = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-    return { name: dayName, amount: earnings };
+    const cashEarnings = dayCashOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+    // Daily Hisab log for this date
+    const dayHisab = dailyHisabs.find(h => h.date === dateStr);
+    const hisabAmount = dayHisab ? (dayHisab.isProfit ? dayHisab.amount : 0) : 0;
+
+    const totalRojKaIncome = cashEarnings + hisabAmount;
+    return { name: dayName, amount: totalRojKaIncome };
   });
 
   const maxEarning = Math.max(...last7DaysData.map(d => d.amount)) || 100;
