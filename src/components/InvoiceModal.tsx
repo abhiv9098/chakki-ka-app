@@ -4,6 +4,7 @@ import React from 'react';
 import { Order } from '../types';
 import { useApp } from '../context/AppContext';
 import { CloseIcon, PrinterIcon, WhatsAppIcon } from './Icons';
+import { UpiPaymentCard } from './UpiPaymentCard';
 
 interface InvoiceModalProps {
   order: Order | null;
@@ -136,19 +137,12 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
             </div>
           </div>
 
-          {upiId && (
-            <div className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-150 dark:border-slate-800/80 text-center space-y-2 mt-4">
-              <span className="text-[10px] font-black text-slate-550 dark:text-slate-400 uppercase tracking-wider">{t('upiQR')}</span>
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  `upi://pay?pa=${upiId}&pn=Chakki%20Mitra&am=${order.totalAmount}&cu=INR&tn=Order_${order.id}`
-                )}`}
-                alt="UPI QR Code"
-                className="w-28 h-28 border-4 border-white rounded-xl shadow-sm bg-white"
-              />
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">UPI ID: {upiId}</p>
-            </div>
-          )}
+          <UpiPaymentCard
+            amount={order.totalAmount}
+            orderId={order.id}
+            note={`Chakki_Bill_${order.id}`}
+            className="mt-4"
+          />
 
           <div className="text-center pt-2">
             <p className="text-xs text-slate-400 font-semibold italic">Generated securely. Thank you!</p>

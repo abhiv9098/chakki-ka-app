@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { SearchIcon, PlusIcon, CheckIcon, CloseIcon, KhataIcon, WhatsAppIcon } from './Icons';
 import { Customer, Order, CreditRecord } from '../types';
+import { UpiPaymentCard } from './UpiPaymentCard';
 
 export const CustomersView: React.FC = () => {
   const {
@@ -417,7 +418,7 @@ export const CustomersView: React.FC = () => {
                 <CloseIcon size={20} />
               </button>
             </div>
-            <form onSubmit={handleRecordPaymentSubmit} className="p-5 space-y-4">
+            <form onSubmit={handleRecordPaymentSubmit} className="p-5 space-y-4 max-h-[85vh] overflow-y-auto">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('amount')} *</label>
                 <input
@@ -431,13 +432,20 @@ export const CustomersView: React.FC = () => {
                   className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
+
+              {/* UPI Payment / QR Section */}
+              <UpiPaymentCard
+                amount={parseFloat(amountStr) || selectedCustomer.outstandingBalance}
+                note={`Khata_Payment_${selectedCustomer.name}`}
+              />
+
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('description')}</label>
                 <input
                   type="text"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="e.g. Cash paid directly"
+                  placeholder="e.g. Cash or UPI paid"
                   className="w-full px-4.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-850 rounded-xl text-base focus:outline-none focus:border-emerald-500"
                 />
               </div>
