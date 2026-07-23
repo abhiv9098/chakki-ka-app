@@ -19,7 +19,7 @@ const grainRates: Record<string, number> = {
 };
 
 export const GrindingView: React.FC = () => {
-  const { customers, addCustomer, addOrder, t, language, setSelectedCustomer, setActiveView } = useApp();
+  const { customers, addCustomer, addOrder, t, language, setSelectedCustomer, setActiveView, defaultGrindingRate } = useApp();
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -32,19 +32,18 @@ export const GrindingView: React.FC = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
 
-  // Update rate automatically when grain type changes
+  // Update rate automatically when grain type or defaultGrindingRate changes
   useEffect(() => {
-    if (grainRates[grainType]) {
-      setRate(grainRates[grainType].toString());
-    }
-  }, [grainType]);
+    const currentRate = grainRates[grainType] || parseFloat(defaultGrindingRate) || 5;
+    setRate(currentRate.toString());
+  }, [grainType, defaultGrindingRate]);
 
   // Calculate total amount
   useEffect(() => {
     const w = parseFloat(weight) || 0;
-    const r = parseFloat(rate) || 0;
+    const r = parseFloat(rate) || parseFloat(defaultGrindingRate) || 5;
     setTotalAmount(parseFloat((w * r).toFixed(2)));
-  }, [weight, rate]);
+  }, [weight, rate, defaultGrindingRate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,34 +172,25 @@ export const GrindingView: React.FC = () => {
                 step="0.05"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                placeholder="0.00"
+                placeholder="0.00 kg"
                 className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
+          </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{t('rate')} *</label>
-              <input
-                type="number"
-                required
-                min="0.5"
-                step="0.5"
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-                placeholder="Rate per kg"
-                className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
-              />
-            </div>
-
-            {/* Auto Calculated Total */}
-            <div className="bg-emerald-50/20 dark:bg-emerald-950/10 border border-emerald-500/10 rounded-2xl p-4.5 flex items-center justify-between h-12 self-end">
-              <span className="text-[10px] text-slate-400 dark:text-slate-550 font-extrabold uppercase tracking-wider">
+          {/* Auto Calculated Total */}
+          <div className="bg-emerald-50/20 dark:bg-emerald-950/10 border border-emerald-500/10 rounded-2xl p-4.5 flex items-center justify-between h-14">
+            <div>
+              <span className="text-[10px] text-slate-400 dark:text-slate-550 font-extrabold uppercase tracking-wider block">
                 {t('totalAmount')}
               </span>
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                ₹{totalAmount}
-              </p>
+              <span className="text-xs text-slate-400 font-medium">
+                @ ₹{rate}/kg
+              </span>
             </div>
+            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+              ₹{totalAmount}
+            </p>
           </div>
 
           {/* Submit Button */}
