@@ -181,13 +181,12 @@ export const DashboardView: React.FC = () => {
           </div>
 
           {/* Weekly Earnings Graph Card */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col">
-            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-50 dark:border-slate-800/40">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-50 dark:border-slate-800/40">
               <div>
-                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">
-                  {language === 'hi' ? 'साप्ताहिक कमाई का ग्राफ' : 'Weekly Earnings Graph'}
+                <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-xs">
+                  {language === 'hi' ? 'साप्ताहिक कमाई ग्राफ' : 'Weekly Revenue Graph'}
                 </h3>
-                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">Last 7 days revenue trend</p>
               </div>
               <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full border border-emerald-500/20">
                 7 Days
@@ -195,7 +194,7 @@ export const DashboardView: React.FC = () => {
             </div>
 
             {/* SVG Bar Chart */}
-            <div className="h-[125px] flex items-end justify-between gap-2 px-1 pt-4 relative">
+            <div className="h-[100px] flex items-end justify-between gap-1.5 px-1 pt-3 relative">
               {/* Gridlines */}
               <div className="absolute inset-x-0 bottom-[25%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
               <div className="absolute inset-x-0 bottom-[50%] border-b border-slate-100 dark:border-slate-800/40 pointer-events-none"></div>
@@ -203,17 +202,17 @@ export const DashboardView: React.FC = () => {
 
               {last7DaysData.map((d, idx) => {
                 const pct = (d.amount / maxEarning) * 100;
-                const barHeight = Math.max(pct, 6);
+                const barHeight = Math.max(pct, 8);
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center group h-full justify-end relative z-10">
-                    <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.5 rounded shadow-sm border border-emerald-500/10 whitespace-nowrap">
+                    <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity mb-0.5 bg-emerald-50 dark:bg-emerald-950/40 px-1 py-0.5 rounded shadow-sm border border-emerald-500/10 whitespace-nowrap">
                       {hideAmounts ? '₹••••' : `₹${d.amount.toFixed(0)}`}
                     </span>
                     <div
                       style={{ height: `${barHeight}%` }}
-                      className="w-full max-w-[24px] bg-gradient-to-t from-emerald-600 to-teal-400 dark:from-emerald-500 dark:to-teal-350 rounded-t-md group-hover:scale-y-[1.04] origin-bottom transition-all duration-200 shadow-md shadow-emerald-500/10 cursor-pointer"
+                      className="w-full max-w-[20px] bg-gradient-to-t from-emerald-500 to-teal-400 dark:from-emerald-500 dark:to-teal-350 rounded-t group-hover:scale-y-[1.04] origin-bottom transition-all duration-200 shadow-sm shadow-emerald-500/10 cursor-pointer"
                     ></div>
-                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1.5">
+                    <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">
                       {d.name}
                     </span>
                   </div>
