@@ -104,10 +104,18 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
             <span className="text-lg">🌾</span>
             <h2 className="font-extrabold text-sm text-slate-800 dark:text-slate-100">{t('invoice')}</h2>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDeleteOrder}
+              className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-extrabold text-xs rounded-lg flex items-center gap-1 transition-colors cursor-pointer border border-rose-200 dark:border-rose-900/40"
+              title={t('deleteBill')}
+            >
+              <TrashIcon size={14} />
+              <span>{language === 'hi' ? 'हटाएं' : 'Delete'}</span>
+            </button>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <CloseIcon size={18} />
             </button>
