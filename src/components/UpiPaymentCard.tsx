@@ -77,43 +77,37 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
 
   if (!upiId || isEditing) {
     return (
-      <div className={`p-4 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-center space-y-3 ${className}`}>
-        <div className="flex items-center justify-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold text-sm">
-          <span>📲</span>
-          <span>{isHindi ? 'UPI ID सेट करें (QR कोड के लिए)' : 'Set UPI ID for Payment QR'}</span>
+      <div className={`p-2.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl text-left space-y-2 ${className}`}>
+        <div className="flex items-center justify-between text-xs font-extrabold text-amber-900 dark:text-amber-300">
+          <span className="flex items-center gap-1.5">
+            <span>📱</span> {isHindi ? 'QR कोड के लिए UPI ID दर्ज करें' : 'Set UPI ID for Payment QR'}
+          </span>
+          {upiId && (
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className="text-[10px] text-slate-500 hover:underline cursor-pointer"
+            >
+              {isHindi ? 'रद्द करें' : 'Cancel'}
+            </button>
+          )}
         </div>
-        <p className="text-xs text-slate-600 dark:text-slate-400">
-          {isHindi
-            ? 'अपनी GPay / PhonePe / Paytm / BHIM UPI ID दर्ज करें ताकि ग्राहक स्कैन करके भुगतान कर सकें:'
-            : 'Enter your GPay / PhonePe / Paytm / BHIM UPI ID so customers can scan and pay:'}
-        </p>
 
-        <form onSubmit={handleSaveUpi} className="flex flex-col sm:flex-row gap-2">
+        <form onSubmit={handleSaveUpi} className="flex gap-1.5">
           <input
             type="text"
             required
             value={inputUpi}
             onChange={(e) => setInputUpi(e.target.value)}
             placeholder={isHindi ? 'जैसे: 9876543210@paytm या shop@ybl' : 'e.g. 9876543210@paytm or shop@ybl'}
-            className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="flex-1 px-3 py-1.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/80 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
           />
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow transition-colors cursor-pointer whitespace-nowrap"
-            >
-              {isHindi ? 'सेव करें' : 'Save'}
-            </button>
-            {upiId && (
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="px-3 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-300 transition-colors cursor-pointer"
-              >
-                {isHindi ? 'रद्द करें' : 'Cancel'}
-              </button>
-            )}
-          </div>
+          <button
+            type="submit"
+            className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-lg shadow-sm transition-colors cursor-pointer whitespace-nowrap"
+          >
+            {isHindi ? 'सेव' : 'Save'}
+          </button>
         </form>
       </div>
     );

@@ -274,5 +274,24 @@ export const dbService = {
   deleteDailyHisab: (id: number): void => {
     const hisabs = dbService.getDailyHisabs().filter(h => h.id !== id);
     localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
+  },
+
+  deleteOrder: (orderId: number): void => {
+    const orders = dbService.getOrders();
+    const targetOrder = orders.find(o => o.id === orderId);
+    if (!targetOrder) return;
+
+    const updatedOrders = orders.filter(o => o.id !== orderId);
+    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updatedOrders));
+
+    // If order was a CREDIT order, delete corresponding credit record and update balance
+    if (targetOrder.paymentType === 'CREDIT') {
+      const records = dbService.getCreditRecords();
+      const updatedRecords = records.filter(
+        r => !(r.customerId === targetOrder.customerId && r.type === 'DUE' && r.description.includes(`Order #${orderId}`))
+      );
+      localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(updatedRecords));
+      dbService.recalculateCustomerBalance(targetOrder.customerId);
+    }
   }
 };

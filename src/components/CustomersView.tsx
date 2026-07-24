@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { SearchIcon, PlusIcon, CheckIcon, CloseIcon, KhataIcon, WhatsAppIcon } from './Icons';
+import { SearchIcon, PlusIcon, CheckIcon, CloseIcon, KhataIcon, WhatsAppIcon, QrCodeIcon } from './Icons';
 import { Customer, Order, CreditRecord } from '../types';
 import { UpiPaymentCard } from './UpiPaymentCard';
+import { CustomerQrModal } from './CustomerQrModal';
 
 export const CustomersView: React.FC = () => {
   const {
@@ -39,6 +40,10 @@ export const CustomersView: React.FC = () => {
   const [editCustPhone, setEditCustPhone] = useState('');
   const [amountStr, setAmountStr] = useState('');
   const [notes, setNotes] = useState('');
+
+  // QR Pass Card state
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [customerForQr, setCustomerForQr] = useState<Customer | null>(null);
 
   // Search filter
   const filteredCustomers = customers
@@ -248,6 +253,16 @@ export const CustomersView: React.FC = () => {
                           <WhatsAppIcon size={11} /> {t('sendReminder')}
                         </a>
                       )}
+                      <button
+                        onClick={() => {
+                          setCustomerForQr(selectedCustomer);
+                          setShowQrModal(true);
+                        }}
+                        className="px-2.5 py-1 bg-teal-50 dark:bg-teal-950/20 text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/30 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 border border-teal-500/10 cursor-pointer whitespace-nowrap shrink-0"
+                        title={t('customerQrCard')}
+                      >
+                        <QrCodeIcon size={12} /> {t('customerQrCard')}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -303,13 +318,35 @@ export const CustomersView: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-bold text-slate-850 dark:text-slate-100">₹{order.totalAmount}</p>
-                          <span className={`inline-block text-[9px] px-2 py-0.5 rounded-full font-black uppercase mt-1 ${
-                            order.paymentType === 'CASH'
-                              ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/20'
-                              : 'bg-amber-50 text-amber-655 dark:bg-amber-950/20'
-                          }`}>
-                            {order.paymentType === 'CASH' ? t('cash') : t('credit')}
-                          </span>
+                          {(() => {
+                            if (order.paymentType === 'CASH') {
+                              return (
+                                <span className="inline-block text-[9px] px-2 py-0.5 rounded-full font-black uppercase mt-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20">
+                                  {t('cash')}
+                                </span>
+                              );
+                            }
+                            const curBalance = selectedCustomer?.outstandingBalance ?? 0;
+                            if (curBalance === 0) {
+                              return (
+                                <span className="inline-block text-[9px] px-2 py-0.5 rounded-full font-black uppercase mt-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20">
+                                  ✅ {language === 'hi' ? 'चुकता (Paid)' : 'Paid'}
+                                </span>
+                              );
+                            } else if (curBalance < order.totalAmount) {
+                              return (
+                                <span className="inline-block text-[9px] px-2 py-0.5 rounded-full font-black uppercase mt-1 bg-amber-50 text-amber-600 dark:bg-amber-950/20">
+                                  {language === 'hi' ? `बाकी: ₹${curBalance.toFixed(0)}` : `Due: ₹${curBalance.toFixed(0)}`}
+                                </span>
+                              );
+                            } else {
+                              return (
+                                <span className="inline-block text-[9px] px-2 py-0.5 rounded-full font-black uppercase mt-1 bg-amber-50 text-amber-600 dark:bg-amber-950/20">
+                                  {t('credit')}
+                                </span>
+                              );
+                            }
+                          })()}
                         </div>
                       </div>
                     ))
@@ -550,6 +587,13 @@ export const CustomersView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Customer QR Card Pass Modal */}
+      <CustomerQrModal
+        customer={customerForQr}
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+      />
     </div>
   );
 };

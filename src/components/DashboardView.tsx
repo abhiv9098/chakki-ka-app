@@ -2,13 +2,15 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { GrindingIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon } from './Icons';
+import { GrindingIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon, QrCodeIcon } from './Icons';
 import { InvoiceModal } from './InvoiceModal';
+import { QrScannerModal } from './QrScannerModal';
 import { Order } from '../types';
 
 export const DashboardView: React.FC = () => {
-  const { orders, customers, dailyHisabs, setActiveView, t, language, hideAmounts } = useApp();
+  const { orders, customers, creditRecords, dailyHisabs, setActiveView, t, language, hideAmounts } = useApp();
   const [selectedOrderForBill, setSelectedOrderForBill] = useState<Order | null>(null);
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
 
   // Today's Date String for Daily Hisab lookup
   const todayDateStr = (() => {
@@ -26,8 +28,17 @@ export const DashboardView: React.FC = () => {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
   const todayOrders = orders.filter(o => o.createdAt >= startOfToday);
+  const todayCashOrdersAmount = todayOrders
+    .filter(o => o.paymentType === 'CASH')
+    .reduce((sum, o) => sum + o.totalAmount, 0);
+
+  // Today's Received Khata Payments
+  const todayReceivedAmount = creditRecords
+    .filter(r => r.type === 'PAID' && r.createdAt >= startOfToday)
+    .reduce((sum, r) => sum + r.amount, 0);
+
   const todayEarningsCount = todayOrders.length;
-  const todayEarningsAmount = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const todayEarningsAmount = todayCashOrdersAmount + todayReceivedAmount;
 
   const activeCustomersCount = customers.filter(c => c.outstandingBalance > 0).length;
   const totalOutstandingAmount = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
@@ -42,7 +53,7 @@ export const DashboardView: React.FC = () => {
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, 5);
 
-  // 7 days earnings data for Graph (Roj ka cash income + daily logs, excluding Udhar customers)
+  // 7 days earnings data for Graph (Roj ka cash income + Received Payments + daily logs)
   const nowTs = Date.now();
   const oneDay = 24 * 60 * 60 * 1000;
   const last7DaysData = Array.from({ length: 7 }).map((_, idx) => {
@@ -55,7 +66,7 @@ export const DashboardView: React.FC = () => {
     const dd = String(dayDate.getDate()).padStart(2, '0');
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    // Filter only CASH orders (excluding Udhar customers)
+    // Filter CASH orders for that day
     const dayCashOrders = orders.filter((o) => {
       const oDate = new Date(o.createdAt);
       return (
@@ -68,11 +79,24 @@ export const DashboardView: React.FC = () => {
 
     const cashEarnings = dayCashOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
+    // Filter Received Payments (PAID Khata records) for that day
+    const dayPaidRecords = creditRecords.filter((r) => {
+      const rDate = new Date(r.createdAt);
+      return (
+        r.type === 'PAID' &&
+        rDate.getDate() === dayDate.getDate() &&
+        rDate.getMonth() === dayDate.getMonth() &&
+        rDate.getFullYear() === dayDate.getFullYear()
+      );
+    });
+
+    const paidEarnings = dayPaidRecords.reduce((sum, r) => sum + r.amount, 0);
+
     // Daily Hisab log for this date
     const dayHisab = dailyHisabs.find(h => h.date === dateStr);
     const hisabAmount = dayHisab ? (dayHisab.isProfit ? dayHisab.amount : 0) : 0;
 
-    const totalRojKaIncome = cashEarnings + hisabAmount;
+    const totalRojKaIncome = cashEarnings + paidEarnings + hisabAmount;
     return { name: dayName, amount: totalRojKaIncome };
   });
 
@@ -256,7 +280,7 @@ export const DashboardView: React.FC = () => {
                 onClick={() => setActiveView('daily-hisab')}
                 className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-20"
               >
-                <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500">
+                <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-500">
                   <ReportsIcon size={16} />
                 </div>
                 <span className="text-[10px] leading-tight text-center font-bold">
@@ -331,13 +355,36 @@ export const DashboardView: React.FC = () => {
                         <p className="font-extrabold text-slate-900 dark:text-slate-55 text-xs sm:text-sm">
                           {hideAmounts ? '₹••••' : `₹${order.totalAmount}`}
                         </p>
-                        <span className={`inline-block text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase mt-1 ${
-                          order.paymentType === 'CASH'
-                            ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/30 dark:text-emerald-400'
-                            : 'bg-amber-50 text-amber-650 dark:bg-amber-950/30 dark:text-amber-400'
-                        }`}>
-                          {order.paymentType === 'CASH' ? t('cash') : t('credit')}
-                        </span>
+                        {(() => {
+                          if (order.paymentType === 'CASH') {
+                            return (
+                              <span className="inline-block text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase mt-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+                                {t('cash')}
+                              </span>
+                            );
+                          }
+                          const cust = customers.find(c => c.id === order.customerId);
+                          const curBal = cust ? cust.outstandingBalance : 0;
+                          if (curBal === 0) {
+                            return (
+                              <span className="inline-block text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase mt-1 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+                                ✅ {language === 'hi' ? 'चुकता (Paid)' : 'Paid'}
+                              </span>
+                            );
+                          } else if (curBal < order.totalAmount) {
+                            return (
+                              <span className="inline-block text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase mt-1 bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                                {language === 'hi' ? `बाकी: ₹${curBal.toFixed(0)}` : `Due: ₹${curBal.toFixed(0)}`}
+                              </span>
+                            );
+                          } else {
+                            return (
+                              <span className="inline-block text-[8px] px-1.5 py-0.5 rounded-full font-black uppercase mt-1 bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                                {t('credit')}
+                              </span>
+                            );
+                          }
+                        })()}
                       </div>
                     </div>
                   );
@@ -353,6 +400,12 @@ export const DashboardView: React.FC = () => {
         order={selectedOrderForBill}
         isOpen={!!selectedOrderForBill}
         onClose={() => setSelectedOrderForBill(null)}
+      />
+
+      {/* QR Code Scanner Modal */}
+      <QrScannerModal
+        isOpen={isQrScannerOpen}
+        onClose={() => setIsQrScannerOpen(false)}
       />
     </div>
   );

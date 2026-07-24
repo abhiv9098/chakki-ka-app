@@ -3,17 +3,20 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Sidebar } from '@/components/Sidebar';
-import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon } from '@/components/Icons';
+import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon } from '@/components/Icons';
 import { DashboardView } from '@/components/DashboardView';
 import { GrindingView } from '@/components/GrindingView';
 import { CustomersView } from '@/components/CustomersView';
 import { SettingsView } from '@/components/SettingsView';
 import { DailyHisabView } from '@/components/DailyHisabView';
+import { EstimateCalculator } from '@/components/EstimateCalculator';
+import { QrScannerModal } from '@/components/QrScannerModal';
 
 export default function Home() {
   const { activeView, setActiveView, language, setLanguage, t, hideAmounts, toggleHideAmounts } = useApp();
   const [showLanguageOnboarding, setShowLanguageOnboarding] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
 
   useEffect(() => {
     // Check if lang preference has been set previously
@@ -66,6 +69,8 @@ export default function Home() {
         return <GrindingView />;
       case 'customers':
         return <CustomersView />;
+      case 'calculator':
+        return <EstimateCalculator />;
       case 'settings':
         return <SettingsView />;
       case 'daily-hisab':
@@ -137,7 +142,7 @@ export default function Home() {
           </div>
           
           {/* Top Bar Actions Group */}
-          <div className="flex items-center gap-3" id="top-bar-actions">
+          <div className="flex items-center gap-2.5" id="top-bar-actions">
             {/* Visibility Toggle Button */}
             <button
               onClick={toggleHideAmounts}
@@ -168,6 +173,12 @@ export default function Home() {
         <section className="animate-fade-in px-4 md:px-8 pb-6 md:pb-8">
           {renderView()}
         </section>
+
+        {/* Global QR Code Scanner Modal */}
+        <QrScannerModal
+          isOpen={isQrScannerOpen}
+          onClose={() => setIsQrScannerOpen(false)}
+        />
       </main>
     </div>
   );

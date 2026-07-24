@@ -5,7 +5,7 @@ import { Customer, Order, CreditRecord, DailyHisab } from '../types';
 import { dbService } from '../services/db';
 import { translations } from '../data/translations';
 
-type ViewType = 'dashboard' | 'customers' | 'grinding' | 'settings' | 'daily-hisab';
+type ViewType = 'dashboard' | 'customers' | 'grinding' | 'settings' | 'daily-hisab' | 'calculator';
 
 interface AppContextType {
   language: 'en' | 'hi';
@@ -25,6 +25,7 @@ interface AppContextType {
   updateCustomer: (customerId: number, name: string, phone: string) => Customer | null;
   deleteCustomer: (customerId: number) => void;
   addOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Order;
+  deleteOrder: (orderId: number) => void;
   recordPayment: (customerId: number, amount: number, description: string) => void;
   recordManualDue: (customerId: number, amount: number, description: string) => void;
   addDailyHisab: (hisab: Omit<DailyHisab, 'id' | 'createdAt'>) => DailyHisab;
@@ -187,6 +188,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newOrd;
   };
 
+  const deleteOrder = (orderId: number) => {
+    dbService.deleteOrder(orderId);
+    refreshData();
+  };
+
   const recordPayment = (customerId: number, amount: number, description: string) => {
     dbService.recordKhataTransaction(customerId, amount, 'PAID', description);
     refreshData();
@@ -261,6 +267,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateCustomer,
         deleteCustomer,
         addOrder,
+        deleteOrder,
         recordPayment,
         recordManualDue,
         addDailyHisab,
