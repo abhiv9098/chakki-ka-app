@@ -106,13 +106,6 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
           </div>
           <div className="flex items-center gap-1">
             <button
-              onClick={handleDeleteOrder}
-              className="p-1 rounded-lg text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-              title={t('deleteBill')}
-            >
-              <TrashIcon size={16} />
-            </button>
-            <button
               onClick={onClose}
               className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
@@ -226,13 +219,6 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
 
         {/* Footer actions */}
         <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-wrap gap-2">
-          <button
-            onClick={handleDeleteOrder}
-            className="py-2.5 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-rose-200 dark:border-rose-800/60"
-          >
-            <TrashIcon size={16} />
-            <span>{t('deleteBill')}</span>
-          </button>
           <button
             onClick={handlePrint}
             className="flex-1 py-2.5 px-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
