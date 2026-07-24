@@ -28,8 +28,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { view: 'dashboard' as const, label: t('dashboard'), icon: DashboardIcon },
     { view: 'grinding' as const, label: t('grindingOrders'), icon: GrindingIcon },
     { view: 'customers' as const, label: t('customers'), icon: CustomersIcon },
-    { view: 'calculator' as const, label: t('calculator'), icon: CalculatorIcon },
     { view: 'daily-hisab' as const, label: t('dailyHisab'), icon: FileTextIcon },
+    { view: 'calculator' as const, label: t('calculator'), icon: CalculatorIcon },
   ];
 
   return (

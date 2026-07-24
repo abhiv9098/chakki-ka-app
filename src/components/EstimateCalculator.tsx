@@ -169,7 +169,10 @@ export const EstimateCalculator: React.FC = () => {
                   <button
                     key={g.key}
                     type="button"
-                    onClick={() => setSelectedGrain(g.key)}
+                    onClick={() => {
+                      setSelectedGrain(g.key);
+                      setCustomRate(String(rateForGrain));
+                    }}
                     className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border text-left cursor-pointer flex flex-col justify-center ${
                       isSelected
                         ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-transparent shadow-md shadow-emerald-500/20 scale-[1.02]'
