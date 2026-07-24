@@ -225,22 +225,32 @@ export const EstimateCalculator: React.FC = () => {
 
             {/* Rate Input */}
             <div className="space-y-1.5">
-              <label className="text-xs font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
-                {language === 'hi' ? '3. दर (Rate ₹/KG)' : '3. Grinding Rate (₹/KG)'}
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-3.5 text-xs font-extrabold text-slate-400">₹</span>
-                <input
-                  type="number"
-                  min="0.1"
-                  step="0.5"
-                  value={customRate}
-                  onChange={(e) => setCustomRate(e.target.value)}
-                  placeholder="₹/kg"
-                  className="w-full pl-8 pr-14 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-lg font-black text-emerald-600 dark:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <span className="absolute right-4 top-3.5 text-xs font-bold text-slate-400">/kg</span>
-              </div>
+              {(() => {
+                const defaultRate = grainRates[selectedGrain] !== undefined ? grainRates[selectedGrain] : 5;
+                return (
+                  <>
+                    <label className="text-xs font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                      <span>{language === 'hi' ? '3. दर (Rate ₹/KG)' : '3. Grinding Rate (₹/KG)'}</span>
+                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 normal-case">
+                        {language === 'hi' ? `${selectedGrain} रेट: ₹${defaultRate}/kg` : `${selectedGrain} Rate: ₹${defaultRate}/kg`}
+                      </span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-3.5 text-xs font-extrabold text-slate-400">₹</span>
+                      <input
+                        type="number"
+                        min="0.1"
+                        step="0.5"
+                        value={customRate}
+                        onChange={(e) => setCustomRate(e.target.value)}
+                        placeholder={`${defaultRate}`}
+                        className="w-full pl-8 pr-14 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-lg font-black text-emerald-600 dark:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <span className="absolute right-4 top-3.5 text-xs font-bold text-slate-400">/kg</span>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
