@@ -287,51 +287,52 @@ export const DailyHisabView: React.FC = () => {
                 <p>No daily summary logs recorded yet.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[500px]">
+              <div className="w-full overflow-hidden">
+                <table className="w-full text-left border-collapse table-auto">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/80 dark:bg-slate-800/40">
-                      <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[16%]">{language === 'hi' ? 'दिनांक' : 'Date'}</th>
-                      <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[26%]">{language === 'hi' ? 'अनाज / वजन' : 'Grain / Weight'}</th>
-                      <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[18%]">{language === 'hi' ? 'कमाई' : 'Revenue'}</th>
-                      <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] w-[15%]">{language === 'hi' ? 'अतिरिक्त आय' : 'Income'}</th>
-                      <th className="py-2.5 px-2 font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide text-[9px] sm:text-[10px] text-right w-[25%]">{t('netResult')}</th>
+                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'दिनांक' : 'Date'}</th>
+                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'अनाज/वजन' : 'Grain/Wt'}</th>
+                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'कमाई' : 'Revenue'}</th>
+                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'आय' : 'Income'}</th>
+                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px] text-right">{t('netResult')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs sm:text-sm">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-[11px] sm:text-sm">
                     {sortedHisabs.map((hisab) => {
                       const dateObj = new Date(hisab.date);
                       const formattedDate = dateObj.toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN', {
-                        day: '2-digit',
+                        day: 'numeric',
                         month: 'short'
                       });
                       const incVal = hisab.extraIncome || 0;
+                      const grainShort = hisab.grainType ? `${hisab.grainType.split(' ')[0]} ${hisab.wheatWeight}kg` : `${hisab.wheatWeight}kg`;
 
                       return (
                         <tr key={hisab.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all align-middle">
-                          <td className="py-3 px-2 font-extrabold text-slate-800 dark:text-slate-100 whitespace-nowrap text-xs">{formattedDate}</td>
-                          <td className="py-3 px-2 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap text-xs">
-                            {hisab.grainType ? `${hisab.grainType.split(' ')[0]} ${hisab.wheatWeight} kg` : `${hisab.wheatWeight} kg`}
+                          <td className="py-2.5 px-1 sm:px-2 font-extrabold text-slate-800 dark:text-slate-100 text-[11px] sm:text-xs whitespace-nowrap">{formattedDate}</td>
+                          <td className="py-2.5 px-1 sm:px-2 font-semibold text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs whitespace-nowrap">
+                            {grainShort}
                           </td>
-                          <td className="py-3 px-2 font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap text-xs">
-                            {hideAmounts ? '₹••••' : `₹${hisab.revenue.toFixed(0)}`}
+                          <td className="py-2.5 px-1 sm:px-2 font-bold text-slate-800 dark:text-slate-100 text-[11px] sm:text-xs whitespace-nowrap">
+                            {hideAmounts ? '₹••' : `₹${hisab.revenue.toFixed(0)}`}
                           </td>
-                          <td className="py-3 px-2 font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs">
+                          <td className="py-2.5 px-1 sm:px-2 font-semibold text-slate-600 dark:text-slate-400 text-[11px] sm:text-xs whitespace-nowrap">
                             {incVal > 0 ? (
                               <span className="text-emerald-600 font-bold" title={hisab.incomeDescription}>
-                                {hideAmounts ? '+₹••••' : `+₹${incVal.toFixed(0)}`}
+                                {hideAmounts ? '+₹••' : `+₹${incVal.toFixed(0)}`}
                               </span>
                             ) : (
                               '—'
                             )}
                           </td>
-                          <td className="py-3 px-2 text-right whitespace-nowrap text-xs">
-                            <span className={`inline-flex items-center font-black text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full ${
+                          <td className="py-2.5 px-1 sm:px-2 text-right whitespace-nowrap">
+                            <span className={`inline-flex items-center font-black text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0.5 rounded-full ${
                               hisab.isProfit
                                 ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/30 dark:text-emerald-400'
                                 : 'bg-rose-50 text-rose-650 dark:bg-rose-950/30 dark:text-rose-450'
                             }`}>
-                              {hideAmounts ? '₹••••' : `${hisab.isProfit ? '+' : '-'}₹${hisab.amount}`}
+                              {hideAmounts ? '₹••' : `${hisab.isProfit ? '+' : '-'}₹${hisab.amount}`}
                             </span>
                           </td>
                         </tr>
