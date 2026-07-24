@@ -85,7 +85,6 @@ export const EstimateCalculator: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🧮</span>
             <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg sm:text-xl tracking-tight">
               {language === 'hi' ? 'अनुमानित लागत कैलकुलेटर & पेमेंट बारकोड' : 'Estimate Calculator & Fixed Payment Barcode'}
             </h3>
