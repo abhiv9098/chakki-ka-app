@@ -5,7 +5,6 @@ import QRCode from 'qrcode';
 import { Order } from '../types';
 import { useApp } from '../context/AppContext';
 import { CloseIcon, PrinterIcon, WhatsAppIcon, TrashIcon } from './Icons';
-import { UpiPaymentCard } from './UpiPaymentCard';
 
 interface InvoiceModalProps {
   order: Order | null;
@@ -220,15 +219,6 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
                     </div>
                   )}
                 </div>
-
-                {!isFullyPaid && (
-                  <UpiPaymentCard
-                    amount={isCredit && remainingDue > 0 ? remainingDue : order.totalAmount}
-                    orderId={order.id}
-                    note={`Chakki_Bill_${order.id}`}
-                    className="mt-2"
-                  />
-                )}
               </>
             );
           })()}

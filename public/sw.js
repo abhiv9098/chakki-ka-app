@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chakki-mitra-cache-v3';
+const CACHE_NAME = 'chakki-mitra-cache-v4';
 const urlsToCache = [
   '/',
   '/manifest.json',
