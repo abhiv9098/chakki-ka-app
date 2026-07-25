@@ -56,18 +56,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [creditRecords, setCreditRecords] = useState<CreditRecord[]>([]);
   const [dailyHisabs, setDailyHisabs] = useState<DailyHisab[]>([]);
   const [upiId, setUpiIdState] = useState<string>('');
-  const [defaultGrindingRate, setDefaultGrindingRateState] = useState<string>('5');
-  const [hideAmounts, setHideAmounts] = useState<boolean>(false);
-
   const defaultGrainRatesMap: Record<string, number> = {
-    "Wheat": 5,
+    "Wheat": 3,
     "Maize": 10,
     "Gram/Chana": 8,
     "Rice": 6,
     "Barley": 7,
     "Bajra": 6,
     "Multigrain": 10,
-    "Other": 5
+    "Other": 3
   };
 
   const [grainRates, setGrainRatesState] = useState<Record<string, number>>(defaultGrainRatesMap);
@@ -81,17 +78,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const storedTheme = localStorage.getItem('chakkimitra_theme') as 'light' | 'dark';
       const storedUpi = localStorage.getItem('chakkimitra_upi_id') || '';
       setUpiIdState(storedUpi);
-      const storedRate = localStorage.getItem('chakkimitra_default_rate') || '5';
+      const storedRate = localStorage.getItem('chakkimitra_default_rate') || '3';
       setDefaultGrindingRateState(storedRate);
 
       const storedGrainRates = localStorage.getItem('chakkimitra_grain_rates');
       if (storedGrainRates) {
         try {
           const parsed = JSON.parse(storedGrainRates);
-          setGrainRatesState({ ...defaultGrainRatesMap, ...parsed });
+          const updatedRates = { ...defaultGrainRatesMap, ...parsed, "Wheat": 3 };
+          setGrainRatesState(updatedRates);
+          localStorage.setItem('chakkimitra_grain_rates', JSON.stringify(updatedRates));
         } catch (e) {
           console.error(e);
         }
+      } else {
+        localStorage.setItem('chakkimitra_grain_rates', JSON.stringify(defaultGrainRatesMap));
       }
 
       const storedHide = localStorage.getItem('chakkimitra_hide_amounts') === 'true';

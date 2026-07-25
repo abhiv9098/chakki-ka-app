@@ -163,7 +163,7 @@ export const EstimateCalculator: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {grainOptionsList.map((g) => {
                 const isSelected = selectedGrain === g.key;
-                const rateForGrain = grainRates[g.key] !== undefined ? grainRates[g.key] : 5;
+                const rateForGrain = grainRates[g.key] !== undefined ? grainRates[g.key] : (g.key === 'Wheat' || g.key === 'Other' ? 3 : 5);
                 return (
                   <button
                     key={g.key}

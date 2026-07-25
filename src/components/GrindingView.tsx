@@ -15,7 +15,7 @@ export const GrindingView: React.FC = () => {
 
   const [grainType, setGrainType] = useState('Wheat (गेहूं)');
   const [weight, setWeight] = useState('');
-  const [rate, setRate] = useState('5');
+  const [rate, setRate] = useState('3');
   const [paymentType, setPaymentType] = useState<'CASH' | 'CREDIT'>('CREDIT');
 
   const [totalAmount, setTotalAmount] = useState(0);
@@ -25,7 +25,7 @@ export const GrindingView: React.FC = () => {
     const plainName = gType.split(' ')[0];
     if (grainRates[gType] !== undefined) return grainRates[gType];
     if (grainRates[plainName] !== undefined) return grainRates[plainName];
-    return parseFloat(defaultGrindingRate) || 5;
+    return parseFloat(defaultGrindingRate) || 3;
   };
 
   // Update rate automatically when grain type or defaultGrindingRate changes
@@ -37,7 +37,7 @@ export const GrindingView: React.FC = () => {
   // Calculate total amount
   useEffect(() => {
     const w = parseFloat(weight) || 0;
-    const r = parseFloat(rate) || parseFloat(defaultGrindingRate) || 5;
+    const r = parseFloat(rate) || parseFloat(defaultGrindingRate) || 3;
     setTotalAmount(parseFloat((w * r).toFixed(2)));
   }, [weight, rate, defaultGrindingRate]);
 
