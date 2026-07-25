@@ -49,8 +49,19 @@ export const GrindingView: React.FC = () => {
       return;
     }
 
+    const rawPhone = customerPhone.trim();
+    if (rawPhone && rawPhone !== 'N/A') {
+      const cleanedDigits = rawPhone.replace(/\D/g, '');
+      if (cleanedDigits.length !== 10) {
+        alert(language === 'hi'
+          ? 'कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें!'
+          : 'Please enter a valid 10-digit mobile number!');
+        return;
+      }
+    }
+
     const nameVal = customerName.trim();
-    const phoneVal = customerPhone.trim() || 'N/A';
+    const phoneVal = rawPhone ? rawPhone.replace(/\D/g, '') : 'N/A';
 
     let targetCustomerId: number;
     let targetCustomerName = nameVal;
@@ -133,10 +144,11 @@ export const GrindingView: React.FC = () => {
                 {language === 'hi' ? 'मोबाइल नंबर' : 'Mobile Number'}
               </label>
               <input
-                type="text"
+                type="tel"
+                maxLength={10}
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder={t('phonePlaceholder')}
+                onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder={language === 'hi' ? '10-अंकों का मोबाइल नंबर' : '10-digit mobile number'}
                 className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
