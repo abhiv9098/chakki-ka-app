@@ -56,6 +56,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [creditRecords, setCreditRecords] = useState<CreditRecord[]>([]);
   const [dailyHisabs, setDailyHisabs] = useState<DailyHisab[]>([]);
   const [upiId, setUpiIdState] = useState<string>('');
+  const [defaultGrindingRate, setDefaultGrindingRateState] = useState<string>('3');
+  const [hideAmounts, setHideAmounts] = useState<boolean>(false);
+
   const defaultGrainRatesMap: Record<string, number> = {
     "Wheat": 3,
     "Maize": 10,
