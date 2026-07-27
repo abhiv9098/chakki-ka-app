@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import { Order } from '../types';
 import { useApp } from '../context/AppContext';
 import { CloseIcon, PrinterIcon, WhatsAppIcon, TrashIcon } from './Icons';
+import { UpiPaymentCard } from './UpiPaymentCard';
 
 interface InvoiceModalProps {
   order: Order | null;
@@ -17,6 +18,13 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
 
   if (!isOpen || !order) return null;
 
+  const customer = customers.find(c => c.id === order.customerId);
+  const isCredit = order.paymentType === 'CREDIT';
+  const currentCustomerBalance = customer ? customer.outstandingBalance : 0;
+  const remainingDue = isCredit ? Math.min(order.totalAmount, currentCustomerBalance) : 0;
+  const paidAmount = isCredit ? Math.max(0, order.totalAmount - remainingDue) : order.totalAmount;
+  const payAmount = isCredit ? remainingDue : order.totalAmount;
+
   const dateStr = new Date(order.createdAt).toLocaleDateString(
     language === 'hi' ? 'hi-IN' : 'en-IN',
     { day: 'numeric', month: 'short', year: 'numeric' }
@@ -27,7 +35,6 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
   );
 
   const handlePrint = () => {
-    // Basic print setup
     window.print();
   };
 
@@ -42,28 +49,43 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
     const greeting = language === 'hi' ? `नमस्ते ${order.customerName},` : `Hello ${order.customerName},`;
     
     let upiString = '';
-    if (upiId) {
-      upiString = `\n\n💳 *Scan & Pay via UPI:* upi://pay?pa=${upiId}&pn=ChakkiMitra&am=${order.totalAmount}&cu=INR&tn=Bill_${order.id}`;
+    if (upiId && payAmount > 0) {
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('ChakkiMitra')}&am=${payAmount}&cu=INR&tn=Bill_${order.id}`;
+      upiString = language === 'hi'
+        ? `\n\n💳 *UPI द्वारा भुगतान करें (Scan & Pay):*\nUPI ID: *${upiId}*\nपेमेंट लिंक: ${upiUrl}`
+        : `\n\n💳 *Pay via UPI (Scan & Pay):*\nUPI ID: *${upiId}*\nPayment Link: ${upiUrl}`;
     }
 
-    const message = language === 'hi'
-      ? `${greeting}\nआपका पिसाई बिल तैयार है:\n\nरसीद: #${order.id}\nअनाज: ${order.grainType}\nवजन: ${order.weight} kg\nदर: ₹${order.rate}/kg\n*कुल राशि: ₹${order.totalAmount}*\nभुगतान: ${order.paymentType === 'CASH' ? 'नकद (भुगतान हो गया)' : 'बकाया (उधारी)'}${upiString}\n\nधन्यवाद! 🙏`
-      : `${greeting}\nYour grinding bill is ready:\n\nInvoice: #${order.id}\nItem: ${order.grainType}\nWeight: ${order.weight} kg\nRate: ₹${order.rate}/kg\n*Total Amount: ₹${order.totalAmount}*\nPayment: ${order.paymentType === 'CASH' ? 'Cash (Paid)' : 'Credit (Pending)'}${upiString}\n\nThank you! 🙏`;
+    let message = '';
+    if (language === 'hi') {
+      message = `${greeting}\nआपका पिसाई बिल तैयार है:\n\n📜 रसीद: #${order.id}\n🌾 अनाज: ${order.grainType}\n⚖️ वजन: ${order.weight} kg (दर: ₹${order.rate}/kg)\n💵 मूल बिल राशि: ₹${order.totalAmount}`;
+      if (isCredit && paidAmount > 0) {
+        message += `\n✅ जमा राशि: -₹${paidAmount}`;
+      }
+      message += `\n*👉 कुल देय बकाया: ₹${payAmount}*`;
+      message += `\nभुगतान स्थिति: ${order.paymentType === 'CASH' ? 'नकद (चुका दिया)' : payAmount === 0 ? 'चुकता (Paid)' : 'बकाया (उधारी)'}${upiString}\n\nधन्यवाद! 🙏`;
+    } else {
+      message = `${greeting}\nYour grinding bill is ready:\n\n📜 Invoice: #${order.id}\n🌾 Item: ${order.grainType}\n⚖️ Weight: ${order.weight} kg (Rate: ₹${order.rate}/kg)\n💵 Original Bill: ₹${order.totalAmount}`;
+      if (isCredit && paidAmount > 0) {
+        message += `\n✅ Paid So Far: -₹${paidAmount}`;
+      }
+      message += `\n*👉 TOTAL DUE: ₹${payAmount}*`;
+      message += `\nPayment: ${order.paymentType === 'CASH' ? 'Cash (Paid)' : payAmount === 0 ? 'Paid (Cleared)' : 'Credit (Pending)'}${upiString}\n\nThank you! 🙏`;
+    }
 
-    const customer = customers.find(c => c.id === order.customerId);
     const rawPhone = customer?.phone || '';
     const cleanedPhone = rawPhone.replace(/\D/g, '');
     const finalPhone = cleanedPhone && cleanedPhone.length >= 10 ? (cleanedPhone.length === 10 ? `91${cleanedPhone}` : cleanedPhone) : '';
 
     // Generate QR Image for sharing
     let qrDataUrl = '';
-    try {
-      const qrPayload = upiId
-        ? `upi://pay?pa=${upiId}&pn=ChakkiMitra&am=${order.totalAmount}&cu=INR&tn=Bill_${order.id}`
-        : JSON.stringify({ orderId: order.id, customer: order.customerName, amount: order.totalAmount });
-      qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 300, margin: 2, color: { dark: '#047857', light: '#FFFFFF' } });
-    } catch (e) {
-      console.error("QR generation failed for WhatsApp share:", e);
+    if (upiId && payAmount > 0) {
+      try {
+        const qrPayload = `upi://pay?pa=${upiId}&pn=ChakkiMitra&am=${payAmount}&cu=INR&tn=Bill_${order.id}`;
+        qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 300, margin: 2, color: { dark: '#047857', light: '#FFFFFF' } });
+      } catch (e) {
+        console.error("QR generation failed for WhatsApp share:", e);
+      }
     }
 
     // Web Share API with PNG Image File attachment
@@ -170,59 +192,56 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
           </div>
 
           {/* Summary / Total & Live Remaining Balance */}
-          {(() => {
-            const customer = customers.find(c => c.id === order.customerId);
-            const isCredit = order.paymentType === 'CREDIT';
-            const currentCustomerBalance = customer ? customer.outstandingBalance : 0;
-            // Calculate effective due & paid amounts
-            const remainingDue = isCredit ? Math.min(order.totalAmount, currentCustomerBalance) : 0;
-            const paidAmount = isCredit ? Math.max(0, order.totalAmount - remainingDue) : order.totalAmount;
-            const isFullyPaid = isCredit && remainingDue === 0;
-
-            return (
-              <>
-                <div className="bg-emerald-50/40 dark:bg-emerald-950/20 rounded-xl p-3 border border-emerald-500/15 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('paymentType')}</span>
-                      <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200 mt-0.5">
-                        {!isCredit ? (
-                          <span className="text-emerald-600 dark:text-emerald-400">{t('cash')} (Paid)</span>
-                        ) : isFullyPaid ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-black">✅ {language === 'hi' ? 'भुगतान चुकता (Paid)' : 'Paid (Cleared)'}</span>
-                        ) : (
-                          <span className="text-amber-600 dark:text-amber-400">{t('credit')}</span>
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                        {isCredit && paidAmount > 0 ? (language === 'hi' ? 'कुल देय बाकी (Due)' : 'TOTAL DUE (₹)') : t('totalAmount')}
-                      </span>
-                      <p className={`font-black text-xl ${isCredit && remainingDue > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                        ₹{isCredit ? remainingDue : order.totalAmount}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Partial Payment / Original Bill Breakdown */}
-                  {isCredit && paidAmount > 0 && (
-                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 text-xs space-y-1">
-                      <div className="flex justify-between text-slate-600 dark:text-slate-400 font-medium">
-                        <span>{language === 'hi' ? 'मूल पिसाई बिल (Original Bill):' : 'Original Bill:'}</span>
-                        <span className="font-bold text-slate-700 dark:text-slate-300">₹{order.totalAmount}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-600 dark:text-slate-400 font-medium">
-                        <span>{language === 'hi' ? 'कुल जमा राशि (Received):' : 'Paid So Far:'}</span>
-                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">-₹{paidAmount}</span>
-                      </div>
-                    </div>
+          <div className="bg-emerald-50/40 dark:bg-emerald-950/20 rounded-xl p-3 border border-emerald-500/15 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('paymentType')}</span>
+                <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200 mt-0.5">
+                  {!isCredit ? (
+                    <span className="text-emerald-600 dark:text-emerald-400">{t('cash')} (Paid)</span>
+                  ) : remainingDue === 0 ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-black">✅ {language === 'hi' ? 'भुगतान चुकता (Paid)' : 'Paid (Cleared)'}</span>
+                  ) : (
+                    <span className="text-amber-600 dark:text-amber-400">{t('credit')}</span>
                   )}
+                </p>
+              </div>
+
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                  {isCredit && paidAmount > 0 ? (language === 'hi' ? 'कुल देय बाकी (Due)' : 'TOTAL DUE (₹)') : t('totalAmount')}
+                </span>
+                <p className={`font-black text-xl ${isCredit && remainingDue > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                  ₹{isCredit ? remainingDue : order.totalAmount}
+                </p>
+              </div>
+            </div>
+
+            {/* Partial Payment / Original Bill Breakdown */}
+            {isCredit && paidAmount > 0 && (
+              <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 text-xs space-y-1">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400 font-medium">
+                  <span>{language === 'hi' ? 'मूल पिसाई बिल (Original Bill):' : 'Original Bill:'}</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">₹{order.totalAmount}</span>
                 </div>
-              </>
-            );
-          })()}
+                <div className="flex justify-between text-slate-600 dark:text-slate-400 font-medium">
+                  <span>{language === 'hi' ? 'कुल जमा राशि (Received):' : 'Paid So Far:'}</span>
+                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400">-₹{paidAmount}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Payment UPI QR Section */}
+          {payAmount > 0 && (
+            <div className="pt-1">
+              <UpiPaymentCard
+                amount={payAmount}
+                note={`Bill_${order.id}`}
+                orderId={order.id}
+              />
+            </div>
+          )}
         </div>
 
         {/* Footer actions */}

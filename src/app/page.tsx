@@ -69,12 +69,12 @@ export default function Home() {
         return <GrindingView />;
       case 'customers':
         return <CustomersView />;
-      case 'calculator':
-        return <EstimateCalculator />;
       case 'settings':
         return <SettingsView />;
       case 'daily-hisab':
         return <DailyHisabView />;
+      case 'calculator':
+        return <EstimateCalculator />;
       default:
         return <DashboardView />;
     }

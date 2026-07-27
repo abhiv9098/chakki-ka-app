@@ -68,3 +68,16 @@ body {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+/* Hide input number spin buttons/arrows */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
