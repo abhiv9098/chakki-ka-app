@@ -5,12 +5,14 @@ import { useApp } from '../context/AppContext';
 import { LossIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon, QrCodeIcon } from './Icons';
 import { InvoiceModal } from './InvoiceModal';
 import { QrScannerModal } from './QrScannerModal';
+import { ExpenseLossModal } from './ExpenseLossModal';
 import { Order } from '../types';
 
 export const DashboardView: React.FC = () => {
   const { orders, customers, creditRecords, dailyHisabs, setActiveView, t, language, hideAmounts } = useApp();
   const [selectedOrderForBill, setSelectedOrderForBill] = useState<Order | null>(null);
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
+  const [isExpenseLossModalOpen, setIsExpenseLossModalOpen] = useState(false);
 
   // Today's Date String for Daily Hisab lookup
   const todayDateStr = (() => {
@@ -112,7 +114,7 @@ export const DashboardView: React.FC = () => {
       colorClass: 'from-rose-500 to-red-600',
       bgClass: 'bg-rose-50 dark:bg-rose-950/20',
       iconColor: 'text-rose-500',
-      onClick: () => setActiveView('daily-hisab')
+      onClick: () => setIsExpenseLossModalOpen(true)
     },
     {
       label: t('todayEarnings'),
@@ -410,6 +412,12 @@ export const DashboardView: React.FC = () => {
       <QrScannerModal
         isOpen={isQrScannerOpen}
         onClose={() => setIsQrScannerOpen(false)}
+      />
+
+      {/* Dedicated Expense & Loss Modal */}
+      <ExpenseLossModal
+        isOpen={isExpenseLossModalOpen}
+        onClose={() => setIsExpenseLossModalOpen(false)}
       />
     </div>
   );
