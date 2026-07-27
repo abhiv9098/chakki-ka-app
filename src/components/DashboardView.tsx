@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { GrindingIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon, QrCodeIcon } from './Icons';
+import { LossIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon, QrCodeIcon } from './Icons';
 import { InvoiceModal } from './InvoiceModal';
 import { QrScannerModal } from './QrScannerModal';
 import { Order } from '../types';
@@ -37,8 +37,10 @@ export const DashboardView: React.FC = () => {
     .filter(r => r.type === 'PAID' && r.createdAt >= startOfToday)
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const todayEarningsCount = todayOrders.length;
   const todayEarningsAmount = todayCashOrdersAmount + todayReceivedAmount;
+  const todayExpensesAmount = todayHisab
+    ? (todayHisab.expenses > 0 ? todayHisab.expenses : (!todayHisab.isProfit ? todayHisab.amount : 0))
+    : 0;
 
   const activeCustomersCount = customers.filter(c => c.outstandingBalance > 0).length;
   const totalOutstandingAmount = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
@@ -104,12 +106,13 @@ export const DashboardView: React.FC = () => {
 
   const stats = [
     {
-      label: t('todayOrders'),
-      value: hideAmounts ? '••' : todayEarningsCount.toString(),
-      icon: GrindingIcon,
-      colorClass: 'from-emerald-500 to-teal-600',
-      bgClass: 'bg-emerald-50 dark:bg-emerald-950/20',
-      iconColor: 'text-emerald-500'
+      label: t('todayExpenses'),
+      value: hideAmounts ? '₹••••' : formatCurrency(todayExpensesAmount),
+      icon: LossIcon,
+      colorClass: 'from-rose-500 to-red-600',
+      bgClass: 'bg-rose-50 dark:bg-rose-950/20',
+      iconColor: 'text-rose-500',
+      onClick: () => setActiveView('daily-hisab')
     },
     {
       label: t('todayEarnings'),
@@ -146,7 +149,8 @@ export const DashboardView: React.FC = () => {
           return (
             <div
               key={idx}
-              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:border-slate-200 dark:hover:border-slate-750"
+              onClick={s.onClick}
+              className={`bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-3.5 flex flex-col justify-between shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:border-slate-200 dark:hover:border-slate-750 ${s.onClick ? 'cursor-pointer' : ''}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-normal">
