@@ -1,6 +1,5 @@
-'use client';
-
 import React, { useState } from 'react';
+import QRCode from 'qrcode';
 import { useApp } from '../context/AppContext';
 import { SearchIcon, PlusIcon, CheckIcon, CloseIcon, KhataIcon, WhatsAppIcon, QrCodeIcon } from './Icons';
 import { Customer, Order, CreditRecord } from '../types';
@@ -22,7 +21,8 @@ export const CustomersView: React.FC = () => {
     setActiveView,
     t,
     language,
-    hideAmounts
+    hideAmounts,
+    upiId
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,6 +44,68 @@ export const CustomersView: React.FC = () => {
   // QR Pass Card state
   const [showQrModal, setShowQrModal] = useState(false);
   const [customerForQr, setCustomerForQr] = useState<Customer | null>(null);
+
+  const handleSendWhatsAppReminder = async (customer: Customer) => {
+    const rawPhone = customer.phone.replace(/\D/g, '');
+    const finalPhone = rawPhone.length >= 10 ? (rawPhone.length === 10 ? `91${rawPhone}` : rawPhone) : '';
+    const dueVal = customer.outstandingBalance;
+    const formattedDue = dueVal % 1 === 0 ? dueVal.toFixed(0) : dueVal.toFixed(2);
+
+    let upiString = '';
+    let upiUrl = '';
+    if (upiId && dueVal > 0) {
+      upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('ChakkiMitra')}&am=${formattedDue}&cu=INR&tn=${encodeURIComponent(`Udhar_${customer.name}`)}`;
+      upiString = language === 'hi'
+        ? `\n\n💳 *UPI द्वारा तुरंत भुगतान करें (Direct Scan & Pay):*\nUPI ID: *${upiId}*\nडायरेक्ट पेमेंट लिंक: ${upiUrl}\n(लिंक पर क्लिक करें या PhonePe / GPay / Paytm से ₹${formattedDue} पे करें)`
+        : `\n\n💳 *Pay via UPI (Direct Scan & Pay):*\nUPI ID: *${upiId}*\nDirect Pay Link: ${upiUrl}\n(Click link to pay ₹${formattedDue} using GPay / PhonePe / Paytm)`;
+    }
+
+    const message = language === 'hi'
+      ? `नमस्ते ${customer.name},\nआटा चक्की (चक्की मित्र) पर आपका कुल बकाया उधारी (Outstanding Credit): *₹${formattedDue}* है।${upiString}\n\nकृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
+      : `Hello ${customer.name},\nYour outstanding balance at Flour Mill is *₹${formattedDue}*.${upiString}\n\nPlease clear it at your earliest convenience. Thank you! 🙏`;
+
+    // Generate Payment QR Image if UPI ID exists
+    let qrDataUrl = '';
+    if (upiId && dueVal > 0) {
+      try {
+        const qrPayload = upiUrl || `upi://pay?pa=${upiId}&pn=ChakkiMitra&am=${formattedDue}&cu=INR&tn=Udhar_${customer.name}`;
+        qrDataUrl = await QRCode.toDataURL(qrPayload, {
+          width: 300,
+          margin: 2,
+          color: { dark: '#047857', light: '#FFFFFF' }
+        });
+      } catch (err) {
+        console.error("QR generation failed for WhatsApp reminder:", err);
+      }
+    }
+
+    // Try Web Share API with QR image file
+    if (qrDataUrl && navigator.share) {
+      try {
+        const response = await fetch(qrDataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `Payment_QR_${customer.name}_Rs${formattedDue}.png`, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: `Udhar Payment QR - ₹${formattedDue}`,
+            text: message,
+            files: [file]
+          });
+          return;
+        }
+      } catch (err) {
+        console.log("Web share with image fallback to URL:", err);
+      }
+    }
+
+    // Direct WhatsApp Link fallback
+    const waUrl = finalPhone
+      ? `https://api.whatsapp.com/send?phone=${finalPhone}&text=${encodeURIComponent(message)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+
+    window.open(waUrl, '_blank');
+  };
 
   // Search filter
   const filteredCustomers = customers
@@ -239,19 +301,13 @@ export const CustomersView: React.FC = () => {
                         💬 SMS
                       </a>
                       {selectedCustomer.outstandingBalance > 0 && (
-                        <a
-                          href={`https://api.whatsapp.com/send?phone=${selectedCustomer.phone.replace(/\D/g, '').length === 10 ? `91${selectedCustomer.phone.replace(/\D/g, '')}` : selectedCustomer.phone.replace(/\D/g, '')}&text=${encodeURIComponent(
-                            language === 'hi'
-                              ? `नमस्ते ${selectedCustomer.name},\nआटा चक्की पर आपका बकाया (Outstanding Credit) ₹${selectedCustomer.outstandingBalance.toFixed(1)} है। कृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
-                              : `Hello ${selectedCustomer.name},\nYour outstanding balance at Flour Mill is ₹${selectedCustomer.outstandingBalance.toFixed(1)}. Please clear it at your earliest convenience. Thank you! 🙏`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => handleSendWhatsAppReminder(selectedCustomer)}
                           className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1 border border-emerald-500/10 cursor-pointer whitespace-nowrap shrink-0"
                           title={t('sendReminder')}
                         >
                           <WhatsAppIcon size={11} /> {t('sendReminder')}
-                        </a>
+                        </button>
                       )}
                       <button
                         onClick={() => {
@@ -275,7 +331,7 @@ export const CustomersView: React.FC = () => {
                   <p className={`font-black text-lg md:text-xl mt-0.5 ${
                     selectedCustomer.outstandingBalance > 0 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-450'
                   }`}>
-                    {hideAmounts ? '₹••••' : `₹${selectedCustomer.outstandingBalance.toFixed(1)}`}
+                    {hideAmounts ? '₹••••' : `₹${selectedCustomer.outstandingBalance % 1 === 0 ? selectedCustomer.outstandingBalance.toFixed(0) : selectedCustomer.outstandingBalance.toFixed(2)}`}
                   </p>
                 </div>
                 <div className="flex gap-1.5 ml-4">
