@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { CloseIcon, TrashIcon, LossIcon, PlusIcon } from './Icons';
+import { CloseIcon, TrashIcon, LossIcon, ChevronRightIcon } from './Icons';
+import { DailyHisab } from '../types';
 
 interface ExpenseLossModalProps {
   isOpen: boolean;
@@ -10,9 +11,9 @@ interface ExpenseLossModalProps {
 }
 
 export const ExpenseLossModal: React.FC<ExpenseLossModalProps> = ({ isOpen, onClose }) => {
-  const { dailyHisabs, addDailyHisab, deleteDailyHisab, language, hideAmounts } = useApp();
+  const { dailyHisabs, deleteDailyHisab, language, hideAmounts } = useApp();
 
-  // Today's date string YYYY-MM-DD
+  // Today's date YYYY-MM-DD
   const todayStr = (() => {
     const todayObj = new Date();
     const yyyy = todayObj.getFullYear();
@@ -21,80 +22,55 @@ export const ExpenseLossModal: React.FC<ExpenseLossModalProps> = ({ isOpen, onCl
     return `${yyyy}-${mm}-${dd}`;
   })();
 
-  const [date, setDate] = useState<string>(todayStr);
-  const [expenseAmount, setExpenseAmount] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
-  const [filterType, setFilterType] = useState<'today' | 'all'>('today');
+  const [activeTab, setActiveTab] = useState<'today' | 'history'>('today');
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   if (!isOpen) return null;
 
-  // Filter all daily hisabs that contain expenses or loss
-  const expenseHisabs = dailyHisabs.filter(
+  const isHindi = language === 'hi';
+
+  // Filter dailyHisabs where there is loss or expense recorded
+  const allLossRecords = dailyHisabs.filter(
     h => (h.expenses > 0 || !h.isProfit || (h.expenseDescription && h.expenseDescription.trim().length > 0))
   );
 
-  // Today's expenses list
-  const todayExpenseList = expenseHisabs.filter(h => h.date === todayStr);
+  // Today's loss records
+  const todayLossRecords = allLossRecords.filter(h => h.date === todayStr);
 
-  // Today's total expense/loss amount
-  const todayTotalLoss = todayExpenseList.reduce((sum, h) => {
-    const itemLoss = h.expenses > 0 ? h.expenses : (!h.isProfit ? h.amount : 0);
-    return sum + itemLoss;
+  // Today's total loss amount
+  const todayTotalLossAmount = todayLossRecords.reduce((sum, h) => {
+    const lossVal = h.expenses > 0 ? h.expenses : (!h.isProfit ? h.amount : 0);
+    return sum + lossVal;
   }, 0);
 
-  // All time total expense
-  const allTotalLoss = expenseHisabs.reduce((sum, h) => {
-    const itemLoss = h.expenses > 0 ? h.expenses : (!h.isProfit ? h.amount : 0);
-    return sum + itemLoss;
+  // All time total loss amount
+  const allTotalLossAmount = allLossRecords.reduce((sum, h) => {
+    const lossVal = h.expenses > 0 ? h.expenses : (!h.isProfit ? h.amount : 0);
+    return sum + lossVal;
   }, 0);
 
-  const displayedList = filterType === 'today' ? todayExpenseList : expenseHisabs;
+  const displayedRecords = activeTab === 'today' ? todayLossRecords : allLossRecords;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const amt = parseFloat(expenseAmount);
-    if (isNaN(amt) || amt <= 0) {
-      alert(language === 'hi' ? 'कृपया खर्च या नुकसान की सही राशि लिखें!' : 'Please enter a valid expense amount!');
-      return;
-    }
-
-    const descText = description.trim() || (language === 'hi' ? 'दैनिक खर्च/नुकसान' : 'Daily Expense/Loss');
-
-    addDailyHisab({
-      date,
-      wheatWeight: 0,
-      rate: 0,
-      revenue: 0,
-      expenses: amt,
-      expenseDescription: descText,
-      isProfit: false,
-      amount: amt,
-      notes: descText
-    });
-
-    setExpenseAmount('');
-    setDescription('');
-    alert(language === 'hi' ? 'खर्च / नुकसान सफलतापूर्वक दर्ज किया गया!' : 'Expense / Loss logged successfully!');
+  const toggleExpand = (id: number) => {
+    setExpandedId(prev => (prev === id ? null : id));
   };
-
-  const isHindi = language === 'hi';
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50 transition-opacity duration-300">
-      {/* Modal Container */}
+      {/* Modal Card */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col max-h-[90vh] animate-scale-up">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-rose-100 dark:border-rose-950/40 bg-gradient-to-r from-rose-50 to-red-50 dark:from-rose-950/30 dark:to-red-950/20">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-rose-500 text-white rounded-xl shadow-md shadow-rose-500/20">
-              <LossIcon size={20} />
+        <div className="flex items-center justify-between px-5 py-4 border-b border-rose-100 dark:border-rose-950/40 bg-gradient-to-r from-rose-50 to-red-50 dark:from-rose-950/30 dark:to-red-950/20">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-rose-500 text-white rounded-2xl shadow-md shadow-rose-500/20">
+              <LossIcon size={22} />
             </div>
             <div>
-              <h2 className="font-extrabold text-base text-slate-800 dark:text-slate-100">
-                {isHindi ? 'खर्च एवं नुकसान खाता (Expense & Loss Log)' : "Today's Expense & Loss"}
+              <h2 className="font-extrabold text-base sm:text-lg text-slate-800 dark:text-slate-100">
+                {isHindi ? 'नुकसान एवं खर्च विवरण' : 'Loss & Expense Details'}
               </h2>
-              <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider">
-                {isHindi ? 'दुकान के रोजाना खर्च और नुकसान का रिकॉर्ड' : 'Track daily expenses & losses'}
+              <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider">
+                {isHindi ? 'किस दिन कितना और क्यों नुकसान हुआ' : 'View loss amounts and reasons'}
               </p>
             </div>
           </div>
@@ -106,153 +82,182 @@ export const ExpenseLossModal: React.FC<ExpenseLossModalProps> = ({ isOpen, onCl
           </button>
         </div>
 
-        {/* Modal Scrollable Content */}
+        {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-          {/* Summary Box */}
-          <div className="bg-gradient-to-br from-rose-500 to-red-600 text-white rounded-2xl p-4 shadow-lg shadow-rose-500/15 flex items-center justify-between">
+          {/* Main Loss Summary Card */}
+          <div className="bg-gradient-to-br from-rose-500 to-red-600 text-white rounded-2xl p-4 sm:p-5 shadow-lg shadow-rose-500/20 flex items-center justify-between">
             <div>
-              <span className="text-[10px] uppercase tracking-wider font-extrabold text-rose-100">
-                {isHindi ? 'आज का कुल खर्च / नुकसान' : "Today's Total Expense/Loss"}
+              <span className="text-[10px] uppercase tracking-wider font-extrabold text-rose-100 block">
+                {activeTab === 'today'
+                  ? (isHindi ? 'आज का कुल नुकसान / खर्च' : "Today's Total Loss")
+                  : (isHindi ? 'कुल दर्ज नुकसान (All Time Loss)' : 'All Time Total Loss')}
               </span>
-              <p className="text-2xl sm:text-3xl font-black mt-0.5 tracking-tight">
-                {hideAmounts ? '₹••••' : `₹${todayTotalLoss.toFixed(0)}`}
+              <p className="text-3xl sm:text-4xl font-black mt-1 tracking-tight">
+                {hideAmounts ? '₹••••' : `₹${(activeTab === 'today' ? todayTotalLossAmount : allTotalLossAmount).toFixed(0)}`}
               </p>
             </div>
             <div className="text-right">
               <span className="text-[10px] font-bold text-rose-200 block uppercase">
-                {isHindi ? 'कुल रिकॉर्ड्स' : 'Total Entries'}
+                {isHindi ? 'नुकसान रिकॉर्ड्स' : 'Loss Entries'}
               </span>
-              <p className="text-lg font-extrabold mt-0.5 bg-white/20 px-3 py-0.5 rounded-full inline-block">
-                {todayExpenseList.length}
+              <p className="text-xl font-black mt-1 bg-white/20 px-3 py-1 rounded-xl inline-block">
+                {displayedRecords.length}
               </p>
             </div>
           </div>
 
-          {/* Form to Log New Expense / Loss */}
-          <form onSubmit={handleSubmit} className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 space-y-3">
-            <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-              <span>➕</span> {isHindi ? 'नया खर्च या नुकसान दर्ज करें' : 'Add New Expense or Loss'}
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                  {isHindi ? 'राशि (₹)' : 'Amount (₹)'}
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  step="any"
-                  value={expenseAmount}
-                  onChange={e => setExpenseAmount(e.target.value)}
-                  placeholder="e.g. 250"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                  {isHindi ? 'तारीख' : 'Date'}
-                </label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                {isHindi ? 'खर्च / नुकसान का विवरण (वजह)' : 'Reason / Expense Description'}
-              </label>
-              <input
-                type="text"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder={isHindi ? 'जैसे: बिजली बिल, मशीन ग्रीसिंग, डीजल आदि' : 'e.g. Electricity bill, machine repair'}
-                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-
+          {/* Tab Navigation */}
+          <div className="flex bg-slate-100 dark:bg-slate-800/60 p-1 rounded-2xl text-xs font-extrabold border border-slate-200/60 dark:border-slate-700/60">
             <button
-              type="submit"
-              className="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/20 transition-all cursor-pointer"
+              type="button"
+              onClick={() => setActiveTab('today')}
+              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
+                activeTab === 'today'
+                  ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/50 dark:border-slate-800'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
             >
-              <PlusIcon size={16} />
-              <span>{isHindi ? 'खर्च दर्ज करें (Save Expense)' : 'Save Expense / Loss'}</span>
+              📅 {isHindi ? 'आज का नुकसान' : "Today's Loss"} ({todayLossRecords.length})
             </button>
-          </form>
-
-          {/* Filter & List Header */}
-          <div className="flex items-center justify-between pt-1">
-            <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
-              {isHindi ? 'दर्ज खर्चों का विवरण' : 'Expense & Loss History'}
-            </h4>
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-[10px] font-bold">
-              <button
-                type="button"
-                onClick={() => setFilterType('today')}
-                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${filterType === 'today' ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm' : 'text-slate-500'}`}
-              >
-                {isHindi ? 'आज का' : 'Today'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterType('all')}
-                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${filterType === 'all' ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm' : 'text-slate-500'}`}
-              >
-                {isHindi ? 'सभी (All)' : 'All Time'} ({allTotalLoss ? `₹${allTotalLoss}` : '₹0'})
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
+                activeTab === 'history'
+                  ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/50 dark:border-slate-800'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              📜 {isHindi ? 'पिछला सारा नुकसान (History)' : 'Loss History'} ({allLossRecords.length})
+            </button>
           </div>
 
-          {/* Expenses List */}
-          {displayedList.length === 0 ? (
-            <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs font-semibold bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-              🔻 {isHindi ? 'कोई खर्च या नुकसान दर्ज नहीं है।' : 'No expense or loss recorded yet.'}
+          {/* Loss Details List */}
+          {displayedRecords.length === 0 ? (
+            <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs font-semibold bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-1">
+              <span className="text-2xl block">✅</span>
+              <p className="font-extrabold text-slate-600 dark:text-slate-300">
+                {activeTab === 'today'
+                  ? (isHindi ? 'आज कोई नुकसान या खर्च दर्ज नहीं हुआ है।' : 'No loss or expense recorded today.')
+                  : (isHindi ? 'अभी तक कोई नुकसान रिकॉर्ड नहीं मिला।' : 'No loss history found.')}
+              </p>
+              <p className="text-[10px] text-slate-400">
+                {isHindi ? 'रोजाना हिसाब (Daily Hisab) से खर्च व नुकसान की एंट्री दर्ज होती है।' : 'Losses are logged via Daily Hisab.'}
+              </p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {displayedList.map(item => {
-                const itemAmount = item.expenses > 0 ? item.expenses : (!item.isProfit ? item.amount : 0);
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  {isHindi ? 'तारीख एवं नुकसान का कारण' : 'Date & Reason for Loss'}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400">
+                  {isHindi ? 'विवरण देखने के लिए क्लिक करें' : 'Click card to expand'}
+                </span>
+              </div>
+
+              {displayedRecords.map(item => {
+                const lossVal = item.expenses > 0 ? item.expenses : (!item.isProfit ? item.amount : 0);
+                const reasonText = item.expenseDescription || item.notes || (isHindi ? 'खर्च / नुकसान' : 'Expense / Loss Reason Not Specified');
+                const isExpanded = expandedId === item.id;
+
+                const formattedDate = new Date(item.date).toLocaleDateString(
+                  isHindi ? 'hi-IN' : 'en-IN',
+                  { day: 'numeric', month: 'short', year: 'numeric' }
+                );
+
                 return (
                   <div
                     key={item.id}
-                    className="p-3 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl flex items-center justify-between shadow-sm hover:border-rose-200 dark:hover:border-rose-900/50 transition-colors"
+                    className="bg-white dark:bg-slate-900 border border-rose-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm transition-all hover:border-rose-300 dark:hover:border-rose-900"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-extrabold text-xs flex items-center justify-center border border-rose-200/50 dark:border-rose-900/40">
-                        🔻
+                    {/* Card Header (Clickable) */}
+                    <div
+                      onClick={() => toggleExpand(item.id)}
+                      className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-black text-xs flex items-center justify-center border border-rose-200/60 dark:border-rose-900/40 shrink-0">
+                          🔻
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+                              📅 {formattedDate}
+                            </span>
+                            {item.date === todayStr && (
+                              <span className="text-[9px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 px-1.5 py-0.5 rounded-md uppercase">
+                                {isHindi ? 'आज' : 'Today'}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-1">
+                            {reasonText}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-extrabold text-xs text-slate-800 dark:text-slate-100">
-                          {item.expenseDescription || item.notes || (isHindi ? 'खर्च / नुकसान' : 'Expense / Loss')}
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                          📅 {item.date}
-                        </p>
+
+                      <div className="flex items-center gap-2.5">
+                        <div className="text-right">
+                          <span className="text-[9px] text-slate-400 font-bold uppercase block">
+                            {isHindi ? 'नुकसान' : 'Loss'}
+                          </span>
+                          <span className="font-black text-sm text-rose-600 dark:text-rose-400">
+                            {hideAmounts ? '₹••••' : `-₹${lossVal.toFixed(0)}`}
+                          </span>
+                        </div>
+                        <div className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-90 text-rose-500' : ''}`}>
+                          <ChevronRightIcon size={16} />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <span className="font-black text-sm text-rose-600 dark:text-rose-400">
-                        {hideAmounts ? '₹••••' : `-₹${itemAmount}`}
-                      </span>
-                      <button
-                        onClick={() => {
-                          if (window.confirm(isHindi ? 'क्या आप इस खर्च रिकॉर्ड को हटाना चाहते हैं?' : 'Delete this expense entry?')) {
-                            deleteDailyHisab(item.id);
-                          }
-                        }}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
-                        title={isHindi ? 'हटाएं' : 'Delete'}
-                      >
-                        <TrashIcon size={14} />
-                      </button>
-                    </div>
+                    {/* Expanded Detailed Breakdown */}
+                    {isExpanded && (
+                      <div className="px-4 py-3 bg-rose-50/40 dark:bg-rose-950/20 border-t border-rose-100/80 dark:border-slate-800 text-xs space-y-2.5 animate-fade-in">
+                        <div className="grid grid-cols-2 gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-rose-100 dark:border-slate-800">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                              {isHindi ? 'नुकसान की वजह / कारण:' : 'Reason for Loss:'}
+                            </span>
+                            <p className="font-extrabold text-slate-800 dark:text-slate-100 mt-0.5 text-xs">
+                              {reasonText}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase block">
+                              {isHindi ? 'कुल नुकसान राशि:' : 'Exact Loss Amount:'}
+                            </span>
+                            <p className="font-black text-rose-600 dark:text-rose-400 text-sm mt-0.5">
+                              -₹{lossVal.toFixed(0)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {item.notes && item.notes !== reasonText && (
+                          <div className="text-slate-600 dark:text-slate-400 text-[11px] font-medium bg-white/60 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <strong>{isHindi ? 'अतिरिक्त नोट:' : 'Note:'}</strong> {item.notes}
+                          </div>
+                        )}
+
+                        <div className="flex justify-between items-center pt-1">
+                          <span className="text-[10px] text-slate-400 font-semibold">
+                            ID: #{item.id} • {item.date}
+                          </span>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(isHindi ? 'क्या आप इस नुकसान रिकॉर्ड को हटाना चाहते हैं?' : 'Delete this loss entry?')) {
+                                deleteDailyHisab(item.id);
+                              }
+                            }}
+                            className="px-2.5 py-1 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-700 dark:text-rose-300 font-bold text-[10px] rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <TrashIcon size={12} />
+                            <span>{isHindi ? 'हटाएं' : 'Delete Record'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -261,10 +266,13 @@ export const ExpenseLossModal: React.FC<ExpenseLossModalProps> = ({ isOpen, onCl
         </div>
 
         {/* Modal Footer */}
-        <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-right">
+        <div className="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center text-xs">
+          <span className="text-slate-400 text-[11px] font-medium">
+            💡 {isHindi ? 'कार्ड पर क्लिक करके विस्तार से विवरण देखें' : 'Click any date card to see full reason'}
+          </span>
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+            className="px-5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-xs rounded-xl transition-colors cursor-pointer"
           >
             {isHindi ? 'बंद करें' : 'Close'}
           </button>
