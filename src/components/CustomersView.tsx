@@ -64,44 +64,9 @@ export const CustomersView: React.FC = () => {
       ? `नमस्ते ${customer.name},\nआटा चक्की (चक्की मित्र) पर आपका कुल बकाया उधारी (Outstanding Credit): *₹${formattedDue}* है।${upiString}\n\nकृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
       : `Hello ${customer.name},\nYour outstanding balance at Flour Mill is *₹${formattedDue}*.${upiString}\n\nPlease clear it at your earliest convenience. Thank you! 🙏`;
 
-    // Generate Payment QR Image if UPI ID exists
-    let qrDataUrl = '';
-    if (upiId && dueVal > 0) {
-      try {
-        const qrPayload = upiUrl || `upi://pay?pa=${upiId}&pn=ChakkiMitra&am=${formattedDue}&cu=INR&tn=Udhar_${customer.name}`;
-        qrDataUrl = await QRCode.toDataURL(qrPayload, {
-          width: 300,
-          margin: 2,
-          color: { dark: '#047857', light: '#FFFFFF' }
-        });
-      } catch (err) {
-        console.error("QR generation failed for WhatsApp reminder:", err);
-      }
-    }
-
-    // Try Web Share API with QR image file
-    if (qrDataUrl && navigator.share) {
-      try {
-        const response = await fetch(qrDataUrl);
-        const blob = await response.blob();
-        const file = new File([blob], `Payment_QR_${customer.name}_Rs${formattedDue}.png`, { type: 'image/png' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: `Udhar Payment QR - ₹${formattedDue}`,
-            text: message,
-            files: [file]
-          });
-          return;
-        }
-      } catch (err) {
-        console.log("Web share with image fallback to URL:", err);
-      }
-    }
-
-    // Direct WhatsApp Link fallback
+    // Direct WhatsApp Chat Link (opens customer chat page directly with pre-filled message)
     const waUrl = finalPhone
-      ? `https://api.whatsapp.com/send?phone=${finalPhone}&text=${encodeURIComponent(message)}`
+      ? `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
 
     window.open(waUrl, '_blank');

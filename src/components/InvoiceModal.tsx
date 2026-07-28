@@ -77,40 +77,9 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
     const cleanedPhone = rawPhone.replace(/\D/g, '');
     const finalPhone = cleanedPhone && cleanedPhone.length >= 10 ? (cleanedPhone.length === 10 ? `91${cleanedPhone}` : cleanedPhone) : '';
 
-    // Generate QR Image for sharing
-    let qrDataUrl = '';
-    if (upiId && payAmount > 0) {
-      try {
-        const qrPayload = `upi://pay?pa=${upiId}&pn=ChakkiMitra&am=${payAmount}&cu=INR&tn=Bill_${order.id}`;
-        qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 300, margin: 2, color: { dark: '#047857', light: '#FFFFFF' } });
-      } catch (e) {
-        console.error("QR generation failed for WhatsApp share:", e);
-      }
-    }
-
-    // Web Share API with PNG Image File attachment
-    if (navigator.share && qrDataUrl) {
-      try {
-        const response = await fetch(qrDataUrl);
-        const blob = await response.blob();
-        const file = new File([blob], `Bill_${order.id}_Payment_QR.png`, { type: 'image/png' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: `Bill #${order.id} - ${order.customerName}`,
-            text: message,
-            files: [file]
-          });
-          return;
-        }
-      } catch (err) {
-        console.log("Web share with image fallback to URL:", err);
-      }
-    }
-
-    // Direct WhatsApp Web Link fallback
+    // Direct WhatsApp Chat Link (opens customer chat page directly with pre-filled message)
     const waUrl = finalPhone
-      ? `https://api.whatsapp.com/send?phone=${finalPhone}&text=${encodeURIComponent(message)}`
+      ? `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
 
     window.open(waUrl, '_blank');
