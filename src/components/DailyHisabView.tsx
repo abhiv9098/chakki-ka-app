@@ -355,22 +355,22 @@ export const DailyHisabView: React.FC = () => {
               </div>
             </div>
 
-            {/* Tab Controls (Only Today & Past Logs) */}
-            <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl w-full text-xs sm:text-sm font-bold">
+            {/* Tab Controls (Matching Screenshot 2 design) */}
+            <div className="bg-slate-100/90 dark:bg-slate-800/60 p-1 rounded-full inline-flex items-center gap-1 text-xs sm:text-sm">
               <button
                 type="button"
                 onClick={() => setActiveTab('today')}
-                className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`px-4.5 py-2 rounded-full transition-all flex items-center gap-2 cursor-pointer font-extrabold text-xs sm:text-sm ${
                   activeTab === 'today'
-                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 font-black scale-[1.01]'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-bold'
+                    ? 'bg-emerald-500 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 font-bold'
                 }`}
               >
                 <span>☀️</span>
                 <span>{language === 'hi' ? 'आज का हिसाब' : "Today's Logs"}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-black min-w-[20px] text-center ${
                   activeTab === 'today'
-                    ? 'bg-white/25 text-white'
+                    ? 'bg-emerald-400/40 text-white'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                 }`}>
                   {todayHisabs.length}
@@ -380,17 +380,17 @@ export const DailyHisabView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('past')}
-                className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`px-4.5 py-2 rounded-full transition-all flex items-center gap-2 cursor-pointer font-extrabold text-xs sm:text-sm ${
                   activeTab === 'past'
-                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 font-black scale-[1.01]'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-bold'
+                    ? 'bg-emerald-500 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 font-bold'
                 }`}
               >
-                <span>🗓️</span>
+                <span>📅</span>
                 <span>{language === 'hi' ? 'पुराना हिसाब' : 'Past Logs'}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-black min-w-[20px] text-center ${
                   activeTab === 'past'
-                    ? 'bg-white/25 text-white'
+                    ? 'bg-emerald-400/40 text-white'
                     : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                 }`}>
                   {pastHisabs.length}
