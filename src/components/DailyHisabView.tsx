@@ -47,6 +47,7 @@ export const DailyHisabView: React.FC = () => {
   const [isProfit, setIsProfit] = useState<boolean>(true);
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
+  const [activeTab, setActiveTab] = useState<'today' | 'past'>('today');
 
   // Auto-calculate revenue
   useEffect(() => {
@@ -62,9 +63,6 @@ export const DailyHisabView: React.FC = () => {
     setAmount(net.toFixed(1));
   }, [wheatWeight, grainType, defaultGrindingRate, extraIncome, grainRates]);
 
-  // Check if summary is already logged for the selected date
-  const isDateAlreadyLogged = dailyHisabs.some(h => h.date === date);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -73,15 +71,6 @@ export const DailyHisabView: React.FC = () => {
         language === 'hi'
           ? 'केवल पिछले 7 दिनों के भीतर का हिसाब ही दर्ज किया जा सकता है!'
           : 'You can only log summaries for the last 7 days!'
-      );
-      return;
-    }
-
-    if (isDateAlreadyLogged) {
-      alert(
-        language === 'hi'
-          ? `इस तारीख (${date}) का हिसाब पहले से ही दर्ज है! एक तारीख का हिसाब केवल एक बार ही जोड़ा जा सकता है।`
-          : `Daily summary for date (${date}) has already been logged! Only one summary per date is allowed.`
       );
       return;
     }
@@ -120,15 +109,114 @@ export const DailyHisabView: React.FC = () => {
     alert(t('hisabSaved'));
   };
 
-  // Sort daily logs by date descending
-  const sortedHisabs = [...dailyHisabs].sort((a, b) => b.date.localeCompare(a.date));
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
 
-  // Calculate 7-day total
+  // Sort daily logs by date descending & creation order
+  const sortedHisabs = [...dailyHisabs].sort((a, b) => {
+    if (b.date !== a.date) return b.date.localeCompare(a.date);
+    return b.id - a.id;
+  });
+
+  // Separate Today's logs and Past logs
+  const todayHisabs = sortedHisabs.filter(h => h.date === todayStr);
+  const pastHisabs = sortedHisabs.filter(h => h.date !== todayStr);
+
+  // Today totals
+  const todayTotalWeight = todayHisabs.reduce((sum, h) => sum + h.wheatWeight, 0);
+  const todayTotalRevenue = todayHisabs.reduce((sum, h) => sum + (h.isProfit ? h.amount : -h.amount), 0);
+
+  // Calculate 7-day totals
   const nowTs = new Date().getTime();
   const sevenDaysAgoTs = nowTs - 7 * 24 * 60 * 60 * 1000;
   const last7DaysHisabs = dailyHisabs.filter(h => new Date(h.date).getTime() >= sevenDaysAgoTs);
   const net7DaysTotal = last7DaysHisabs.reduce((sum, h) => sum + (h.isProfit ? h.amount : -h.amount), 0);
   const display7DaysTotal = net7DaysTotal < 0 ? 0 : net7DaysTotal;
+
+  const renderTable = (logs: DailyHisab[], isTodaySection: boolean = false) => {
+    if (logs.length === 0) {
+      return (
+        <div className="py-10 flex flex-col items-center justify-center text-slate-400 text-xs font-semibold space-y-1">
+          <span className="text-3xl">📋</span>
+          <p>{language === 'hi' ? 'कोई हिसाब दर्ज नहीं है' : 'No logs recorded'}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-full overflow-hidden">
+        <table className="w-full text-left border-collapse table-auto">
+          <thead>
+            <tr className="border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/80 dark:bg-slate-800/40">
+              <th className="py-2 px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">
+                {isTodaySection ? (language === 'hi' ? 'एंट्री #' : 'Entry #') : (language === 'hi' ? 'दिनांक' : 'Date')}
+              </th>
+              <th className="py-2 px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'अनाज/वजन' : 'Grain/Wt'}</th>
+              <th className="py-2 px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'कमाई' : 'Revenue'}</th>
+              <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'आय' : 'Income'}</th>
+              <th className="py-2 px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px] text-right">{t('netResult')}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-[11px] sm:text-sm">
+            {logs.map((hisab, index) => {
+              const dateObj = new Date(hisab.date);
+              const formattedDate = dateObj.toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN', {
+                day: 'numeric',
+                month: 'short'
+              });
+              const incVal = hisab.extraIncome || 0;
+              const grainShort = hisab.grainType
+                ? `${hisab.grainType.split(' ')[0]} ${hisab.wheatWeight}kg`
+                : `${hisab.wheatWeight}kg`;
+
+              return (
+                <tr key={hisab.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all align-middle">
+                  <td className="py-2.5 px-2 font-extrabold text-slate-800 dark:text-slate-100 text-[11px] sm:text-xs whitespace-nowrap">
+                    {isTodaySection ? (
+                      <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-black">
+                        <span>#{logs.length - index}</span>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">({formattedDate})</span>
+                      </span>
+                    ) : (
+                      formattedDate
+                    )}
+                  </td>
+                  <td className="py-2.5 px-2 font-semibold text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs whitespace-nowrap">
+                    {grainShort}
+                  </td>
+                  <td className="py-2.5 px-2 font-bold text-slate-800 dark:text-slate-100 text-[11px] sm:text-xs whitespace-nowrap">
+                    {hideAmounts ? '₹••' : `₹${hisab.revenue.toFixed(0)}`}
+                  </td>
+                  <td className="py-2.5 px-1 sm:px-2 font-semibold text-slate-600 dark:text-slate-400 text-[11px] sm:text-xs whitespace-nowrap">
+                    {incVal > 0 ? (
+                      <span className="text-emerald-600 font-bold" title={hisab.incomeDescription}>
+                        {hideAmounts ? '+₹••' : `+₹${incVal.toFixed(0)}`}
+                      </span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="py-2.5 px-2 text-right whitespace-nowrap">
+                    <span className={`inline-flex items-center font-black text-[10px] sm:text-xs px-2 py-0.5 rounded-full ${
+                      hisab.isProfit
+                        ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/30 dark:text-emerald-400'
+                        : 'bg-rose-50 text-rose-650 dark:bg-rose-950/30 dark:text-rose-450'
+                    }`}>
+                      {hideAmounts ? '₹••' : `${hisab.isProfit ? '+' : '-'}₹${hisab.amount}`}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -136,7 +224,7 @@ export const DailyHisabView: React.FC = () => {
         {/* Form Panel */}
         <div className="md:col-span-1 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm h-fit">
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-4">
             {/* Date */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
@@ -149,16 +237,12 @@ export const DailyHisabView: React.FC = () => {
                 max={todayStr}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
               <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
                 {language === 'hi' ? 'केवल पिछले 7 दिनों का हिसाब दर्ज कर सकते हैं' : 'Only last 7 days allowed'}
               </span>
-              {isDateAlreadyLogged && (
-                <p className="text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-xl border border-amber-200 dark:border-amber-900/40 mt-1">
-                  ⚠️ {language === 'hi' ? 'इस तारीख का हिसाब पहले ही दर्ज है!' : 'Summary already logged for this date!'}
-                </p>
-              )}
             </div>
 
             {/* Grain Type Selector */}
@@ -169,8 +253,7 @@ export const DailyHisabView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowGrainModal(true)}
-                disabled={isDateAlreadyLogged}
-                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base text-left font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-between cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base text-left font-extrabold text-slate-800 dark:text-slate-100 flex items-center justify-between cursor-pointer"
               >
                 <span>{grainType}</span>
                 <span className="text-xs text-slate-400">▼</span>
@@ -190,8 +273,8 @@ export const DailyHisabView: React.FC = () => {
                 placeholder="0.0 kg"
                 value={wheatWeight}
                 onChange={(e) => setWheatWeight(e.target.value)}
-                disabled={isDateAlreadyLogged}
-                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                onKeyDown={handleKeyDown}
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -207,8 +290,8 @@ export const DailyHisabView: React.FC = () => {
                 placeholder="₹0"
                 value={extraIncome}
                 onChange={(e) => setExtraIncome(e.target.value)}
-                disabled={isDateAlreadyLogged}
-                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                onKeyDown={handleKeyDown}
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
             </div>
 
@@ -222,14 +305,10 @@ export const DailyHisabView: React.FC = () => {
                 placeholder={language === 'hi' ? 'जैसे - बिजली बिल, खराबी, नुकसान...' : 'e.g. Electricity bill, repair, loss reason...'}
                 value={reasonForLoss}
                 onChange={(e) => setReasonForLoss(e.target.value)}
-                disabled={isDateAlreadyLogged}
-                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                onKeyDown={handleKeyDown}
+                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100"
               />
             </div>
-
-
-
-
 
             {/* Net Amount (Read-only / Auto-calculated) */}
             <div className="space-y-1">
@@ -248,105 +327,138 @@ export const DailyHisabView: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isDateAlreadyLogged}
-              className={`w-full h-12 text-white font-black rounded-xl text-base transition-all shadow-lg cursor-pointer ${
-                isDateAlreadyLogged
-                  ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
-                  : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/10 active:scale-98'
-              }`}
+              className="w-full h-12 text-white font-black rounded-xl text-base transition-all shadow-lg cursor-pointer bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/10 active:scale-98"
             >
-              {isDateAlreadyLogged
-                ? (language === 'hi' ? 'इस तारीख का हिसाब दर्ज हो चुका है' : 'Already Logged for Date')
-                : t('saveHisab')
-              }
+              {t('saveHisab')}
             </button>
           </form>
         </div>
 
-        {/* List Panel */}
+        {/* List Panel with Today vs Past Sectioning */}
         <div className="md:col-span-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col min-h-[450px]">
-          <div className="mb-4 flex items-center justify-between gap-2 flex-wrap">
-            <div>
-              <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-lg">
-                {language === 'hi' ? 'डेली हिसाब इतिहास' : 'Daily Logs History'}
-              </h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-medium">Record of day-by-day mill stats</p>
+          {/* Header & Filter Tabs */}
+          <div className="mb-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-lg">
+                  {language === 'hi' ? 'डेली हिसाब इतिहास' : 'Daily Logs History'}
+                </h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
+                  {language === 'hi' ? 'आज का हिसाब और पुराना इतिहास' : 'Today and past entries view'}
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block whitespace-nowrap">7-Day Net</span>
+                <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap inline-block mt-0.5">
+                  {hideAmounts ? '₹••••' : `+ ₹${display7DaysTotal.toFixed(0)} Profit`}
+                </span>
+              </div>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block whitespace-nowrap">7-Day Net</span>
-              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap inline-block mt-0.5">
-                {hideAmounts ? '₹••••' : `+ ₹${display7DaysTotal.toFixed(0)} Profit`}
-              </span>
+
+            {/* Tab Controls (Only Today & Past Logs) */}
+            <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl w-full text-xs sm:text-sm font-bold">
+              <button
+                type="button"
+                onClick={() => setActiveTab('today')}
+                className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  activeTab === 'today'
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 font-black scale-[1.01]'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-bold'
+                }`}
+              >
+                <span>☀️</span>
+                <span>{language === 'hi' ? 'आज का हिसाब' : "Today's Logs"}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
+                  activeTab === 'today'
+                    ? 'bg-white/25 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                }`}>
+                  {todayHisabs.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('past')}
+                className={`py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  activeTab === 'past'
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 font-black scale-[1.01]'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-bold'
+                }`}
+              >
+                <span>🗓️</span>
+                <span>{language === 'hi' ? 'पुराना हिसाब' : 'Past Logs'}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
+                  activeTab === 'past'
+                    ? 'bg-white/25 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                }`}>
+                  {pastHisabs.length}
+                </span>
+              </button>
             </div>
           </div>
 
-          <div className="flex-1 w-full overflow-hidden">
+          <div className="flex-1 w-full space-y-6 overflow-hidden">
             {sortedHisabs.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center py-20 text-slate-400 text-sm font-semibold space-y-2">
                 <span className="text-4xl">📊</span>
                 <p>No daily summary logs recorded yet.</p>
               </div>
             ) : (
-              <div className="w-full overflow-hidden">
-                <table className="w-full text-left border-collapse table-auto">
-                  <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/80 dark:bg-slate-800/40">
-                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'दिनांक' : 'Date'}</th>
-                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'अनाज/वजन' : 'Grain/Wt'}</th>
-                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'कमाई' : 'Revenue'}</th>
-                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px]">{language === 'hi' ? 'आय' : 'Income'}</th>
-                      <th className="py-2 px-1 sm:px-2 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px] text-right">{t('netResult')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-[11px] sm:text-sm">
-                    {sortedHisabs.map((hisab) => {
-                      const dateObj = new Date(hisab.date);
-                      const formattedDate = dateObj.toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN', {
-                        day: 'numeric',
-                        month: 'short'
-                      });
-                      const incVal = hisab.extraIncome || 0;
-                      const grainShort = hisab.grainType ? `${hisab.grainType.split(' ')[0]} ${hisab.wheatWeight}kg` : `${hisab.wheatWeight}kg`;
+              <>
+                {/* Today's Section when activeTab is 'today' */}
+                {activeTab === 'today' && (
+                  <div className="border border-emerald-200/60 dark:border-emerald-950/50 bg-emerald-50/30 dark:bg-emerald-950/10 rounded-2xl p-4 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between gap-2 flex-wrap border-b border-emerald-100 dark:border-emerald-950/40 pb-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-lg">☀️</span>
+                        <h4 className="font-extrabold text-slate-850 dark:text-slate-100 text-base whitespace-nowrap">
+                          {language === 'hi' ? 'आज का हिसाब' : "Today's Logs"}
+                        </h4>
+                        <span className="text-[11px] font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 rounded-full whitespace-nowrap inline-flex items-center shrink-0">
+                          {todayHisabs.length} {language === 'hi' ? 'एंट्री' : 'entries'}
+                        </span>
+                      </div>
+                      {todayHisabs.length > 0 && (
+                        <div className="text-xs font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-3 py-1 rounded-xl border border-emerald-100 dark:border-emerald-900/30 whitespace-nowrap">
+                          {language === 'hi' ? 'आज का योग:' : 'Today:'}{' '}
+                          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm ml-1">
+                            {todayTotalWeight}kg ({hideAmounts ? '₹••' : `₹${todayTotalRevenue.toFixed(0)}`})
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                      return (
-                        <tr key={hisab.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all align-middle">
-                          <td className="py-2.5 px-1 sm:px-2 font-extrabold text-slate-800 dark:text-slate-100 text-[11px] sm:text-xs whitespace-nowrap">{formattedDate}</td>
-                          <td className="py-2.5 px-1 sm:px-2 font-semibold text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs whitespace-nowrap">
-                            {grainShort}
-                          </td>
-                          <td className="py-2.5 px-1 sm:px-2 font-bold text-slate-800 dark:text-slate-100 text-[11px] sm:text-xs whitespace-nowrap">
-                            {hideAmounts ? '₹••' : `₹${hisab.revenue.toFixed(0)}`}
-                          </td>
-                          <td className="py-2.5 px-1 sm:px-2 font-semibold text-slate-600 dark:text-slate-400 text-[11px] sm:text-xs whitespace-nowrap">
-                            {incVal > 0 ? (
-                              <span className="text-emerald-600 font-bold" title={hisab.incomeDescription}>
-                                {hideAmounts ? '+₹••' : `+₹${incVal.toFixed(0)}`}
-                              </span>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                          <td className="py-2.5 px-1 sm:px-2 text-right whitespace-nowrap">
-                            <span className={`inline-flex items-center font-black text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0.5 rounded-full ${
-                              hisab.isProfit
-                                ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/30 dark:text-emerald-400'
-                                : 'bg-rose-50 text-rose-650 dark:bg-rose-950/30 dark:text-rose-450'
-                            }`}>
-                              {hideAmounts ? '₹••' : `${hisab.isProfit ? '+' : '-'}₹${hisab.amount}`}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    {renderTable(todayHisabs, true)}
+                  </div>
+                )}
+
+                {/* Past Section when activeTab is 'past' */}
+                {activeTab === 'past' && (
+                  <div className="border border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/40 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap border-b border-slate-100 dark:border-slate-800/60 pb-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-lg">🗓️</span>
+                        <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-base whitespace-nowrap">
+                          {language === 'hi' ? 'पुराना हिसाब (कल व पिछले दिन)' : 'Past Logs (Yesterday & Older)'}
+                        </h4>
+                        <span className="text-[11px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-0.5 rounded-full whitespace-nowrap inline-flex items-center shrink-0">
+                          {pastHisabs.length} {language === 'hi' ? 'एंट्री' : 'entries'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {renderTable(pastHisabs, false)}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Grain Selection Modal matching Image 2 */}
+      {/* Grain Selection Modal */}
       {showGrainModal && (
         <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in"

@@ -23,7 +23,7 @@ export const DashboardView: React.FC = () => {
     return `${yyyy}-${mm}-${dd}`;
   })();
 
-  const todayHisab = dailyHisabs.find(h => h.date === todayDateStr);
+  const todayHisabsList = dailyHisabs.filter(h => h.date === todayDateStr);
 
   // Stats calculation
   const now = new Date();
@@ -39,10 +39,16 @@ export const DashboardView: React.FC = () => {
     .filter(r => r.type === 'PAID' && r.createdAt >= startOfToday)
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const todayEarningsAmount = todayCashOrdersAmount + todayReceivedAmount;
-  const todayExpensesAmount = todayHisab
-    ? (todayHisab.expenses > 0 ? todayHisab.expenses : (!todayHisab.isProfit ? todayHisab.amount : 0))
-    : 0;
+  // Today's Daily Hisab Income & Expenses
+  const todayHisabsIncome = todayHisabsList.reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
+  const todayHisabsExpense = todayHisabsList.reduce((sum, h) => {
+    if (h.expenses > 0) return sum + h.expenses;
+    if (!h.isProfit) return sum + h.amount;
+    return sum;
+  }, 0);
+
+  const todayEarningsAmount = todayCashOrdersAmount + todayReceivedAmount + todayHisabsIncome;
+  const todayExpensesAmount = todayHisabsExpense;
 
   const activeCustomersCount = customers.filter(c => c.outstandingBalance > 0).length;
   const totalOutstandingAmount = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
@@ -96,9 +102,9 @@ export const DashboardView: React.FC = () => {
 
     const paidEarnings = dayPaidRecords.reduce((sum, r) => sum + r.amount, 0);
 
-    // Daily Hisab log for this date
-    const dayHisab = dailyHisabs.find(h => h.date === dateStr);
-    const hisabAmount = dayHisab ? (dayHisab.isProfit ? dayHisab.amount : 0) : 0;
+    // Daily Hisab logs for this date
+    const dayHisabsList = dailyHisabs.filter(h => h.date === dateStr);
+    const hisabAmount = dayHisabsList.reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
 
     const totalRojKaIncome = cashEarnings + paidEarnings + hisabAmount;
     return { name: dayName, amount: totalRojKaIncome };

@@ -37,6 +37,7 @@ export interface DailyHisab {
   date: string;
   grainType?: string;
   wheatWeight: number;
+  potaliCount?: number;
   rate: number;
   revenue: number;
   expenses: number;

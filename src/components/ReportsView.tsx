@@ -4,7 +4,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export const ReportsView: React.FC = () => {
-  const { orders, t, hideAmounts } = useApp();
+  const { orders, dailyHisabs, t, hideAmounts } = useApp();
 
   const now = Date.now();
   const oneDay = 24 * 60 * 60 * 1000;
@@ -17,13 +17,19 @@ export const ReportsView: React.FC = () => {
   const startOfLast30Days = now - 30 * oneDay;
 
   const todayOrders = orders.filter(o => o.createdAt >= startOfToday);
-  const todayEarnings = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const todayHisabs = dailyHisabs.filter(h => new Date(h.date).getTime() >= startOfToday);
+  const todayHisabsIncome = todayHisabs.reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
+  const todayEarnings = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0) + todayHisabsIncome;
 
   const weeklyOrders = orders.filter(o => o.createdAt >= startOfLast7Days);
-  const weeklyEarnings = weeklyOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const weeklyHisabs = dailyHisabs.filter(h => new Date(h.date).getTime() >= startOfLast7Days);
+  const weeklyHisabsIncome = weeklyHisabs.reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
+  const weeklyEarnings = weeklyOrders.reduce((sum, o) => sum + o.totalAmount, 0) + weeklyHisabsIncome;
 
   const monthlyOrders = orders.filter(o => o.createdAt >= startOfLast30Days);
-  const monthlyEarnings = monthlyOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const monthlyHisabs = dailyHisabs.filter(h => new Date(h.date).getTime() >= startOfLast30Days);
+  const monthlyHisabsIncome = monthlyHisabs.reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
+  const monthlyEarnings = monthlyOrders.reduce((sum, o) => sum + o.totalAmount, 0) + monthlyHisabsIncome;
 
   // 2. Grinding distribution by grain type
   const grainStats: Record<string, { weight: number; count: number; amount: number }> = {};
@@ -43,6 +49,11 @@ export const ReportsView: React.FC = () => {
     const dayTimestamp = now - (6 - idx) * oneDay;
     const dayDate = new Date(dayTimestamp);
     const dayName = dayDate.toLocaleDateString(undefined, { weekday: 'short' });
+
+    const yyyy = dayDate.getFullYear();
+    const mm = String(dayDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(dayDate.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}-${mm}-${dd}`;
     
     // filter orders on that calendar date
     const dayOrders = orders.filter((o) => {
@@ -54,7 +65,10 @@ export const ReportsView: React.FC = () => {
       );
     });
 
-    const earnings = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const dayHisabs = dailyHisabs.filter(h => h.date === dateStr);
+    const dayHisabsIncome = dayHisabs.reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
+
+    const earnings = dayOrders.reduce((sum, o) => sum + o.totalAmount, 0) + dayHisabsIncome;
     return { name: dayName, amount: earnings };
   });
 

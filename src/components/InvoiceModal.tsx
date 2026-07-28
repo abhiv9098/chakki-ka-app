@@ -50,10 +50,9 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
     
     let upiString = '';
     if (upiId && payAmount > 0) {
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('ChakkiMitra')}&am=${payAmount}&cu=INR&tn=Bill_${order.id}`;
       upiString = language === 'hi'
-        ? `\n\n💳 *UPI द्वारा भुगतान करें (Scan & Pay):*\nUPI ID: *${upiId}*\nपेमेंट लिंक: ${upiUrl}`
-        : `\n\n💳 *Pay via UPI (Scan & Pay):*\nUPI ID: *${upiId}*\nPayment Link: ${upiUrl}`;
+        ? `\n\n💳 *UPI ID:* *${upiId}*`
+        : `\n\n💳 *UPI ID:* *${upiId}*`;
     }
 
     let message = '';
