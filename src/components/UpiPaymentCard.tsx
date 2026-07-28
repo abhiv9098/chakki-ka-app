@@ -132,13 +132,22 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
       </div>
 
       {qrDataUrl ? (
-        <div className="relative group">
+        <a
+          href={upiString}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={isHindi ? 'पेमेंट ऐप खोलने के लिए QR कोड पर क्लिक करें' : 'Click QR Code to open UPI App'}
+          className="relative group cursor-pointer block hover:scale-105 active:scale-95 transition-transform"
+        >
           <img
             src={qrDataUrl}
             alt="UPI QR Code"
             className="w-36 h-36 border-4 border-white dark:border-slate-800 rounded-2xl shadow-md bg-white p-1"
           />
-        </div>
+          <span className="mt-1 block text-[10px] font-black text-emerald-600 dark:text-emerald-400">
+            👆 {isHindi ? 'QR पर क्लिक करके पे करें (PhonePe / GPay / Paytm)' : 'Tap QR Code to Pay'}
+          </span>
+        </a>
       ) : (
         <div className="w-36 h-36 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-2xl flex items-center justify-center text-xs text-slate-500">
           Generating QR...
