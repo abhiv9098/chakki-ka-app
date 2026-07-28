@@ -55,14 +55,12 @@ export const CustomersView: React.FC = () => {
     let upiUrl = '';
     if (upiId && dueVal > 0) {
       upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${formattedDue}&cu=INR&tn=${encodeURIComponent(`Udhar_${customer.name}`)}`;
-      upiString = language === 'hi'
-        ? `\n\n💳 *UPI ID:* *${upiId}*\n(विश्वकर्मा चक्की (Vishwakarma Chakki) QR स्कैन करें या UPI ID से भुक्तान करें)`
-        : `\n\n💳 *UPI ID:* *${upiId}*\n(Pay via UPI QR or UPI ID to Vishwakarma Chakki)`;
+      upiString = `\n\n💳 *UPI ID:* *${upiId}*`;
     }
 
     const message = language === 'hi'
-      ? `नमस्ते ${customer.name},\nविश्वकर्मा चक्की (Vishwakarma Chakki) पर आपका कुल बकाया उधारी: *₹${formattedDue}* है।${upiString}\n\nकृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
-      : `Hello ${customer.name},\nYour outstanding balance at Vishwakarma Chakki is *₹${formattedDue}*.${upiString}\n\nPlease clear it at your earliest convenience. Thank you! 🙏`;
+      ? `🌾 *विश्वकर्मा आटा चक्की*\n\nनमस्ते ${customer.name},\nआपका कुल बकाया उधारी: *₹${formattedDue}* है।${upiString}\n\nकृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
+      : `🌾 *Vishwakarma Atta Chakki*\n\nHello ${customer.name},\nYour total outstanding balance is: *₹${formattedDue}*.${upiString}\n\nPlease clear it at your earliest convenience. Thank you! 🙏`;
 
     // Generate Payment QR Image if UPI ID exists
     let qrDataUrl = '';

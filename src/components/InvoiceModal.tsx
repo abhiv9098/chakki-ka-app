@@ -50,21 +50,19 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
     
     let upiString = '';
     if (upiId && payAmount > 0) {
-      upiString = language === 'hi'
-        ? `\n\n💳 *UPI ID:* *${upiId}*\n(विश्वकर्मा चक्की (Vishwakarma Chakki) QR स्कैन करें या UPI ID से भुक्तान करें)`
-        : `\n\n💳 *UPI ID:* *${upiId}*\n(Pay via UPI QR or UPI ID to Vishwakarma Chakki)`;
+      upiString = `\n\n💳 *UPI ID:* *${upiId}*`;
     }
 
     let message = '';
     if (language === 'hi') {
-      message = `${greeting}\nविश्वकर्मा चक्की (Vishwakarma Chakki) का पिसाई बिल:\n\n📜 रसीद: #${order.id}\n📅 दिनांक: ${dateStr}\n🌾 अनाज: ${order.grainType}\n⚖️ वजन: ${order.weight} kg (दर: ₹${order.rate}/kg)\n💵 मूल पिसाई राशि: ₹${order.totalAmount}`;
+      message = `🌾 *विश्वकर्मा आटा चक्की*\n\n${greeting}\nआपका पिसाई बिल:\n\n📅 दिनांक: ${dateStr}\n🌾 अनाज: ${order.grainType}\n⚖️ वजन: ${order.weight} kg (दर: ₹${order.rate}/kg)\n💵 मूल पिसाई राशि: ₹${order.totalAmount}`;
       if (isCredit && paidAmount > 0) {
         message += `\n✅ जमा राशि: -₹${paidAmount}`;
       }
       message += `\n*👉 कुल देय बकाया: ₹${payAmount}*`;
       message += `\nभुगतान स्थिति: ${order.paymentType === 'CASH' ? 'नकद (चुका दिया)' : payAmount === 0 ? 'चुकता (Paid)' : 'बकाया (उधारी)'}${upiString}\n\nधन्यवाद! 🙏`;
     } else {
-      message = `${greeting}\nVishwakarma Chakki Bill:\n\n📜 Invoice: #${order.id}\n📅 Date: ${dateStr}\n🌾 Item: ${order.grainType}\n⚖️ Weight: ${order.weight} kg (Rate: ₹${order.rate}/kg)\n💵 Bill Amount: ₹${order.totalAmount}`;
+      message = `🌾 *Vishwakarma Atta Chakki*\n\n${greeting}\nYour Milling Bill:\n\n📅 Date: ${dateStr}\n🌾 Item: ${order.grainType}\n⚖️ Weight: ${order.weight} kg (Rate: ₹${order.rate}/kg)\n💵 Bill Amount: ₹${order.totalAmount}`;
       if (isCredit && paidAmount > 0) {
         message += `\n✅ Paid So Far: -₹${paidAmount}`;
       }

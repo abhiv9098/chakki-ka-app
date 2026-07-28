@@ -318,8 +318,10 @@ export const EstimateCalculator: React.FC = () => {
                 <span>{isCopied ? 'Link Copied!' : 'Copy UPI Link'}</span>
               </button>
               <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  `Hello! Your grinding estimate for ${selectedGrain} (${weight} kg @ ₹${rate}/kg) is ₹${totalAmount}.\nScan & pay via UPI: upi://pay?pa=${upiId}&pn=ChakkiMitra&am=${totalAmount}&cu=INR`
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  language === 'hi'
+                    ? `विश्वकर्मा आटा चक्की (Vishwakarma Atta Chakki) पिसाई अनुमान:\n\n🌾 अनाज: ${selectedGrain}\n⚖️ वजन: ${weight} kg (दर: ₹${rate}/kg)\n💵 कुल अनुमानित राशि: ₹${totalAmount}\n💳 UPI ID: ${upiId}\n\nधन्यवाद! 🙏`
+                    : `Vishwakarma Atta Chakki Estimate:\n\n🌾 Item: ${selectedGrain}\n⚖️ Weight: ${weight} kg (Rate: ₹${rate}/kg)\n💵 Estimated Cost: ₹${totalAmount}\n💳 UPI ID: ${upiId}\n\nThank you! 🙏`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
