@@ -50,22 +50,21 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
     
     let upiString = '';
     if (upiId && payAmount > 0) {
-      const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('ChakkiMitra')}&am=${payAmount}&cu=INR&tn=Bill_${order.id}`;
       upiString = language === 'hi'
-        ? `\n\n💳 *UPI ID:* *${upiId}*\n📲 *पेमेंट लिंक (PhonePe / GPay / Paytm से पे करने के लिए लिंक पर क्लिक करें):*\n${upiUrl}`
-        : `\n\n💳 *UPI ID:* *${upiId}*\n📲 *Direct Pay Link (Click link to open Paytm / PhonePe / GPay):*\n${upiUrl}`;
+        ? `\n\n💳 *UPI ID:* *${upiId}*\n(विश्वकर्मा चक्की (Vishwakarma Chakki) QR स्कैन करें या UPI ID से भुक्तान करें)`
+        : `\n\n💳 *UPI ID:* *${upiId}*\n(Pay via UPI QR or UPI ID to Vishwakarma Chakki)`;
     }
 
     let message = '';
     if (language === 'hi') {
-      message = `${greeting}\nआपका पिसाई बिल तैयार है:\n\n📜 रसीद: #${order.id}\n🌾 अनाज: ${order.grainType}\n⚖️ वजन: ${order.weight} kg (दर: ₹${order.rate}/kg)\n💵 मूल बिल राशि: ₹${order.totalAmount}`;
+      message = `${greeting}\nविश्वकर्मा चक्की (Vishwakarma Chakki) का पिसाई बिल:\n\n📜 रसीद: #${order.id}\n📅 दिनांक: ${dateStr}\n🌾 अनाज: ${order.grainType}\n⚖️ वजन: ${order.weight} kg (दर: ₹${order.rate}/kg)\n💵 मूल पिसाई राशि: ₹${order.totalAmount}`;
       if (isCredit && paidAmount > 0) {
         message += `\n✅ जमा राशि: -₹${paidAmount}`;
       }
       message += `\n*👉 कुल देय बकाया: ₹${payAmount}*`;
       message += `\nभुगतान स्थिति: ${order.paymentType === 'CASH' ? 'नकद (चुका दिया)' : payAmount === 0 ? 'चुकता (Paid)' : 'बकाया (उधारी)'}${upiString}\n\nधन्यवाद! 🙏`;
     } else {
-      message = `${greeting}\nYour grinding bill is ready:\n\n📜 Invoice: #${order.id}\n🌾 Item: ${order.grainType}\n⚖️ Weight: ${order.weight} kg (Rate: ₹${order.rate}/kg)\n💵 Original Bill: ₹${order.totalAmount}`;
+      message = `${greeting}\nVishwakarma Chakki Bill:\n\n📜 Invoice: #${order.id}\n📅 Date: ${dateStr}\n🌾 Item: ${order.grainType}\n⚖️ Weight: ${order.weight} kg (Rate: ₹${order.rate}/kg)\n💵 Bill Amount: ₹${order.totalAmount}`;
       if (isCredit && paidAmount > 0) {
         message += `\n✅ Paid So Far: -₹${paidAmount}`;
       }
@@ -77,7 +76,38 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
     const cleanedPhone = rawPhone.replace(/\D/g, '');
     const finalPhone = cleanedPhone && cleanedPhone.length >= 10 ? (cleanedPhone.length === 10 ? `91${cleanedPhone}` : cleanedPhone) : '';
 
-    // Direct WhatsApp Chat Link (opens customer chat page directly with pre-filled message)
+    // Generate QR Image for sharing
+    let qrDataUrl = '';
+    if (upiId && payAmount > 0) {
+      try {
+        const qrPayload = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${payAmount}&cu=INR&tn=Bill_${order.id}`;
+        qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 300, margin: 2, color: { dark: '#047857', light: '#FFFFFF' } });
+      } catch (e) {
+        console.error("QR generation failed for WhatsApp share:", e);
+      }
+    }
+
+    // Web Share API with PNG Image File attachment (sends QR image file directly)
+    if (navigator.share && qrDataUrl) {
+      try {
+        const response = await fetch(qrDataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `Payment_QR_${order.customerName}_Bill_${order.id}.png`, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: `Bill #${order.id} - ${order.customerName}`,
+            text: message,
+            files: [file]
+          });
+          return;
+        }
+      } catch (err) {
+        console.log("Web share with image fallback to URL:", err);
+      }
+    }
+
+    // Direct WhatsApp Link fallback
     const waUrl = finalPhone
       ? `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;

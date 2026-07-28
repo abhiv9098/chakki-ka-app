@@ -59,7 +59,7 @@ export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, isOp
           <div className="bg-gradient-to-b from-emerald-50 to-teal-50 dark:from-slate-800/80 dark:to-slate-800/40 p-6 rounded-2xl border border-emerald-100 dark:border-slate-700 space-y-4">
             {/* Header info */}
             <div className="flex justify-between items-center text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              <span>🌾 CHAKKI MITRA</span>
+              <span>🌾 VISHWAKARMA CHAKKI</span>
               <span>ID: #{customer.id}</span>
             </div>
 

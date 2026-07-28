@@ -29,7 +29,7 @@ export const EstimateCalculator: React.FC = () => {
   // Generate dynamic payment UPI QR Code whenever amount or UPI ID changes
   useEffect(() => {
     if (totalAmount > 0 && upiId) {
-      const upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Chakki Mitra')}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(`Grinding_${selectedGrain}_${weight}kg`)}`;
+      const upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(`Grinding_${selectedGrain}_${weight}kg`)}`;
 
       QRCode.toDataURL(upiString, {
         width: 280,
@@ -62,7 +62,7 @@ export const EstimateCalculator: React.FC = () => {
 
   const copyUpiLink = () => {
     if (!upiId || totalAmount <= 0) return;
-    const upiLink = `upi://pay?pa=${upiId}&pn=ChakkiMitra&am=${totalAmount}&cu=INR&tn=Grinding_${selectedGrain}_${weight}kg`;
+    const upiLink = `upi://pay?pa=${upiId}&pn=VishwakarmaChakki&am=${totalAmount}&cu=INR&tn=Grinding_${selectedGrain}_${weight}kg`;
     navigator.clipboard.writeText(upiLink);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2500);

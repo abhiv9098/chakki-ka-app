@@ -1,6 +1,6 @@
 export const translations = {
   en: {
-    appName: "Chakki Mitra",
+    appName: "Vishwakarma Chakki",
     tagline: "Digital Ledger",
     dashboard: "Dashboard",
     customers: "Udhari Customers",

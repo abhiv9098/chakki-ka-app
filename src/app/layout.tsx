@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chakki Mitra (चक्की मित्र) - Smart Flour Mill Management",
+  title: "Vishwakarma Chakki (विश्वकर्मा चक्की) - Smart Flour Mill Management",
   description: "Bilingual Atta Chakki order tracking, ledger accounting, and report dashboard.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Chakki Mitra",
+    title: "Vishwakarma Chakki",
   },
 };
 

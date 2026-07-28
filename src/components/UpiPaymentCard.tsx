@@ -13,7 +13,7 @@ interface UpiPaymentCardProps {
 
 export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
   amount,
-  note = 'Chakki Mitra Payment',
+  note = 'Vishwakarma Chakki Payment',
   orderId,
   className = '',
 }) => {
@@ -27,7 +27,7 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
 
   const tnText = orderId ? `Order_${orderId}` : note.replace(/\s+/g, '_');
   const upiString = upiId
-    ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('Chakki Mitra')}&am=${amount}&cu=INR&tn=${encodeURIComponent(tnText)}`
+    ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${amount}&cu=INR&tn=${encodeURIComponent(tnText)}`
     : '';
 
   useEffect(() => {

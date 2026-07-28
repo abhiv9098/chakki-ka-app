@@ -54,17 +54,52 @@ export const CustomersView: React.FC = () => {
     let upiString = '';
     let upiUrl = '';
     if (upiId && dueVal > 0) {
-      upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('ChakkiMitra')}&am=${formattedDue}&cu=INR&tn=${encodeURIComponent(`Udhar_${customer.name}`)}`;
+      upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${formattedDue}&cu=INR&tn=${encodeURIComponent(`Udhar_${customer.name}`)}`;
       upiString = language === 'hi'
-        ? `\n\n💳 *UPI ID:* *${upiId}*\n📲 *पेमेंट लिंक (PhonePe / GPay / Paytm से पे करने के लिए लिंक पर क्लिक करें):*\n${upiUrl}`
-        : `\n\n💳 *UPI ID:* *${upiId}*\n📲 *Direct Pay Link (Click link to open Paytm / PhonePe / GPay):*\n${upiUrl}`;
+        ? `\n\n💳 *UPI ID:* *${upiId}*\n(विश्वकर्मा चक्की (Vishwakarma Chakki) QR स्कैन करें या UPI ID से भुक्तान करें)`
+        : `\n\n💳 *UPI ID:* *${upiId}*\n(Pay via UPI QR or UPI ID to Vishwakarma Chakki)`;
     }
 
     const message = language === 'hi'
-      ? `नमस्ते ${customer.name},\nआटा चक्की (चक्की मित्र) पर आपका कुल बकाया उधारी (Outstanding Credit): *₹${formattedDue}* है।${upiString}\n\nकृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
-      : `Hello ${customer.name},\nYour outstanding balance at Flour Mill is *₹${formattedDue}*.${upiString}\n\nPlease clear it at your earliest convenience. Thank you! 🙏`;
+      ? `नमस्ते ${customer.name},\nविश्वकर्मा चक्की (Vishwakarma Chakki) पर आपका कुल बकाया उधारी: *₹${formattedDue}* है।${upiString}\n\nकृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
+      : `Hello ${customer.name},\nYour outstanding balance at Vishwakarma Chakki is *₹${formattedDue}*.${upiString}\n\nPlease clear it at your earliest convenience. Thank you! 🙏`;
 
-    // Direct WhatsApp Chat Link (opens customer chat page directly with pre-filled message)
+    // Generate Payment QR Image if UPI ID exists
+    let qrDataUrl = '';
+    if (upiId && dueVal > 0) {
+      try {
+        const qrPayload = upiUrl || `upi://pay?pa=${encodeURIComponent(upiId)}&pn=VishwakarmaChakki&am=${formattedDue}&cu=INR&tn=Udhar_${customer.name}`;
+        qrDataUrl = await QRCode.toDataURL(qrPayload, {
+          width: 300,
+          margin: 2,
+          color: { dark: '#047857', light: '#FFFFFF' }
+        });
+      } catch (err) {
+        console.error("QR generation failed for WhatsApp reminder:", err);
+      }
+    }
+
+    // Try Web Share API with QR image file (sends QR image file directly)
+    if (qrDataUrl && navigator.share) {
+      try {
+        const response = await fetch(qrDataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `Payment_QR_${customer.name}_Rs${formattedDue}.png`, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: `Udhar Payment QR - ₹${formattedDue}`,
+            text: message,
+            files: [file]
+          });
+          return;
+        }
+      } catch (err) {
+        console.log("Web share with image fallback to URL:", err);
+      }
+    }
+
+    // Direct WhatsApp Link fallback
     const waUrl = finalPhone
       ? `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
