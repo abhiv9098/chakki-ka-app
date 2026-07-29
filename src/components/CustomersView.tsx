@@ -55,7 +55,11 @@ export const CustomersView: React.FC = () => {
     let upiUrl = '';
     if (upiId && dueVal > 0) {
       upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${formattedDue}&cu=INR&tn=${encodeURIComponent(`Udhar_${customer.name}`)}`;
-      upiString = `\n\n💳 *UPI ID:* *${upiId}*`;
+      if (language === 'hi') {
+        upiString = `\n\n💳 *UPI ID:* *${upiId}*\n📲 *पेमेंट लिंक (ऑटो-फिल ₹${formattedDue}):*\n${upiUrl}`;
+      } else {
+        upiString = `\n\n💳 *UPI ID:* *${upiId}*\n📲 *Direct Pay Link (Auto-fill ₹${formattedDue}):*\n${upiUrl}`;
+      }
     }
 
     const message = language === 'hi'
