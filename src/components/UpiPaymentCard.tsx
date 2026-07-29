@@ -25,9 +25,13 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
 
   const isHindi = language === 'hi';
 
-  const tnText = orderId ? `Order_${orderId}` : note.replace(/\s+/g, '_');
+  const formattedAmount = (Math.max(0, amount)).toFixed(2);
+  const tnText = orderId ? `Bill_${orderId}` : note.replace(/\s+/g, '_');
+  const trId = `TR_${orderId || Date.now()}`;
+
+  // Standard UPI URI format with locked fixed amount (am) & transaction reference (tr)
   const upiString = upiId
-    ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${amount}&cu=INR&tn=${encodeURIComponent(tnText)}`
+    ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${formattedAmount}&cu=INR&tn=${encodeURIComponent(tnText)}&tr=${encodeURIComponent(trId)}`
     : '';
 
   useEffect(() => {
@@ -75,6 +79,12 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
     }
   };
 
+  const handleLaunchUpi = (e: React.MouseEvent) => {
+    if (!upiString) return;
+    // On mobile devices, assigning location opens PhonePe/GPay/Paytm directly with pre-filled amount
+    window.location.href = upiString;
+  };
+
   if (!upiId || isEditing) {
     return (
       <div className={`p-2.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl text-left space-y-2 ${className}`}>
@@ -117,7 +127,7 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
     <div className={`flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700/80 text-center space-y-3 ${className}`}>
       <div className="flex items-center justify-between w-full px-1">
         <span className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-          <span>📱</span> {t('upiQR')} (₹{amount})
+          <span>📱</span> {t('upiQR')} (₹{formattedAmount})
         </span>
         <button
           type="button"
@@ -134,6 +144,7 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
       {qrDataUrl ? (
         <a
           href={upiString}
+          onClick={handleLaunchUpi}
           target="_blank"
           rel="noopener noreferrer"
           title={isHindi ? 'पेमेंट ऐप खोलने के लिए QR कोड पर क्लिक करें' : 'Click QR Code to open UPI App'}
@@ -145,7 +156,7 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
             className="w-36 h-36 border-4 border-white dark:border-slate-800 rounded-2xl shadow-md bg-white p-1"
           />
           <span className="mt-1 block text-[10px] font-black text-emerald-600 dark:text-emerald-400">
-            👆 {isHindi ? 'QR पर क्लिक करके पे करें (PhonePe / GPay / Paytm)' : 'Tap QR Code to Pay'}
+            👆 {isHindi ? `फिक्स ₹${formattedAmount} पे करें (GPay / PhonePe / Paytm)` : `Pay Fixed ₹${formattedAmount} via UPI`}
           </span>
         </a>
       ) : (
@@ -154,15 +165,16 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
         </div>
       )}
 
-      {/* Deep link button for mobile */}
+      {/* Deep link button for mobile with pre-filled fixed amount */}
       <a
         href={upiString}
+        onClick={handleLaunchUpi}
         target="_blank"
         rel="noopener noreferrer"
         className="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 active:scale-98 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" x2="12.01" y1="18" y2="18"/></svg>
-        {isHindi ? 'UPI ऐप से पे करें (PhonePe / GPay / Paytm)' : 'Pay via UPI App (GPay / PhonePe)'}
+        {isHindi ? `फिक्स ₹${formattedAmount} ऑटो-फिल के साथ पे करें` : `Pay Fixed ₹${formattedAmount} via UPI App`}
       </a>
 
       {/* Copy UPI ID */}
