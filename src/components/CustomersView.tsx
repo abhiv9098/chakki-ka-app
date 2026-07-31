@@ -52,14 +52,8 @@ export const CustomersView: React.FC = () => {
     const formattedDue = dueVal % 1 === 0 ? dueVal.toFixed(0) : dueVal.toFixed(2);
 
     let upiString = '';
-    let upiUrl = '';
     if (upiId && dueVal > 0) {
-      upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('VishwakarmaChakki')}&am=${formattedDue}&cu=INR&tn=${encodeURIComponent(`Udhar_${customer.name}`)}`;
-      if (language === 'hi') {
-        upiString = `\n\n💳 *UPI ID:* *${upiId}*\n📲 *पेमेंट लिंक (ऑटो-फिल ₹${formattedDue}):*\n${upiUrl}`;
-      } else {
-        upiString = `\n\n💳 *UPI ID:* *${upiId}*\n📲 *Direct Pay Link (Auto-fill ₹${formattedDue}):*\n${upiUrl}`;
-      }
+      upiString = `\n\n💳 *UPI ID:* *${upiId}*`;
     }
 
     const message = language === 'hi'
@@ -70,7 +64,7 @@ export const CustomersView: React.FC = () => {
     let qrDataUrl = '';
     if (upiId && dueVal > 0) {
       try {
-        const qrPayload = upiUrl || `upi://pay?pa=${encodeURIComponent(upiId)}&pn=VishwakarmaChakki&am=${formattedDue}&cu=INR&tn=Udhar_${customer.name}`;
+        const qrPayload = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=VishwakarmaChakki&am=${formattedDue}&cu=INR&tn=Udhar_${customer.name}`;
         qrDataUrl = await QRCode.toDataURL(qrPayload, {
           width: 300,
           margin: 2,

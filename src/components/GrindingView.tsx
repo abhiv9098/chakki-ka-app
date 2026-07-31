@@ -165,6 +165,7 @@ export const GrindingView: React.FC = () => {
               >
                 {[
                   "Wheat (गेहूं)",
+                  "Atta (आटा)",
                   "Maize (मक्का)",
                   "Gram/Chana (चना)",
                   "Rice (चावल)",

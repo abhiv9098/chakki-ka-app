@@ -77,6 +77,7 @@ export const ReportsView: React.FC = () => {
   // Colors mapping for grains
   const grainColor: Record<string, string> = {
     "Wheat (गेहूं)": "bg-amber-500 text-amber-500",
+    "Atta (आटा)": "bg-amber-600 text-amber-600",
     "Maize (मक्का)": "bg-yellow-600 text-yellow-600",
     "Gram/Chana (चना)": "bg-orange-500 text-orange-500",
     "Rice (चावल)": "bg-blue-400 text-blue-400",

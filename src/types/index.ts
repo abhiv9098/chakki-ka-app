@@ -14,7 +14,7 @@ export interface Order {
   weight: number;
   rate: number;
   totalAmount: number;
-  paymentType: 'CASH' | 'CREDIT';
+  paymentType: 'CASH' | 'CREDIT' | 'ONLINE' | 'PAYTM';
   createdAt: number;
 }
 

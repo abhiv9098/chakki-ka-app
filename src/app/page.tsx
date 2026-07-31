@@ -3,17 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Sidebar } from '@/components/Sidebar';
-import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon } from '@/components/Icons';
+import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon, FontSizeIcon } from '@/components/Icons';
 import { DashboardView } from '@/components/DashboardView';
 import { GrindingView } from '@/components/GrindingView';
 import { CustomersView } from '@/components/CustomersView';
 import { SettingsView } from '@/components/SettingsView';
 import { DailyHisabView } from '@/components/DailyHisabView';
-import { EstimateCalculator } from '@/components/EstimateCalculator';
+import { HisabHistoryView } from '@/components/HisabHistoryView';
 import { QrScannerModal } from '@/components/QrScannerModal';
 
 export default function Home() {
-  const { activeView, setActiveView, language, setLanguage, t, hideAmounts, toggleHideAmounts } = useApp();
+  const { activeView, setActiveView, language, setLanguage, t, hideAmounts, toggleHideAmounts, fontSize, setFontSize } = useApp();
   const [showLanguageOnboarding, setShowLanguageOnboarding] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
@@ -73,8 +73,8 @@ export default function Home() {
         return <SettingsView />;
       case 'daily-hisab':
         return <DailyHisabView />;
-      case 'calculator':
-        return <EstimateCalculator />;
+      case 'hisab-history':
+        return <HisabHistoryView />;
       default:
         return <DashboardView />;
     }
@@ -143,6 +143,7 @@ export default function Home() {
           
           {/* Top Bar Actions Group */}
           <div className="flex items-center gap-2.5" id="top-bar-actions">
+
             {/* Visibility Toggle Button */}
             <button
               onClick={toggleHideAmounts}

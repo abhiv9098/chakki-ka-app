@@ -5,13 +5,15 @@ import { Customer, Order, CreditRecord, DailyHisab } from '../types';
 import { dbService } from '../services/db';
 import { translations } from '../data/translations';
 
-type ViewType = 'dashboard' | 'customers' | 'grinding' | 'settings' | 'daily-hisab' | 'calculator';
+type ViewType = 'dashboard' | 'customers' | 'grinding' | 'settings' | 'daily-hisab' | 'hisab-history';
 
 interface AppContextType {
   language: 'en' | 'hi';
   setLanguage: (lang: 'en' | 'hi') => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
+  fontSize: 'normal' | 'large' | 'xlarge';
+  setFontSize: (size: 'normal' | 'large' | 'xlarge') => void;
   customers: Customer[];
   orders: Order[];
   creditRecords: CreditRecord[];
@@ -29,6 +31,7 @@ interface AppContextType {
   recordPayment: (customerId: number, amount: number, description: string) => void;
   recordManualDue: (customerId: number, amount: number, description: string) => void;
   addDailyHisab: (hisab: Omit<DailyHisab, 'id' | 'createdAt'>) => DailyHisab;
+  updateDailyHisab: (hisab: DailyHisab) => void;
   deleteDailyHisab: (id: number) => void;
   exportBackup: () => string;
   restoreBackup: (json: string) => boolean;
@@ -48,6 +51,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<'en' | 'hi'>('en');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [fontSize, setFontSizeState] = useState<'normal' | 'large' | 'xlarge'>('large');
   const [activeView, setActiveView] = useState<ViewType>('dashboard');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
@@ -61,6 +65,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const defaultGrainRatesMap: Record<string, number> = {
     "Wheat": 3,
+    "Atta": 3,
     "Maize": 10,
     "Gram/Chana": 8,
     "Rice": 6,
@@ -110,11 +115,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         document.documentElement.classList.remove('dark');
       }
 
+      const storedFontSize = (localStorage.getItem('chakkimitra_font_size') as 'normal' | 'large' | 'xlarge') || 'large';
+      setFontSizeState(storedFontSize);
+      document.documentElement.classList.remove('font-normal', 'font-large', 'font-xlarge');
+      document.documentElement.classList.add(`font-${storedFontSize}`);
+
       // Initialize DB & load initial data
       dbService.init();
       refreshData();
     }
   }, []);
+
+  const setFontSize = (size: 'normal' | 'large' | 'xlarge') => {
+    setFontSizeState(size);
+    localStorage.setItem('chakkimitra_font_size', size);
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.remove('font-normal', 'font-large', 'font-xlarge');
+      document.documentElement.classList.add(`font-${size}`);
+    }
+  };
 
   const updateGrainRate = (grain: string, rate: number) => {
     const updated = { ...grainRates, [grain]: rate };
@@ -156,6 +175,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newHisab = dbService.saveDailyHisab(hisab);
     refreshData();
     return newHisab;
+  };
+
+  const updateDailyHisab = (hisab: DailyHisab) => {
+    dbService.updateDailyHisab(hisab);
+    refreshData();
   };
 
   const deleteDailyHisab = (id: number) => {
@@ -258,6 +282,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setLanguage,
         theme,
         toggleTheme,
+        fontSize,
+        setFontSize,
         customers,
         orders,
         creditRecords,
@@ -275,6 +301,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         recordPayment,
         recordManualDue,
         addDailyHisab,
+        updateDailyHisab,
         deleteDailyHisab,
         exportBackup,
         restoreBackup,

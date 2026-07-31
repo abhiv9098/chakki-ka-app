@@ -12,8 +12,7 @@ import {
   MoonIcon,
   GlobeIcon,
   CloseIcon,
-  FileTextIcon,
-  CalculatorIcon
+  FileTextIcon
 } from './Icons';
 
 interface SidebarProps {
@@ -26,10 +25,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navItems = [
     { view: 'dashboard' as const, label: t('dashboard'), icon: DashboardIcon },
+    { view: 'daily-hisab' as const, label: t('dailyHisab'), icon: FileTextIcon },
+    { view: 'hisab-history' as const, label: t('hisab-history' as any), icon: KhataIcon },
     { view: 'grinding' as const, label: t('grindingOrders'), icon: GrindingIcon },
     { view: 'customers' as const, label: t('customers'), icon: CustomersIcon },
-    { view: 'daily-hisab' as const, label: t('dailyHisab'), icon: FileTextIcon },
-    { view: 'calculator' as const, label: t('calculator'), icon: CalculatorIcon },
   ];
 
   return (
@@ -90,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 }`}
               >
                 <Icon className={`transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-emerald-500'}`} size={18} />
-                <span>{item.label}</span>
+                <span className="whitespace-nowrap truncate">{item.label}</span>
               </button>
             );
           })}
@@ -177,7 +176,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 }`}
               >
                 <Icon className={`transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-emerald-500'}`} size={20} />
-                <span>{item.label}</span>
+                <span className="whitespace-nowrap truncate">{item.label}</span>
               </button>
             );
           })}

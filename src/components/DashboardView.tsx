@@ -2,10 +2,12 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LossIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon, QrCodeIcon } from './Icons';
+import { LossIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon, QrCodeIcon, FileTextIcon, GrindingIcon } from './Icons';
 import { InvoiceModal } from './InvoiceModal';
 import { QrScannerModal } from './QrScannerModal';
 import { ExpenseLossModal } from './ExpenseLossModal';
+import { GrindingKgModal } from './GrindingKgModal';
+import { PaymentSummaryModal } from './PaymentSummaryModal';
 import { Order } from '../types';
 
 export const DashboardView: React.FC = () => {
@@ -13,6 +15,8 @@ export const DashboardView: React.FC = () => {
   const [selectedOrderForBill, setSelectedOrderForBill] = useState<Order | null>(null);
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [isExpenseLossModalOpen, setIsExpenseLossModalOpen] = useState(false);
+  const [isGrindingKgModalOpen, setIsGrindingKgModalOpen] = useState(false);
+  const [isPaymentSummaryModalOpen, setIsPaymentSummaryModalOpen] = useState(false);
 
   // Today's Date String for Daily Hisab lookup
   const todayDateStr = (() => {
@@ -49,6 +53,10 @@ export const DashboardView: React.FC = () => {
 
   const todayEarningsAmount = todayCashOrdersAmount + todayReceivedAmount + todayHisabsIncome;
   const todayExpensesAmount = todayHisabsExpense;
+
+  const todayOrdersWeight = todayOrders.reduce((sum, o) => sum + (o.weight || 0), 0);
+  const todayHisabsWeight = todayHisabsList.reduce((sum, h) => sum + (h.wheatWeight || 0), 0);
+  const todayGroundWeightKg = todayOrdersWeight + todayHisabsWeight;
 
   const activeCustomersCount = customers.filter(c => c.outstandingBalance > 0).length;
   const totalOutstandingAmount = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
@@ -114,13 +122,13 @@ export const DashboardView: React.FC = () => {
 
   const stats = [
     {
-      label: t('todayExpenses'),
-      value: hideAmounts ? '₹••••' : formatCurrency(todayExpensesAmount),
-      icon: LossIcon,
-      colorClass: 'from-rose-500 to-red-600',
-      bgClass: 'bg-rose-50 dark:bg-rose-950/20',
-      iconColor: 'text-rose-500',
-      onClick: () => setIsExpenseLossModalOpen(true)
+      label: language === 'hi' ? 'आज का कैश / पेमेंट मोड' : 'TODAY CASH & PAYMENTS',
+      value: hideAmounts ? '₹••••' : formatCurrency(todayCashOrdersAmount + todayReceivedAmount + (todayHisabsList.filter(h => h.expenseDescription === 'CASH' || !h.expenseDescription).reduce((sum, h) => sum + (h.revenue || h.amount || 0), 0))),
+      icon: ReportsIcon,
+      colorClass: 'from-emerald-500 to-teal-600',
+      bgClass: 'bg-emerald-50 dark:bg-emerald-950/20',
+      iconColor: 'text-emerald-500',
+      onClick: () => setIsPaymentSummaryModalOpen(true)
     },
     {
       label: t('todayEarnings'),
@@ -131,12 +139,13 @@ export const DashboardView: React.FC = () => {
       iconColor: 'text-teal-500'
     },
     {
-      label: t('activeCustomers'),
-      value: hideAmounts ? '••' : activeCustomersCount.toString(),
-      icon: CustomersIcon,
+      label: language === 'hi' ? 'आज की पिसाई (KG)' : 'TODAY GROUND (KG)',
+      value: hideAmounts ? '•• kg' : `${todayGroundWeightKg.toFixed(1)} kg`,
+      icon: GrindingIcon,
       colorClass: 'from-blue-500 to-indigo-600',
       bgClass: 'bg-blue-50 dark:bg-blue-950/20',
-      iconColor: 'text-blue-500'
+      iconColor: 'text-blue-500',
+      onClick: () => setIsGrindingKgModalOpen(true)
     },
     {
       label: t('totalOutstanding'),
@@ -277,26 +286,26 @@ export const DashboardView: React.FC = () => {
             </div>
             <div className="grid grid-cols-3 gap-2.5">
               <button
-                onClick={() => setActiveView('grinding')}
+                onClick={() => setActiveView('daily-hisab')}
                 className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer h-20 border border-emerald-400/20"
               >
                 <div className="p-1.5 rounded-lg bg-white/20 text-white">
-                  <PlusIcon size={16} />
+                  <FileTextIcon size={16} />
                 </div>
                 <span className="text-[10px] leading-tight text-center font-bold">
-                  {t('logNewGrinding')}
+                  {language === 'hi' ? 'डेली हिसाब (Daily Log)' : 'Daily Log'}
                 </span>
               </button>
 
               <button
-                onClick={() => setActiveView('daily-hisab')}
+                onClick={() => setActiveView('grinding')}
                 className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-20"
               >
                 <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-500">
-                  <ReportsIcon size={16} />
+                  <PlusIcon size={16} />
                 </div>
                 <span className="text-[10px] leading-tight text-center font-bold">
-                  {t('dailyHisab')}
+                  {t('logNewGrinding')}
                 </span>
               </button>
 
@@ -424,6 +433,18 @@ export const DashboardView: React.FC = () => {
       <ExpenseLossModal
         isOpen={isExpenseLossModalOpen}
         onClose={() => setIsExpenseLossModalOpen(false)}
+      />
+
+      {/* Grinding Volume Breakdown Modal (KG) */}
+      <GrindingKgModal
+        isOpen={isGrindingKgModalOpen}
+        onClose={() => setIsGrindingKgModalOpen(false)}
+      />
+
+      {/* Payment Summary Modal (Cash, Paytm, Udhar) */}
+      <PaymentSummaryModal
+        isOpen={isPaymentSummaryModalOpen}
+        onClose={() => setIsPaymentSummaryModalOpen(false)}
       />
     </div>
   );

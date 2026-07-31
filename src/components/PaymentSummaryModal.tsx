@@ -1,0 +1,483 @@
+'use client';
+
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import { CloseIcon } from './Icons';
+import { DailyHisab } from '../types';
+
+interface PaymentSummaryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen, onClose }) => {
+  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts } = useApp();
+
+  const [activeTab, setActiveTab] = useState<'CASH' | 'PAYTM' | 'UDHAR'>('CASH');
+
+  if (!isOpen) return null;
+
+  const isHindi = language === 'hi';
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
+  };
+
+  const todayStr = (() => {
+    const todayObj = new Date();
+    const yyyy = todayObj.getFullYear();
+    const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(todayObj.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  })();
+
+  const startOfToday = (() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  })();
+
+  // Helper to parse Jama and Udhar details from a DailyHisab entry
+  const getUdharDetails = (hisab: DailyHisab) => {
+    const total = hisab.amount || 0;
+    const desc = hisab.expenseDescription || '';
+
+    if (desc === 'CASH' || desc === 'PAYTM') {
+      return { jama: total, udhar: 0, isUdhar: false, mode: desc };
+    }
+
+    const jamaMatch = desc.match(/Jama:\s*₹?(\d+(?:\.\d+)?)/i);
+    const udharMatch = desc.match(/Udhar:\s*₹?(\d+(?:\.\d+)?)/i);
+
+    if (jamaMatch && udharMatch) {
+      const jama = parseFloat(jamaMatch[1]) || 0;
+      const udhar = parseFloat(udharMatch[1]) || 0;
+      return { jama, udhar, isUdhar: udhar > 0, mode: 'PARTIAL_UDHAR' };
+    }
+
+    return { jama: 0, udhar: total, isUdhar: true, mode: 'UDHAR' };
+  };
+
+  // 1. CASH TRANSACTIONS
+  const todayCashOrders = orders.filter(
+    o => o.createdAt >= startOfToday && (o.paymentType === 'CASH' || !o.paymentType)
+  );
+  const todayCashHisabs = dailyHisabs.filter(
+    h => h.date === todayStr && (h.expenseDescription === 'CASH' || !h.expenseDescription)
+  );
+  const todayPaidCreditRecords = creditRecords.filter(
+    r => r.createdAt >= startOfToday && r.type === 'PAID'
+  );
+
+  const totalCashOrders = todayCashOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const totalCashHisabs = todayCashHisabs.reduce((sum, h) => sum + (h.revenue || h.amount || 0), 0);
+  const totalPaidCredits = todayPaidCreditRecords.reduce((sum, r) => sum + r.amount, 0);
+  const totalCashToday = totalCashOrders + totalCashHisabs + totalPaidCredits;
+
+  // 2. PAYTM TRANSACTIONS
+  const todayPaytmOrders = orders.filter(
+    o => o.createdAt >= startOfToday && (o.paymentType === 'ONLINE' || o.paymentType === 'PAYTM')
+  );
+  const todayPaytmHisabs = dailyHisabs.filter(
+    h => h.date === todayStr && h.expenseDescription === 'PAYTM'
+  );
+
+  const totalPaytmOrders = todayPaytmOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const totalPaytmHisabs = todayPaytmHisabs.reduce((sum, h) => sum + (h.revenue || h.amount || 0), 0);
+  const totalPaytmToday = totalPaytmOrders + totalPaytmHisabs;
+
+  // 3. UDHAR (CREDIT & JAMA) TRANSACTIONS
+  const udharHisabsList = dailyHisabs.filter(h => getUdharDetails(h).isUdhar);
+
+  const todayUdharOrders = orders.filter(
+    o => o.createdAt >= startOfToday && o.paymentType === 'CREDIT'
+  );
+  const todayUdharHisabs = dailyHisabs.filter(
+    h => h.date === todayStr && getUdharDetails(h).isUdhar
+  );
+  const todayCreditAddedRecords = creditRecords.filter(
+    r => r.createdAt >= startOfToday && r.type === 'DUE'
+  );
+
+  const totalUdharOrders = todayUdharOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const totalUdharHisabs = todayUdharHisabs.reduce((sum, h) => sum + getUdharDetails(h).udhar, 0);
+  const totalUdharAdded = todayCreditAddedRecords.reduce((sum, r) => sum + r.amount, 0);
+  const totalUdharToday = totalUdharOrders + totalUdharHisabs + totalUdharAdded;
+
+  // Total Outstanding across all customers + daily hisabs
+  const totalCustomerOutstanding = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
+  const totalHisabsUdharOutstanding = udharHisabsList.reduce((sum, h) => sum + getUdharDetails(h).udhar, 0);
+  const grandTotalUdharOutstanding = totalCustomerOutstanding + totalHisabsUdharOutstanding;
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 z-50 transition-opacity duration-300">
+      <div className="bg-white dark:bg-slate-900 border-0 sm:border border-slate-100 dark:border-slate-800 rounded-none sm:rounded-3xl w-full h-full sm:h-auto sm:max-w-2xl sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in">
+        {/* Header */}
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-850/40">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+              💰
+            </div>
+            <div>
+              <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-lg tracking-tight">
+                {isHindi ? 'भुगतान विवरण (Payment Ledger)' : 'Payment Collection Ledger'}
+              </h3>
+              <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                {isHindi ? 'कैश, Paytm और उधार जमा का संपूर्ण विवरण' : "Cash, Paytm, and Udhar payments breakdown"}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <CloseIcon size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 overflow-y-auto space-y-5 flex-1">
+          {/* 3 Main Tabs: CASH | PAYTM | UDHAR */}
+          <div className="grid grid-cols-3 gap-2 bg-slate-100/90 dark:bg-slate-800/60 p-1.5 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => setActiveTab('CASH')}
+              className={`py-2.5 px-2 rounded-xl transition-all font-extrabold text-xs sm:text-sm cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                activeTab === 'CASH'
+                  ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span>💵</span>
+                <span>{isHindi ? 'कैश (Cash)' : 'Cash'}</span>
+              </div>
+              <span className="text-[11px] font-black opacity-90">
+                {hideAmounts ? '₹••' : `₹${totalCashToday.toFixed(0)}`}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('PAYTM')}
+              className={`py-2.5 px-2 rounded-xl transition-all font-extrabold text-xs sm:text-sm cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                activeTab === 'PAYTM'
+                  ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span>📲</span>
+                <span>Paytm</span>
+              </div>
+              <span className="text-[11px] font-black opacity-90">
+                {hideAmounts ? '₹••' : `₹${totalPaytmToday.toFixed(0)}`}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('UDHAR')}
+              className={`py-2.5 px-2 rounded-xl transition-all font-extrabold text-xs sm:text-sm cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                activeTab === 'UDHAR'
+                  ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span>📝</span>
+                <span>{isHindi ? 'उधार (Udhar)' : 'Udhar'}</span>
+              </div>
+              <span className="text-[11px] font-black opacity-90">
+                {hideAmounts ? '₹••' : `₹${grandTotalUdharOutstanding.toFixed(0)}`}
+              </span>
+            </button>
+          </div>
+
+          {/* TAB 1: CASH DETAILS */}
+          {activeTab === 'CASH' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-5 text-white shadow-lg shadow-emerald-500/20 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-emerald-100 uppercase tracking-wider block">
+                    {isHindi ? 'आज का कुल आया कैश' : 'Today Cash Received'}
+                  </span>
+                  <p className="text-4xl font-black mt-1 tracking-tight">
+                    {hideAmounts ? '₹••••' : `₹${totalCashToday.toFixed(0)}`}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-black shrink-0">
+                  💵
+                </div>
+              </div>
+
+              {/* Cash Transactions List */}
+              <div className="space-y-2">
+                <h4 className="font-extrabold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">
+                  {isHindi ? 'कैश भुगतान सूची' : 'Cash Payments List'}
+                </h4>
+
+                {todayCashOrders.length === 0 && todayCashHisabs.length === 0 && todayPaidCreditRecords.length === 0 ? (
+                  <p className="text-xs text-slate-400 font-semibold italic py-6 text-center bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                    {isHindi ? 'आज कोई कैश एंट्री नहीं पाई गई।' : 'No cash transactions today.'}
+                  </p>
+                ) : (
+                  <div className="space-y-2 pb-2">
+                    {todayPaidCreditRecords.map(r => (
+                      <div key={`c-${r.id}`} className="p-3 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black text-xs">
+                            ✓
+                          </span>
+                          <div>
+                            <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                              {customers.find(c => c.id === r.customerId)?.name || r.description || (isHindi ? 'ग्राहक' : 'Customer')}
+                            </h5>
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block">
+                              {isHindi ? 'उधार जमा कैश' : 'Udhar Paid Cash'}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-black text-emerald-600 dark:text-emerald-400 text-base">
+                          +₹{r.amount}
+                        </span>
+                      </div>
+                    ))}
+
+                    {todayCashHisabs.map(h => (
+                      <div key={`h-${h.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
+                            📋
+                          </span>
+                          <div>
+                            <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                              {h.incomeDescription || h.notes || (isHindi ? 'नकद ग्राहक' : 'Cash Customer')}
+                            </h5>
+                            <span className="text-[10px] font-semibold text-slate-400 block">
+                              {h.grainType} ({h.wheatWeight} kg)
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-black text-slate-900 dark:text-slate-100 text-base">
+                          ₹{(h.revenue || h.amount || 0).toFixed(0)}
+                        </span>
+                      </div>
+                    ))}
+
+                    {todayCashOrders.map(o => (
+                      <div key={`o-${o.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
+                            🌾
+                          </span>
+                          <div>
+                            <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                              {o.customerName || (isHindi ? 'नकद ग्राहक' : 'Cash Customer')}
+                            </h5>
+                            <span className="text-[10px] font-semibold text-slate-400 block">
+                              {o.grainType} ({o.weight} kg)
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-black text-slate-900 dark:text-slate-100 text-base">
+                          ₹{o.totalAmount}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: PAYTM DETAILS */}
+          {activeTab === 'PAYTM' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-5 text-white shadow-lg shadow-emerald-500/20 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-emerald-100 uppercase tracking-wider block">
+                    {isHindi ? 'आज Paytm ऑनलाइन कमाई' : "Today's Paytm Earnings"}
+                  </span>
+                  <p className="text-4xl font-black mt-1 tracking-tight">
+                    {hideAmounts ? '₹••••' : `₹${totalPaytmToday.toFixed(0)}`}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-black shrink-0">
+                  📲
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="font-extrabold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">
+                  {isHindi ? 'Paytm ऑनलाइन भुगतान सूची' : 'Paytm Payments List'}
+                </h4>
+
+                {todayPaytmOrders.length === 0 && todayPaytmHisabs.length === 0 ? (
+                  <p className="text-xs text-slate-400 font-semibold italic py-6 text-center bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                    {isHindi ? 'आज Paytm से कोई भुगतान नहीं प्राप्त हुआ है।' : 'No Paytm payments received today.'}
+                  </p>
+                ) : (
+                  <div className="space-y-2 pb-2">
+                    {todayPaytmHisabs.map(h => (
+                      <div key={`h-${h.id}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs">
+                            📲
+                          </span>
+                          <div>
+                            <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                              {h.incomeDescription || h.notes || (isHindi ? 'ग्राहक' : 'Customer')}
+                            </h5>
+                            <span className="text-[10px] font-semibold text-slate-400 block">
+                              Paytm ({h.grainType})
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-black text-blue-600 dark:text-blue-400 text-base">
+                          ₹{(h.revenue || h.amount || 0).toFixed(0)}
+                        </span>
+                      </div>
+                    ))}
+
+                    {todayPaytmOrders.map(o => (
+                      <div key={`o-${o.id}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs">
+                            📲
+                          </span>
+                          <div>
+                            <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                              {o.customerName || (isHindi ? 'Paytm ग्राहक' : 'Paytm Customer')}
+                            </h5>
+                            <span className="text-[10px] font-semibold text-slate-400 block">
+                              Paytm ({o.grainType})
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-black text-blue-600 dark:text-blue-400 text-base">
+                          ₹{o.totalAmount}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: UDHAR (CREDIT & JAMA) HISTORY LEDGER */}
+          {activeTab === 'UDHAR' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-5 text-white shadow-lg shadow-amber-500/20 grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-[11px] font-bold text-amber-100 uppercase tracking-wider block">
+                    {isHindi ? 'आज का नया उधार' : "Today's New Udhar"}
+                  </span>
+                  <p className="text-3xl font-black mt-1 tracking-tight">
+                    {hideAmounts ? '₹••••' : `₹${totalUdharToday.toFixed(0)}`}
+                  </p>
+                </div>
+                <div className="border-l border-white/20 pl-4">
+                  <span className="text-[11px] font-bold text-amber-100 uppercase tracking-wider block">
+                    {isHindi ? 'कुल बाकी उधार (Total Due)' : 'Total Outstanding'}
+                  </span>
+                  <p className="text-3xl font-black mt-1 tracking-tight">
+                    {hideAmounts ? '₹••••' : formatCurrency(grandTotalUdharOutstanding)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Comprehensive Udhar Transactions & Khata History List */}
+              <div className="space-y-2">
+                <h4 className="font-extrabold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">
+                  {isHindi ? 'उधार व जमा इतिहास विवरण (Udhar & Jama History)' : 'Udhar & Jama History Ledger'}
+                </h4>
+
+                {udharHisabsList.length === 0 && customers.filter(c => c.outstandingBalance > 0).length === 0 ? (
+                  <p className="text-xs text-slate-400 font-semibold italic py-6 text-center bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                    {isHindi ? 'कोई उधार रिकॉर्ड मौजूद नहीं है।' : 'No active credit records.'}
+                  </p>
+                ) : (
+                  <div className="space-y-2.5 pb-2">
+                    {/* 1. Daily Hisab Udhar Entries */}
+                    {udharHisabsList.map(h => {
+                      const udharInfo = getUdharDetails(h);
+                      return (
+                        <div key={`udhar-h-${h.id}`} className="p-3 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/60 rounded-2xl space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                📝
+                              </span>
+                              <div>
+                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                  {h.incomeDescription || h.notes || (isHindi ? 'उधार ग्राहक' : 'Udhar Log')}
+                                </h5>
+                                <span className="text-[10px] font-bold text-slate-400">
+                                  {h.date} • {h.grainType} ({h.wheatWeight}kg)
+                                </span>
+                              </div>
+                            </div>
+
+                            <span className="font-black text-slate-900 dark:text-slate-100 text-sm">
+                              {isHindi ? 'कुल: ' : 'Total: '}₹{h.amount}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1 border-t border-amber-200/40 dark:border-amber-900/40 text-[11px] font-extrabold">
+                            <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
+                              ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{udharInfo.jama}
+                            </span>
+
+                            <span className="text-amber-700 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-800">
+                              📝 {isHindi ? 'बाकी उधार: ₹' : 'Udhar Due: ₹'}{udharInfo.udhar}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {/* 2. Customer Khata Accounts */}
+                    {customers.filter(c => c.outstandingBalance > 0).map(c => {
+                      const customerPaidRecords = creditRecords.filter(r => r.customerId === c.id && r.type === 'PAID');
+                      const totalCustomerPaid = customerPaidRecords.reduce((sum, r) => sum + r.amount, 0);
+
+                      return (
+                        <div key={`cust-k-${c.id}`} className="p-3.5 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-sm shrink-0">
+                              👤
+                            </div>
+                            <div>
+                              <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                {c.name}
+                              </h5>
+                              <p className="text-[11px] font-semibold text-slate-400 flex items-center gap-2 mt-0.5">
+                                <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
+                                  ✓ {isHindi ? 'खाता जमा: ₹' : 'Khata Jama: ₹'}{totalCustomerPaid.toFixed(0)}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <span className="text-[10px] font-bold text-slate-400 block uppercase">
+                              {isHindi ? 'खाता बकाया' : 'Khata Balance'}
+                            </span>
+                            <span className="text-sm font-black text-amber-600 dark:text-amber-400">
+                              ₹{c.outstandingBalance.toFixed(0)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -276,6 +276,15 @@ export const dbService = {
     localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
   },
 
+  updateDailyHisab: (updatedHisab: DailyHisab): void => {
+    const hisabs = dbService.getDailyHisabs();
+    const idx = hisabs.findIndex(h => h.id === updatedHisab.id);
+    if (idx !== -1) {
+      hisabs[idx] = updatedHisab;
+      localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
+    }
+  },
+
   deleteOrder: (orderId: number): void => {
     const orders = dbService.getOrders();
     const targetOrder = orders.find(o => o.id === orderId);

@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { GlobeIcon, SunIcon, MoonIcon, CheckIcon } from './Icons';
+import { GlobeIcon, SunIcon, MoonIcon, CheckIcon, FontSizeIcon } from './Icons';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -10,6 +10,8 @@ export const SettingsView: React.FC = () => {
     setLanguage,
     theme,
     toggleTheme,
+    fontSize,
+    setFontSize,
     exportBackup,
     restoreBackup,
     t,
@@ -139,66 +141,54 @@ export const SettingsView: React.FC = () => {
         </div>
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800/60 space-y-6">
-          {/* Language select */}
+          {/* Word / Font Size setting */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6 first:pt-0">
             <div>
-              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
-                {t('language')} / Language Preference
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide flex items-center gap-2">
+                <FontSizeIcon size={17} className="text-emerald-500" />
+                <span>{language === 'hi' ? 'अक्षर / शब्द का आकार (Text Size)' : 'Word / Font Size'}</span>
               </h4>
               <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
-                Set billing strings and menu actions to Hindi or English.
+                {language === 'hi'
+                  ? 'ऐप के सभी शब्दों और टेक्स्ट का साइज़ बड़ा या सामान्य करें।'
+                  : 'Adjust font and word size across all screens for better readability.'}
               </p>
             </div>
             <div className="flex gap-2.5">
               <button
-                onClick={() => setLanguage('en')}
-                className={`w-32 h-[46px] rounded-xl text-base font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
-                  language === 'en'
-                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
-                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-450 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                type="button"
+                onClick={() => setFontSize('normal')}
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
+                  fontSize === 'normal'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                English
+                {language === 'hi' ? 'सामान्य (Normal)' : 'Normal'}
               </button>
               <button
-                onClick={() => setLanguage('hi')}
-                className={`w-32 h-[46px] rounded-xl text-base font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
-                  language === 'hi'
-                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/10'
-                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-450 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                type="button"
+                onClick={() => setFontSize('large')}
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
+                  fontSize === 'large'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                हिन्दी
+                {language === 'hi' ? 'बड़ा (Large)' : 'Large (Bada)'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFontSize('xlarge')}
+                className={`px-3.5 py-2.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
+                  fontSize === 'xlarge'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {language === 'hi' ? 'बहुत बड़ा (XL)' : 'Extra Large'}
               </button>
             </div>
-          </div>
-
-          {/* Theme setting */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
-            <div>
-              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
-                {t('darkMode')} / App Appearance
-              </h4>
-              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
-                Toggle between light and dark themes for comfortable reading.
-              </p>
-            </div>
-            <button
-              onClick={toggleTheme}
-              className="h-[46px] min-w-[140px] bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-750 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 cursor-pointer transition-all uppercase tracking-wider"
-            >
-              {theme === 'light' ? (
-                <>
-                  <SunIcon size={15} className="text-amber-500" />
-                  <span>Light Mode</span>
-                </>
-              ) : (
-                <>
-                  <MoonIcon size={15} className="text-indigo-400" />
-                  <span>Dark Mode</span>
-                </>
-              )}
-            </button>
           </div>
 
           {/* UPI ID setting */}
@@ -238,6 +228,7 @@ export const SettingsView: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { key: 'Wheat', label: language === 'hi' ? 'गेहूं (Wheat)' : 'Wheat' },
+                { key: 'Atta', label: language === 'hi' ? 'आटा (Atta)' : 'Atta' },
                 { key: 'Maize', label: language === 'hi' ? 'मक्का (Maize)' : 'Maize' },
                 { key: 'Gram/Chana', label: language === 'hi' ? 'चना (Gram)' : 'Gram/Chana' },
                 { key: 'Rice', label: language === 'hi' ? 'चावल (Rice)' : 'Rice' },
@@ -450,6 +441,73 @@ export const SettingsView: React.FC = () => {
                 className="hidden"
               />
             </div>
+          </div>
+
+          {/* Language Preference (At Bottom) */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide flex items-center gap-2">
+                <GlobeIcon size={18} className="text-emerald-500" />
+                <span>{language === 'hi' ? 'भाषा (Language Preference)' : 'Language Preference'}</span>
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                {language === 'hi'
+                  ? 'ऐप्लिकेशन की भाषा हिन्दी या इंग्लिश में चुनें।'
+                  : 'Set application language to English or Hindi.'}
+              </p>
+            </div>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setLanguage('en')}
+                className={`w-32 h-[46px] rounded-xl text-sm font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
+                  language === 'en'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('hi')}
+                className={`w-32 h-[46px] rounded-xl text-sm font-extrabold border transition-all cursor-pointer flex items-center justify-center ${
+                  language === 'hi'
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                हिन्दी
+              </button>
+            </div>
+          </div>
+
+          {/* Theme setting (Moved to bottom) */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6">
+            <div>
+              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
+                {t('darkMode')} / App Appearance
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                Toggle between light and dark themes for comfortable reading.
+              </p>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className="h-[46px] min-w-[140px] bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-750 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 cursor-pointer transition-all uppercase tracking-wider"
+            >
+              {theme === 'light' ? (
+                <>
+                  <SunIcon size={15} className="text-amber-500" />
+                  <span>Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <MoonIcon size={15} className="text-indigo-400" />
+                  <span>Dark Mode</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
