@@ -52,20 +52,27 @@ export const DailyHisabView: React.FC = () => {
   const [grainType, setGrainType] = useState('Wheat');
   const [showGrainModal, setShowGrainModal] = useState(false);
   const [wheatWeight, setWheatWeight] = useState('');
+  const [customRate, setCustomRate] = useState<string>('5');
   const [revenue, setRevenue] = useState(0);
   const [customerNaam, setCustomerNaam] = useState('');
   const [paymentMode, setPaymentMode] = useState<'CASH' | 'PAYTM' | 'UDHAR'>('CASH');
   const [jamaAmount, setJamaAmount] = useState<string>('');
   const [amount, setAmount] = useState('');
 
+  // Update custom rate when grain type or saved rates change
+  useEffect(() => {
+    const fixedRate = grainRates[grainType] !== undefined ? grainRates[grainType] : (parseFloat(defaultGrindingRate) || 5);
+    setCustomRate(String(fixedRate));
+  }, [grainType, grainRates, defaultGrindingRate]);
+
   // Auto-calculate revenue
   useEffect(() => {
     const w = parseFloat(wheatWeight) || 0;
-    const r = grainRates[grainType] || parseFloat(defaultGrindingRate) || 5;
-    const calculatedRevenue = w * r;
+    const r = parseFloat(customRate) || (grainRates[grainType] !== undefined ? grainRates[grainType] : 5);
+    const calculatedRevenue = Math.round(w * r * 10) / 10;
     setRevenue(calculatedRevenue);
     setAmount(calculatedRevenue.toFixed(1));
-  }, [wheatWeight, grainType, defaultGrindingRate, grainRates]);
+  }, [wheatWeight, customRate, grainType, grainRates]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,22 +193,49 @@ export const DailyHisabView: React.FC = () => {
             </button>
           </div>
 
-          {/* Grain weight in kg */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              {(grainLabels[grainType]?.[language === 'hi' ? 'hi' : 'en'] || grainType).toUpperCase()} {language === 'hi' ? 'पिसाई (KG)' : 'GROUND (KG)'} *
-            </label>
-            <input
-              type="number"
-              required
-              min="0.1"
-              step="0.1"
-              placeholder="0.0 kg"
-              value={wheatWeight}
-              onChange={(e) => setWheatWeight(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
-            />
+          {/* Weight & Fixed Rate Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Grain weight in kg */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block truncate">
+                {language === 'hi' ? 'वजन (KG)' : 'WEIGHT (KG)'} *
+              </label>
+              <input
+                type="number"
+                required
+                min="0.1"
+                step="0.1"
+                placeholder="0.0 kg"
+                value={wheatWeight}
+                onChange={(e) => setWheatWeight(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
+              />
+            </div>
+
+            {/* Fixed Rate / Bhav (₹/KG) */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block truncate">
+                  {language === 'hi' ? 'फिक्स भाव (₹/KG)' : 'RATE (₹/KG)'}
+                </label>
+                <span className="text-[9px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.2 rounded border border-emerald-500/20">
+                  {language === 'hi' ? 'फिक्स' : 'Fixed'}
+                </span>
+              </div>
+              <div className="relative flex items-center">
+                <span className="absolute left-3 text-sm font-extrabold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.5"
+                  value={customRate}
+                  onChange={(e) => setCustomRate(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full h-11 pl-7 pr-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base font-black text-emerald-600 dark:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Naam / Customer Name */}

@@ -214,15 +214,20 @@ export const SettingsView: React.FC = () => {
 
           {/* Grain Grinding Rates setting */}
           <div className="pt-6 space-y-4">
-            <div>
-              <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide">
-                {language === 'hi' ? 'अनाज पिसाई दरें (₹/KG)' : 'Grain Grinding Rates (₹/KG)'}
-              </h4>
-              <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
-                {language === 'hi'
-                  ? 'प्रत्येक अनाज (गेहूं, मक्का, चना आदि) के लिए पिसाई की दर (₹/किलो) तय करें।'
-                  : 'Set custom grinding rate per kg for each grain type.'}
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h4 className="font-extrabold text-slate-700 dark:text-slate-200 text-sm tracking-wide flex items-center gap-2">
+                  <span>{language === 'hi' ? 'अनाज पिसाई फिक्स भाव (₹/KG)' : 'Grain Grinding Fixed Rates (₹/KG)'}</span>
+                  <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                    ✓ {language === 'hi' ? 'ऑटो-सेव्ड' : 'Auto-Saved'}
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-400 dark:text-slate-550 mt-0.5 font-medium">
+                  {language === 'hi'
+                    ? 'जो भाव आप यहाँ फिक्स करेंगे, वह हमेशा सेव रहेगा और नए हिसाब में अपने-आप लागू होगा।'
+                    : 'The rates you fix here remain saved permanently and auto-apply to all new grinding logs.'}
+                </p>
+              </div>
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
