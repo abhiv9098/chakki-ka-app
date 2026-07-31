@@ -251,14 +251,14 @@ export const SettingsView: React.FC = () => {
                     <div className="relative flex items-center">
                       <span className="absolute left-3 text-xs font-bold text-slate-400">₹</span>
                       <input
-                        type="number"
-                        min="0.1"
-                        step="0.5"
+                        type="text"
+                        inputMode="decimal"
                         value={currentVal}
                         onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          if (!isNaN(val)) {
-                            updateGrainRate(g.key, val);
+                          const raw = e.target.value;
+                          if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                            const val = parseFloat(raw);
+                            updateGrainRate(g.key, isNaN(val) ? 0 : val);
                           }
                         }}
                         className="w-full pl-7 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-black text-emerald-600 dark:text-emerald-400 focus:outline-none focus:border-emerald-500"

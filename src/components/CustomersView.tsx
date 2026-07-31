@@ -513,8 +513,8 @@ export const CustomersView: React.FC = () => {
                 <input
                   type="number"
                   required
-                  min="0.01"
-                  step="0.01"
+                  min="0"
+                  step="any"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
                   placeholder="₹ Amount to pay"
@@ -565,8 +565,8 @@ export const CustomersView: React.FC = () => {
                 <input
                   type="number"
                   required
-                  min="0.01"
-                  step="0.01"
+                  min="0"
+                  step="any"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
                   placeholder="₹ Amount to add as due"

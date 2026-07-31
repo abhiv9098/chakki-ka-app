@@ -518,9 +518,9 @@ export const HisabHistoryView: React.FC = () => {
                   <input
                     type="number"
                     required
-                    min="1"
+                    min="0"
                     max={details.udhar}
-                    step="0.5"
+                    step="any"
                     placeholder={`Max ₹${details.udhar}`}
                     value={newPaymentAmount}
                     onChange={(e) => setNewPaymentAmount(e.target.value)}

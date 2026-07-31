@@ -199,8 +199,8 @@ export const EstimateCalculator: React.FC = () => {
               <div className="relative">
                 <input
                   type="number"
-                  min="0.1"
-                  step="0.5"
+                  min="0"
+                  step="any"
                   value={weightStr}
                   onChange={(e) => setWeightStr(e.target.value)}
                   placeholder="0.0 kg"
@@ -239,8 +239,8 @@ export const EstimateCalculator: React.FC = () => {
                       <span className="absolute left-4 top-3.5 text-xs font-extrabold text-slate-400">₹</span>
                       <input
                         type="number"
-                        min="0.1"
-                        step="0.5"
+                        min="0"
+                        step="any"
                         value={customRate}
                         onChange={(e) => setCustomRate(e.target.value)}
                         placeholder={`${defaultRate}`}

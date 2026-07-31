@@ -186,8 +186,8 @@ export const GrindingView: React.FC = () => {
               <input
                 type="number"
                 required
-                min="0.1"
-                step="0.05"
+                min="0"
+                step="any"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
                 placeholder="0.00 kg"

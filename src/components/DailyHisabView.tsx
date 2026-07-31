@@ -201,13 +201,17 @@ export const DailyHisabView: React.FC = () => {
                 {language === 'hi' ? 'वजन (KG)' : 'WEIGHT (KG)'} *
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 required
-                min="0.1"
-                step="0.1"
                 placeholder="0.0 kg"
                 value={wheatWeight}
-                onChange={(e) => setWheatWeight(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                    setWheatWeight(val);
+                  }
+                }}
                 onKeyDown={handleKeyDown}
                 className="w-full h-11 px-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-bold"
               />
@@ -226,11 +230,15 @@ export const DailyHisabView: React.FC = () => {
               <div className="relative flex items-center">
                 <span className="absolute left-3 text-sm font-extrabold text-slate-400">₹</span>
                 <input
-                  type="number"
-                  min="0.1"
-                  step="0.5"
+                  type="text"
+                  inputMode="decimal"
                   value={customRate}
-                  onChange={(e) => setCustomRate(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setCustomRate(val);
+                    }
+                  }}
                   onKeyDown={handleKeyDown}
                   className="w-full h-11 pl-7 pr-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base font-black text-emerald-600 dark:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
                 />
@@ -314,13 +322,16 @@ export const DailyHisabView: React.FC = () => {
                 </span>
               </div>
               <input
-                type="number"
-                min="0"
-                max={revenue}
-                step="0.5"
+                type="text"
+                inputMode="decimal"
                 placeholder={language === 'hi' ? '0.0 (अगर कुछ पैसे जमा किए हैं)' : '0.0 (If partial cash paid)'}
                 value={jamaAmount}
-                onChange={(e) => setJamaAmount(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                    setJamaAmount(val);
+                  }
+                }}
                 onKeyDown={handleKeyDown}
                 className="w-full h-10 px-3.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
               />

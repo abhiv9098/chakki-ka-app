@@ -12,6 +12,18 @@ interface GrindingKgModalProps {
 export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClose }) => {
   const { orders, dailyHisabs, language } = useApp();
 
+  const grainLabels: Record<string, { hi: string; en: string }> = {
+    'Wheat': { hi: 'गेहूं', en: 'Wheat' },
+    'Atta': { hi: 'आटा', en: 'Atta' },
+    'Maize': { hi: 'मक्का', en: 'Maize' },
+    'Gram/Chana': { hi: 'चना', en: 'Gram' },
+    'Rice': { hi: 'चावल', en: 'Rice' },
+    'Barley': { hi: 'जौ', en: 'Barley' },
+    'Bajra': { hi: 'बाजरा', en: 'Bajra' },
+    'Multigrain': { hi: 'मल्टीग्रेन', en: 'Multigrain' },
+    'Other': { hi: 'अन्य', en: 'Other' },
+  };
+
   const todayStr = (() => {
     const todayObj = new Date();
     const yyyy = todayObj.getFullYear();
@@ -188,7 +200,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-5 text-white shadow-lg shadow-emerald-500/20 flex items-center justify-between">
             <div>
               <span className="text-xs font-bold text-emerald-100 uppercase tracking-wider block">
-                {filterMode === 'calendar' ? (isHindi ? `तारीख (${selectedDate}) की कुल पिसाई` : `Date (${selectedDate}) Grinding`) : (isHindi ? '7 दिनों की कुल पिसाई' : '7 Days Total Grinding')}
+                {filterMode === 'calendar' ? (isHindi ? `तारीख (${selectedDate}) की कुल पिसाई` : `Date (${selectedDate}) Grinding`) : (isHindi ? '30 दिनों की कुल पिसाई' : '30 Days Total Grinding')}
               </span>
               <p className="text-4xl font-black mt-1 tracking-tight">
                 {totalKg.toFixed(1)} <span className="text-xl font-bold">KG</span>
@@ -210,7 +222,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
                   <div key={gName} className="p-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 block truncate">
-                        🌾 {gName}
+                        🌾 {grainLabels[gName]?.[isHindi ? 'hi' : 'en'] || gName}
                       </span>
                       <span className="text-sm font-black text-slate-850 dark:text-slate-100">
                         {gKg.toFixed(1)} kg
@@ -243,7 +255,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
                 </p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              <div className="space-y-2 pb-2">
                 {combinedEntries.map((item) => (
                   <div key={item.id} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -255,7 +267,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
                           {item.customerName}
                         </h5>
                         <p className="text-[11px] font-semibold text-slate-400 flex items-center gap-2 mt-0.5">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">🌾 पोटली: {item.grainType}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">🌾 {isHindi ? 'पोटली:' : 'Potli:'} {grainLabels[item.grainType]?.[isHindi ? 'hi' : 'en'] || item.grainType}</span>
                           <span>•</span>
                           <span>{item.date}</span>
                         </p>
