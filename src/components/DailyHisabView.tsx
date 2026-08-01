@@ -95,6 +95,15 @@ export const DailyHisabView: React.FC = () => {
       return;
     }
 
+    if (paymentMode === 'UDHAR' && !customerNaam.trim()) {
+      alert(
+        language === 'hi'
+          ? 'उधार खाता दर्ज करने के लिए ग्राहक का नाम (Naam) लिखना अनिवार्य है!'
+          : 'Please enter customer name for Udhar credit entry!'
+      );
+      return;
+    }
+
     const jamaVal = paymentMode === 'UDHAR' ? (parseFloat(jamaAmount) || 0) : netAmount;
     const remainingUdhar = Math.max(0, netAmount - jamaVal);
 
@@ -140,10 +149,10 @@ export const DailyHisabView: React.FC = () => {
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
             <h3 className="font-black text-slate-800 dark:text-slate-100 text-xl tracking-tight">
-              {language === 'hi' ? 'डेली हिसाब एंट्री' : 'Daily Summary Log'}
+              Daily Entry
             </h3>
             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
-              {language === 'hi' ? 'आज की कुल पिसाई व बिक्री तुरंत दर्ज करें' : 'Record daily grinding log'}
+              {language === 'hi' ? 'आज की कुल पिसाई व बिक्री दर्ज करें' : 'Record daily grinding entry'}
             </p>
           </div>
 
@@ -248,16 +257,22 @@ export const DailyHisabView: React.FC = () => {
 
           {/* Naam / Customer Name */}
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              {language === 'hi' ? 'नाम (Naam)' : 'NAAM (नाम)'}
+            <label className="text-[10px] font-bold uppercase tracking-wider flex items-center justify-between">
+              <span className={paymentMode === 'UDHAR' ? 'text-amber-600 dark:text-amber-400 font-extrabold' : 'text-slate-400 dark:text-slate-500'}>
+                {language === 'hi' ? 'नाम (Naam)' : 'NAAM (नाम)'} {paymentMode === 'UDHAR' && (language === 'hi' ? '* (उधार के लिए अनिवार्य)' : '* Required for Udhar')}
+              </span>
             </label>
             <input
               type="text"
-              placeholder={language === 'hi' ? 'ग्राहक का नाम लिखें...' : 'Customer Name...'}
+              placeholder={language === 'hi' ? 'ग्राहक का नाम (जैसे: रमेश, सुरेश)...' : 'Customer Name...'}
               value={customerNaam}
               onChange={(e) => setCustomerNaam(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-semibold"
+              className={`w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border rounded-xl text-base focus:outline-none text-slate-800 dark:text-slate-100 font-semibold ${
+                paymentMode === 'UDHAR'
+                  ? 'border-amber-300 dark:border-amber-700 focus:ring-2 focus:ring-amber-500'
+                  : 'border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500'
+              }`}
             />
           </div>
 
@@ -341,7 +356,7 @@ export const DailyHisabView: React.FC = () => {
           {/* Net Amount (Read-only / Auto-calculated) */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              {language === 'hi' ? 'मुनाफा राशि (₹)' : 'Profit Amount (₹)'}
+              {language === 'hi' ? 'कुल राशि (₹)' : 'TOTAL AMOUNT (₹)'}
             </label>
             <input
               type="text"

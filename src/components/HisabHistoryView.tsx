@@ -326,7 +326,11 @@ export const HisabHistoryView: React.FC = () => {
                       <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800">
                         <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                           <div className="font-extrabold text-slate-800 dark:text-slate-100 truncate">
-                            {hisab.incomeDescription || '—'}
+                            {(hisab.incomeDescription && !hisab.incomeDescription.includes('Log'))
+                              ? hisab.incomeDescription
+                              : (hisab.notes && !hisab.notes.includes('Log'))
+                                ? hisab.notes
+                                : (udharInfo.isUdhar ? (language === 'hi' ? 'उधार ग्राहक' : 'Udhar Customer') : '—')}
                           </div>
                           {udharInfo.isUdhar && (
                             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
