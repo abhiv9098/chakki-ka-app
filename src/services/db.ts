@@ -99,6 +99,18 @@ export const dbService = {
     return null;
   },
 
+  updateCustomerPotaliStatus: (customerId: number, status: 'none' | 'received' | 'delivered'): Customer | null => {
+    const customers = dbService.getCustomers();
+    const index = customers.findIndex(c => c.id === customerId);
+    if (index !== -1) {
+      customers[index].potaliStatus = status;
+      customers[index].potaliUpdatedAt = Date.now();
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+      return customers[index];
+    }
+    return null;
+  },
+
   deleteCustomer: (customerId: number): void => {
     const customers = dbService.getCustomers().filter(c => c.id !== customerId);
     localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));

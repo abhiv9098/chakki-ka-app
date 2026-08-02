@@ -126,7 +126,16 @@ export const translations = {
     upiDetected: "UPI Payment QR Detected",
     viewCustomerProfile: "Open Customer Profile",
     viewOrderBill: "View Order Invoice",
-    invalidQrCode: "Unrecognized QR Code format"
+    invalidQrCode: "Unrecognized QR Code format",
+    potaliStatus: "Potali Status",
+    potaliApnePaas: "Potali Apne Paas (Red)",
+    potaliDeDi: "Potali De Di (Green)",
+    potaliNone: "No Active Potali",
+    potali1Tap: "1-Tap (Red): Potali Apne Paas",
+    potali2Tap: "2-Tap / Right (Green): Potali De Di",
+    potaliTrackerHeader: "Active Potali Store Tracker",
+    activePotalis: "Potalis at Shop",
+    potaliToggleHint: "Tap to cycle status: 🔴 Apne Paas -> 🟢 De Di -> Clear"
   },
   hi: {
     appName: "चक्की मित्र",
@@ -255,6 +264,15 @@ export const translations = {
     upiDetected: "UPI भुगतान QR मिला",
     viewCustomerProfile: "ग्राहक प्रोफाइल खोलें",
     viewOrderBill: "पिसाई बिल देखें",
-    invalidQrCode: "अमान्य या अज्ञात QR कोड"
+    invalidQrCode: "अमान्य या अज्ञात QR कोड",
+    potaliStatus: "पोटली स्थिति",
+    potaliApnePaas: "🔴 पोटली अपने पास है (लाल)",
+    potaliDeDi: "🟢 पोटली ग्राहक को दे दी (हरा)",
+    potaliNone: "कोई पोटली नहीं",
+    potali1Tap: "1-टैप (लाल): पोटली अपने पास है",
+    potali2Tap: "2-टैप / राइट (हरा): पोटली ग्राहक को दे दी",
+    potaliTrackerHeader: "दुकान में पोटली ट्रैकर",
+    activePotalis: "दुकान में जमा पोटली",
+    potaliToggleHint: "क्लिक करके बदलें: 🔴 अपने पास -> 🟢 ग्राहक को दे दी -> हटाएं"
   }
 };

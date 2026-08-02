@@ -4,6 +4,8 @@ export interface Customer {
   phone: string;
   outstandingBalance: number;
   createdAt: number;
+  potaliStatus?: 'none' | 'received' | 'delivered';
+  potaliUpdatedAt?: number;
 }
 
 export interface Order {
@@ -15,6 +17,7 @@ export interface Order {
   rate: number;
   totalAmount: number;
   paymentType: 'CASH' | 'CREDIT' | 'ONLINE' | 'PAYTM';
+  potaliStatus?: 'none' | 'received' | 'delivered';
   createdAt: number;
 }
 
@@ -47,5 +50,6 @@ export interface DailyHisab {
   isProfit: boolean;
   amount: number;
   notes: string;
+  isPending?: boolean;
   createdAt: number;
 }

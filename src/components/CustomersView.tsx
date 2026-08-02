@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import QRCode from 'qrcode';
 import { useApp } from '../context/AppContext';
-import { SearchIcon, PlusIcon, CheckIcon, CloseIcon, KhataIcon, WhatsAppIcon, QrCodeIcon } from './Icons';
+import { SearchIcon, PlusIcon, CheckIcon, CloseIcon, KhataIcon, WhatsAppIcon, QrCodeIcon, PotaliIcon } from './Icons';
 import { Customer, Order, CreditRecord } from '../types';
 import { UpiPaymentCard } from './UpiPaymentCard';
 import { CustomerQrModal } from './CustomerQrModal';
@@ -13,6 +13,8 @@ export const CustomersView: React.FC = () => {
     creditRecords,
     addCustomer,
     updateCustomer,
+    updateCustomerPotaliStatus,
+    cycleCustomerPotaliStatus,
     recordPayment,
     recordManualDue,
     selectedCustomer,
@@ -207,17 +209,50 @@ export const CustomersView: React.FC = () => {
               <button
                 key={cust.id}
                 onClick={() => setSelectedCustomer(cust)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  cycleCustomerPotaliStatus(cust.id);
+                }}
                 className="w-full text-left p-3.5 rounded-2xl flex justify-between items-center transition-all duration-200 cursor-pointer border border-transparent hover:bg-slate-50/80 dark:hover:bg-slate-800/20"
               >
                 <div>
-                  <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">
-                    {cust.name}
-                  </h4>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">
+                      {cust.name}
+                    </h4>
+                    {cust.potaliStatus === 'received' && (
+                      <span className="text-[9px] bg-rose-500 text-white font-extrabold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm" title="1-Tap Red: Potali Apne Paas">
+                        🔴 Potali
+                      </span>
+                    )}
+                    {cust.potaliStatus === 'delivered' && (
+                      <span className="text-[9px] bg-emerald-600 text-white font-extrabold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm" title="2-Tap Green: Potali De Di">
+                        🟢 De Di
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
                     📞 {cust.phone}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      cycleCustomerPotaliStatus(cust.id);
+                    }}
+                    className={`px-2 py-1 rounded-xl border text-[11px] font-black transition-all cursor-pointer flex items-center gap-1 ${
+                      cust.potaliStatus === 'received'
+                        ? 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-400'
+                        : cust.potaliStatus === 'delivered'
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-400'
+                        : 'bg-slate-50 border-slate-200 text-slate-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:bg-slate-100'
+                    }`}
+                    title="Potali Status: Tap to toggle (🔴 Red: Apne Paas, 🟢 Green: De Di)"
+                  >
+                    🎒 {cust.potaliStatus === 'received' ? '🔴' : cust.potaliStatus === 'delivered' ? '🟢' : '⚪'}
+                  </button>
                   <span className={`inline-block text-xs font-black px-2.5 py-1 rounded-xl transition-all ${
                     cust.outstandingBalance > 0
                       ? 'bg-amber-50 text-amber-650 dark:bg-amber-950/30 dark:text-amber-400'
@@ -344,6 +379,96 @@ export const CustomersView: React.FC = () => {
                     Add Due
                   </button>
                 </div>
+              </div>
+            </div>
+
+            {/* Potali Status Quick Control Banner */}
+            <div className={`mt-4 p-3.5 rounded-2xl border transition-all flex flex-wrap items-center justify-between gap-3 ${
+              selectedCustomer.potaliStatus === 'received'
+                ? 'bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent border-rose-500/30'
+                : selectedCustomer.potaliStatus === 'delivered'
+                ? 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/30'
+                : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xl transition-all ${
+                  selectedCustomer.potaliStatus === 'received'
+                    ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30 animate-pulse'
+                    : selectedCustomer.potaliStatus === 'delivered'
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                }`}>
+                  🎒
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                      {language === 'hi' ? '🎒 पोटली स्थिति (Potali Status):' : '🎒 Potali Status:'}
+                    </span>
+                    {selectedCustomer.potaliStatus === 'received' && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500 text-white shadow-sm">
+                        🔴 {language === 'hi' ? '1-टैप: पोटली दुकान में जमा है (अपने पास)' : '1-Tap: Potali Received (At Shop)'}
+                      </span>
+                    )}
+                    {selectedCustomer.potaliStatus === 'delivered' && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-600 text-white shadow-sm">
+                        🟢 {language === 'hi' ? '2-टैप / Right: पोटली ग्राहक को दे दी गई है' : '2-Tap / Right: Potali Delivered to Customer'}
+                      </span>
+                    )}
+                    {(!selectedCustomer.potaliStatus || selectedCustomer.potaliStatus === 'none') && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        ⚪ {language === 'hi' ? 'कोई पोटली जमा नहीं है' : 'No active potali'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                    {language === 'hi'
+                      ? 'ग्राहक की पोटली आने पर (🔴 1-टैप) करें। ले जाने पर (✔ 2-टैप / Right-click) करके (🟢 दे दी) मार्क करें।'
+                      : 'Tap (🔴 1-Tap) when customer drops potali. Tap (✔ 2-Tap / Right-click) to mark (🟢 Delivered) when picked up.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* 1 Tap Red Button */}
+                <button
+                  type="button"
+                  onClick={() => updateCustomerPotaliStatus(selectedCustomer.id, 'received')}
+                  className={`h-9 px-3.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 border shadow-sm ${
+                    selectedCustomer.potaliStatus === 'received'
+                      ? 'bg-rose-500 text-white border-rose-600 ring-2 ring-rose-400/40 shadow-rose-500/20'
+                      : 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 hover:bg-rose-50 dark:hover:bg-rose-950/20'
+                  }`}
+                  title="1 Tap / Red: Potali Received & Stored at Shop"
+                >
+                  🔴 {language === 'hi' ? '1-टैप: अपने पास है' : '1-Tap: Received'}
+                </button>
+
+                {/* 2 Tap / Right Click Green Button */}
+                <button
+                  type="button"
+                  onClick={() => updateCustomerPotaliStatus(selectedCustomer.id, 'delivered')}
+                  className={`h-9 px-3.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 border shadow-sm ${
+                    selectedCustomer.potaliStatus === 'delivered'
+                      ? 'bg-emerald-600 text-white border-emerald-700 ring-2 ring-emerald-400/40 shadow-emerald-600/20'
+                      : 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/20'
+                  }`}
+                  title="2 Tap / Right Click: Potali Delivered to Customer"
+                >
+                  ✔ {language === 'hi' ? '2-टैप: ग्राहक को दे दी' : '2-Tap: Delivered'}
+                </button>
+
+                {/* Reset button */}
+                {selectedCustomer.potaliStatus && selectedCustomer.potaliStatus !== 'none' && (
+                  <button
+                    type="button"
+                    onClick={() => updateCustomerPotaliStatus(selectedCustomer.id, 'none')}
+                    className="h-9 w-9 rounded-xl text-xs font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-rose-500 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center justify-center"
+                    title="Clear Potali Status"
+                  >
+                    ✖
+                  </button>
+                )}
               </div>
             </div>
 

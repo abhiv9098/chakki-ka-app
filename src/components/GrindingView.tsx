@@ -8,7 +8,7 @@ import { Order } from '../types';
 import { dbService } from '../services/db';
 
 export const GrindingView: React.FC = () => {
-  const { customers, addCustomer, addOrder, t, language, setSelectedCustomer, setActiveView, defaultGrindingRate, grainRates } = useApp();
+  const { customers, addCustomer, addOrder, updateCustomerPotaliStatus, t, language, setSelectedCustomer, setActiveView, defaultGrindingRate, grainRates } = useApp();
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -17,6 +17,7 @@ export const GrindingView: React.FC = () => {
   const [weight, setWeight] = useState('');
   const [rate, setRate] = useState('3');
   const [paymentType, setPaymentType] = useState<'CASH' | 'CREDIT'>('CREDIT');
+  const [potaliChoice, setPotaliChoice] = useState<'none' | 'received' | 'delivered'>('received');
 
   const [totalAmount, setTotalAmount] = useState(0);
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
@@ -92,8 +93,13 @@ export const GrindingView: React.FC = () => {
       weight: orderWeight,
       rate: orderRate,
       totalAmount,
-      paymentType
+      paymentType,
+      potaliStatus: potaliChoice
     });
+
+    if (potaliChoice && potaliChoice !== 'none') {
+      updateCustomerPotaliStatus(targetCustomerId, potaliChoice);
+    }
 
     // Show invoice modal
     setSubmittedOrder(newOrder);
@@ -193,6 +199,50 @@ export const GrindingView: React.FC = () => {
                 placeholder="0.00 kg"
                 className="w-full h-12 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-800 dark:text-slate-100 font-bold"
               />
+            </div>
+          </div>
+
+          {/* Potali Status Selector */}
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-2">
+            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              🎒 {language === 'hi' ? 'पोटली स्थिति चुनें (Potali Status)' : 'Set Potali Status'}
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setPotaliChoice('received')}
+                className={`py-2 px-2.5 rounded-xl text-xs font-extrabold transition-all border cursor-pointer flex items-center justify-center gap-1 ${
+                  potaliChoice === 'received'
+                    ? 'bg-rose-500 text-white border-rose-600 shadow-sm'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                }`}
+                title="1-Tap: Red (Potali Apne Paas)"
+              >
+                🔴 1-Tap: {language === 'hi' ? 'अपने पास' : 'Apne Paas'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPotaliChoice('delivered')}
+                className={`py-2 px-2.5 rounded-xl text-xs font-extrabold transition-all border cursor-pointer flex items-center justify-center gap-1 ${
+                  potaliChoice === 'delivered'
+                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                }`}
+                title="2-Tap: Green (Potali De Di)"
+              >
+                ✔ 2-Tap: {language === 'hi' ? 'दे दी' : 'De Di'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPotaliChoice('none')}
+                className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer flex items-center justify-center gap-1 ${
+                  potaliChoice === 'none'
+                    ? 'bg-slate-700 text-white border-slate-800'
+                    : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                ⚪ {language === 'hi' ? 'कोई नहीं' : 'None'}
+              </button>
             </div>
           </div>
 

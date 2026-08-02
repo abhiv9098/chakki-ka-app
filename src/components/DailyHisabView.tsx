@@ -28,7 +28,7 @@ const grainLabels: Record<string, { hi: string; en: string }> = {
 };
 
 export const DailyHisabView: React.FC = () => {
-  const { addDailyHisab, t, language, defaultGrindingRate, grainRates, setActiveView } = useApp();
+  const { addDailyHisab, dailyHisabs, updateDailyHisab, deleteDailyHisab, customers, updateCustomerPotaliStatus, t, language, defaultGrindingRate, grainRates, setActiveView } = useApp();
 
   // Calculate today and 30 days ago date strings for date picker range restriction
   const { todayStr, minDateStr } = (() => {
@@ -51,11 +51,12 @@ export const DailyHisabView: React.FC = () => {
   const [date, setDate] = useState(todayStr);
   const [grainType, setGrainType] = useState('Wheat');
   const [showGrainModal, setShowGrainModal] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
   const [wheatWeight, setWheatWeight] = useState('');
   const [customRate, setCustomRate] = useState<string>('5');
   const [revenue, setRevenue] = useState(0);
   const [customerNaam, setCustomerNaam] = useState('');
-  const [paymentMode, setPaymentMode] = useState<'CASH' | 'PAYTM' | 'UDHAR'>('CASH');
+  const [paymentMode, setPaymentMode] = useState<'CASH' | 'PAYTM' | 'UDHAR' | 'PENDING'>('CASH');
   const [jamaAmount, setJamaAmount] = useState<string>('');
   const [amount, setAmount] = useState('');
 
@@ -95,11 +96,11 @@ export const DailyHisabView: React.FC = () => {
       return;
     }
 
-    if (paymentMode === 'UDHAR' && !customerNaam.trim()) {
+    if ((paymentMode === 'UDHAR' || paymentMode === 'PENDING') && !customerNaam.trim()) {
       alert(
         language === 'hi'
-          ? 'उधार खाता दर्ज करने के लिए ग्राहक का नाम (Naam) लिखना अनिवार्य है!'
-          : 'Please enter customer name for Udhar credit entry!'
+          ? 'उधार/पेंडिंग एंट्री दर्ज करने के लिए ग्राहक का नाम (Naam) लिखना अनिवार्य है!'
+          : 'Please enter customer name for Udhar or Pending entry!'
       );
       return;
     }
@@ -107,7 +108,9 @@ export const DailyHisabView: React.FC = () => {
     const jamaVal = paymentMode === 'UDHAR' ? (parseFloat(jamaAmount) || 0) : netAmount;
     const remainingUdhar = Math.max(0, netAmount - jamaVal);
 
-    const finalExpenseDesc = (paymentMode === 'UDHAR' && jamaVal > 0)
+    const finalExpenseDesc = paymentMode === 'PENDING'
+      ? `PENDING_POTALI (₹${netAmount.toFixed(0)} Pending)`
+      : (paymentMode === 'UDHAR' && jamaVal > 0)
       ? `UDHAR (Jama: ₹${jamaVal.toFixed(0)}, Udhar: ₹${remainingUdhar.toFixed(0)})`
       : paymentMode;
 
@@ -123,8 +126,17 @@ export const DailyHisabView: React.FC = () => {
       incomeDescription: customerNaam.trim(),
       isProfit: true,
       amount: netAmount,
-      notes: customerNaam.trim() || `${grainType} Log`
+      notes: customerNaam.trim() || `${grainType} Log`,
+      isPending: paymentMode === 'PENDING'
     });
+
+    // Auto mark customer's potaliStatus as received if customer profile exists
+    if (customerNaam.trim()) {
+      const cust = customers.find(c => c.name.toLowerCase() === customerNaam.trim().toLowerCase());
+      if (cust) {
+        updateCustomerPotaliStatus(cust.id, 'received');
+      }
+    }
 
     // Reset fields
     setWheatWeight('');
@@ -142,28 +154,47 @@ export const DailyHisabView: React.FC = () => {
     }
   };
 
+  const pendingHisabsList = dailyHisabs.filter(h => h.isPending || h.expenseDescription?.includes('PENDING'));
+  const pendingCount = pendingHisabsList.length;
+
   return (
-    <div className="space-y-6 max-w-xl mx-auto pb-12 animate-fade-in">
+    <div className="space-y-6 max-w-xl mx-auto pb-12 animate-fade-in px-1 sm:px-0">
       {/* Form Panel */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl space-y-6 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
-            <h3 className="font-black text-slate-800 dark:text-slate-100 text-xl tracking-tight">
-              Daily Entry
+            <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg sm:text-xl tracking-tight">
+              {language === 'hi' ? 'डेली पिसाई दर्ज करें' : 'Daily Entry'}
             </h3>
             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
               {language === 'hi' ? 'आज की कुल पिसाई व बिक्री दर्ज करें' : 'Record daily grinding entry'}
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveView('hisab-history')}
-            className="px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
-          >
-            <span>📜</span>
-            <span>{language === 'hi' ? 'इतिहास देखें' : 'View History'}</span>
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowPendingModal(true)}
+              className={`px-2.5 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                pendingCount > 0
+                  ? 'bg-rose-50 border-rose-300 text-rose-600 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-400 shadow-xs animate-pulse'
+                  : 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700'
+              }`}
+              title="Pending Potalis List / पेंडिंग पिसाई सूची"
+            >
+              <span>⏳</span>
+              <span>{language === 'hi' ? `पेंडिंग (${pendingCount})` : `Pending (${pendingCount})`}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView('hisab-history')}
+              className="px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs rounded-xl transition-all cursor-pointer flex items-center gap-1 shrink-0"
+            >
+              <span>📜</span>
+              <span>{language === 'hi' ? 'इतिहास देखें' : 'View History'}</span>
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-4">
@@ -276,12 +307,12 @@ export const DailyHisabView: React.FC = () => {
             />
           </div>
 
-          {/* Payment Method Selector (Cash / Paytm / Udhar) */}
+          {/* Payment Method Selector (Cash / Paytm / Udhar / Pending) */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
               {language === 'hi' ? 'भुगतान का प्रकार (Payment Method)' : 'Payment Method'}
             </label>
-            <div className="grid grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-4 gap-1.5 pt-1">
               <button
                 type="button"
                 onClick={() => { setPaymentMode('CASH'); setJamaAmount(''); }}
@@ -320,8 +351,41 @@ export const DailyHisabView: React.FC = () => {
                 <span>📝</span>
                 <span>{language === 'hi' ? 'उधार' : 'Udhar'}</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => { setPaymentMode('PENDING'); setJamaAmount(''); }}
+                className={`py-2 px-1 rounded-xl text-xs font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                  paymentMode === 'PENDING'
+                    ? 'bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Pending Potali / पिसाई पेंडिंग"
+              >
+                <span>⏳</span>
+                <span>{language === 'hi' ? 'पेंडिंग' : 'Pending'}</span>
+              </button>
             </div>
           </div>
+
+          {/* Pending Potali Banner when PENDING mode is selected */}
+          {paymentMode === 'PENDING' && (
+            <div className="p-3 bg-rose-50/80 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/60 rounded-2xl space-y-1 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-rose-800 dark:text-rose-300">
+                  ⏳ {language === 'hi' ? 'पोटली दुकान पर जमा (पिसाई पेंडिंग)' : 'Potali stored at shop (Grinding Pending)'}
+                </span>
+                <span className="text-xs font-black text-rose-600 dark:text-rose-400">
+                  ⏳ ₹{amount} {language === 'hi' ? 'पेंडिंग' : 'Pending'}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                {language === 'hi'
+                  ? 'यह एंट्री पेंडिंग पिसाई सूची में सेव होगी। ऊपर दिए गए (⏳ पेंडिंग) बटन से बाद में पूरा कर सकते हैं।'
+                  : 'This entry will be saved in Pending list. You can mark it completed anytime from top button.'}
+              </p>
+            </div>
+          )}
 
           {/* Optional Jama Amount input when Udhar is selected */}
           {paymentMode === 'UDHAR' && (
@@ -427,6 +491,128 @@ export const DailyHisabView: React.FC = () => {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Potalis Modal */}
+      {showPendingModal && (
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowPendingModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden my-auto space-y-3 p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center font-extrabold text-sm">
+                  ⏳
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-slate-850 dark:text-slate-100 text-base">
+                    {language === 'hi' ? 'पेंडिंग पिसाई पोटली सूची' : 'Pending Grinding Potalis'}
+                  </h4>
+                  <p className="text-xs text-slate-400 font-medium">
+                    {language === 'hi' ? `कुल ${pendingCount} पोटली पिसाई पेंडिंग है` : `${pendingCount} potalis pending grinding`}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPendingModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {pendingHisabsList.length === 0 ? (
+              <div className="py-10 text-center text-slate-400 text-xs font-semibold bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-1">
+                <span className="text-2xl block">✨</span>
+                <span>{language === 'hi' ? 'वर्तमान में कोई पेंडिंग पोटली नहीं है!' : 'No pending potalis right now!'}</span>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[60vh] overflow-y-auto pr-1 space-y-2">
+                {pendingHisabsList.map((h) => {
+                  const custName = h.incomeDescription || h.notes || (language === 'hi' ? 'ग्राहक' : 'Customer');
+                  const cust = customers.find(c => c.name.toLowerCase() === custName.toLowerCase());
+
+                  return (
+                    <div key={`pend-${h.id}`} className="pt-2 first:pt-0 p-3 bg-rose-50/40 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-2xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                            {custName}
+                          </h5>
+                          <p className="text-[11px] font-bold text-slate-400 mt-0.5">
+                            {h.grainType} ({h.wheatWeight} kg) • {h.date}
+                          </p>
+                        </div>
+                        <span className="text-xs font-black text-rose-600 dark:text-rose-400 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-rose-200 dark:border-rose-800 shadow-2xs">
+                          ⏳ ₹{h.amount} Pending
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-rose-100 dark:border-rose-900/30">
+                        <span className="text-[10px] font-extrabold text-slate-400 mr-auto">
+                          {language === 'hi' ? 'पिसाई पूर्ण होने पर:' : 'Mark Complete:'}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateDailyHisab({
+                              ...h,
+                              isPending: false,
+                              expenseDescription: 'CASH'
+                            });
+                            if (cust) updateCustomerPotaliStatus(cust.id, 'delivered');
+                          }}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black transition-all shadow-xs cursor-pointer"
+                          title="Mark Grinding Done & Cash Collected"
+                        >
+                          💵 {language === 'hi' ? 'कैश (Done)' : 'Cash'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateDailyHisab({
+                              ...h,
+                              isPending: false,
+                              expenseDescription: 'PAYTM'
+                            });
+                            if (cust) updateCustomerPotaliStatus(cust.id, 'delivered');
+                          }}
+                          className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-black transition-all shadow-xs cursor-pointer"
+                          title="Mark Grinding Done & Paytm Collected"
+                        >
+                          📲 Paytm
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateDailyHisab({
+                              ...h,
+                              isPending: false,
+                              expenseDescription: 'UDHAR'
+                            });
+                            if (cust) updateCustomerPotaliStatus(cust.id, 'delivered');
+                          }}
+                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-black transition-all shadow-xs cursor-pointer"
+                          title="Mark Grinding Done & Udhar Logged"
+                        >
+                          📝 Udhar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

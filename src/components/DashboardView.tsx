@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LossIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon, QrCodeIcon, FileTextIcon, GrindingIcon } from './Icons';
+import { LossIcon, CustomersIcon, KhataIcon, ReportsIcon, PlusIcon, ChevronRightIcon, QrCodeIcon, FileTextIcon, GrindingIcon, PotaliIcon } from './Icons';
 import { InvoiceModal } from './InvoiceModal';
 import { QrScannerModal } from './QrScannerModal';
 import { ExpenseLossModal } from './ExpenseLossModal';
@@ -11,7 +11,7 @@ import { PaymentSummaryModal } from './PaymentSummaryModal';
 import { Order } from '../types';
 
 export const DashboardView: React.FC = () => {
-  const { orders, customers, creditRecords, dailyHisabs, setActiveView, t, language, hideAmounts } = useApp();
+  const { orders, customers, creditRecords, dailyHisabs, setActiveView, setSelectedCustomer, updateCustomerPotaliStatus, cycleCustomerPotaliStatus, t, language, hideAmounts } = useApp();
   const [selectedOrderForBill, setSelectedOrderForBill] = useState<Order | null>(null);
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [isExpenseLossModalOpen, setIsExpenseLossModalOpen] = useState(false);

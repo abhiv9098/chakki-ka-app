@@ -25,6 +25,8 @@ interface AppContextType {
   refreshData: () => void;
   addCustomer: (name: string, phone: string) => Customer;
   updateCustomer: (customerId: number, name: string, phone: string) => Customer | null;
+  updateCustomerPotaliStatus: (customerId: number, status: 'none' | 'received' | 'delivered') => void;
+  cycleCustomerPotaliStatus: (customerId: number) => void;
   deleteCustomer: (customerId: number) => void;
   addOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Order;
   deleteOrder: (orderId: number) => void;
@@ -202,6 +204,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return updated;
   };
 
+  const updateCustomerPotaliStatus = (customerId: number, status: 'none' | 'received' | 'delivered') => {
+    const updated = dbService.updateCustomerPotaliStatus(customerId, status);
+    refreshData();
+    if (selectedCustomer && selectedCustomer.id === customerId) {
+      setSelectedCustomer(updated);
+    }
+  };
+
+  const cycleCustomerPotaliStatus = (customerId: number) => {
+    const targetCust = dbService.getCustomers().find(c => c.id === customerId);
+    if (!targetCust) return;
+    const current = targetCust.potaliStatus || 'none';
+    let nextStatus: 'none' | 'received' | 'delivered' = 'received';
+    if (current === 'none') nextStatus = 'received';
+    else if (current === 'received') nextStatus = 'delivered';
+    else if (current === 'delivered') nextStatus = 'none';
+
+    updateCustomerPotaliStatus(customerId, nextStatus);
+  };
+
   const deleteCustomer = (customerId: number) => {
     dbService.deleteCustomer(customerId);
     refreshData();
@@ -295,6 +317,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         refreshData,
         addCustomer,
         updateCustomer,
+        updateCustomerPotaliStatus,
+        cycleCustomerPotaliStatus,
         deleteCustomer,
         addOrder,
         deleteOrder,

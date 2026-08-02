@@ -11,7 +11,7 @@ interface PaymentSummaryModalProps {
 }
 
 export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen, onClose }) => {
-  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab } = useApp();
+  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, updateCustomerPotaliStatus, cycleCustomerPotaliStatus } = useApp();
 
   const [activeTab, setActiveTab] = useState<'CASH' | 'PAYTM' | 'UDHAR'>('CASH');
   const [selectedHisabForPayment, setSelectedHisabForPayment] = useState<DailyHisab | null>(null);
@@ -281,26 +281,64 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                   </p>
                 ) : (
                   <div className="space-y-2 pb-2">
-                    {todayPaidCreditRecords.map(r => (
-                      <div key={`c-${r.id}`} className="p-3 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black text-xs">
-                            ✓
-                          </span>
-                          <div>
-                            <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
-                              {customers.find(c => c.id === r.customerId)?.name || r.description || (isHindi ? 'ग्राहक' : 'Customer')}
-                            </h5>
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block">
-                              {isHindi ? 'उधार जमा कैश' : 'Udhar Paid Cash'}
+                    {todayPaidCreditRecords.map(r => {
+                      const cust = customers.find(c => c.id === r.customerId);
+                      const potaliStatus = cust?.potaliStatus || 'none';
+
+                      return (
+                        <div key={`c-${r.id}`} className="p-3 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900 rounded-2xl flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                              ✓
                             </span>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                  {cust?.name || r.description || (isHindi ? 'ग्राहक' : 'Customer')}
+                                </h5>
+                                {potaliStatus === 'received' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
+                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
+                                  </span>
+                                )}
+                                {potaliStatus === 'delivered' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">
+                                {isHindi ? 'उधार जमा कैश' : 'Udhar Paid Cash'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-emerald-600 dark:text-emerald-400 text-base">
+                              +₹{r.amount}
+                            </span>
+                            {cust && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
+                                  updateCustomerPotaliStatus(cust.id, nextStatus);
+                                }}
+                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
+                                  potaliStatus === 'received'
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
+                                    : potaliStatus === 'delivered'
+                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                                }`}
+                                title="Potali Delivered Button: Click to mark potali as given to customer"
+                              >
+                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <span className="font-black text-emerald-600 dark:text-emerald-400 text-base">
-                          +₹{r.amount}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {todayCashHisabs.map(h => {
                       const realName = (h.incomeDescription && !h.incomeDescription.includes('Log') && h.incomeDescription !== '5')
@@ -309,35 +347,49 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                           ? h.notes
                           : '';
                       const displayName = realName || (isHindi ? 'नकद ग्राहक' : 'Cash Customer');
+                      const cust = customers.find(c => c.name.toLowerCase() === displayName.toLowerCase());
+                      const potaliStatus = cust?.potaliStatus || 'none';
 
                       return (
-                        <div key={`h-${h.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between">
+                        <div key={`h-${h.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
+                            <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0">
                               📋
                             </span>
                             <div>
-                              <h5
-                                onClick={() => {
-                                  const input = window.prompt(
-                                    isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
-                                    realName
-                                  );
-                                  if (input !== null && input.trim()) {
-                                    updateDailyHisab({
-                                      ...h,
-                                      incomeDescription: input.trim(),
-                                      notes: input.trim()
-                                    });
-                                  }
-                                }}
-                                className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer flex items-center gap-1 group"
-                                title={isHindi ? 'ग्राहक का नाम दर्ज करने के लिए क्लिक करें' : 'Click to edit customer name'}
-                              >
-                                <span>{displayName}</span>
-                                <span className="text-[10px] text-slate-400 opacity-60 group-hover:opacity-100">✏️</span>
-                              </h5>
-                              <span className="text-[10px] font-semibold text-slate-400 block">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h5
+                                  onClick={() => {
+                                    const input = window.prompt(
+                                      isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
+                                      realName
+                                    );
+                                    if (input !== null && input.trim()) {
+                                      updateDailyHisab({
+                                        ...h,
+                                        incomeDescription: input.trim(),
+                                        notes: input.trim()
+                                      });
+                                    }
+                                  }}
+                                  className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer flex items-center gap-1 group"
+                                  title={isHindi ? 'ग्राहक का नाम दर्ज करने के लिए क्लिक करें' : 'Click to edit customer name'}
+                                >
+                                  <span>{displayName}</span>
+                                  <span className="text-[10px] text-slate-400 opacity-60 group-hover:opacity-100">✏️</span>
+                                </h5>
+                                {potaliStatus === 'received' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
+                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
+                                  </span>
+                                )}
+                                {potaliStatus === 'delivered' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
                                 {h.grainType} ({h.wheatWeight} kg)
                               </span>
                             </div>
@@ -346,6 +398,25 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                             <span className="font-black text-slate-900 dark:text-slate-100 text-base">
                               ₹{(h.revenue || h.amount || 0).toFixed(0)}
                             </span>
+                            {cust && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
+                                  updateCustomerPotaliStatus(cust.id, nextStatus);
+                                }}
+                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
+                                  potaliStatus === 'received'
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
+                                    : potaliStatus === 'delivered'
+                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                                }`}
+                                title="Potali Delivered Button: Click to mark potali as given to customer"
+                              >
+                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => handleDeleteHisab(h.id)}
@@ -359,26 +430,64 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                       );
                     })}
 
-                    {todayCashOrders.map(o => (
-                      <div key={`o-${o.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs">
-                            🌾
-                          </span>
-                          <div>
-                            <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
-                              {o.customerName || (isHindi ? 'नकद ग्राहक' : 'Cash Customer')}
-                            </h5>
-                            <span className="text-[10px] font-semibold text-slate-400 block">
-                              {o.grainType} ({o.weight} kg)
+                    {todayCashOrders.map(o => {
+                      const cust = customers.find(c => c.id === o.customerId);
+                      const potaliStatus = cust?.potaliStatus || o.potaliStatus || 'none';
+
+                      return (
+                        <div key={`o-${o.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0">
+                              🌾
                             </span>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                  {o.customerName || (isHindi ? 'नकद ग्राहक' : 'Cash Customer')}
+                                </h5>
+                                {potaliStatus === 'received' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
+                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
+                                  </span>
+                                )}
+                                {potaliStatus === 'delivered' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
+                                {o.grainType} ({o.weight} kg)
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-slate-900 dark:text-slate-100 text-base">
+                              ₹{o.totalAmount}
+                            </span>
+                            {cust && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
+                                  updateCustomerPotaliStatus(cust.id, nextStatus);
+                                }}
+                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
+                                  potaliStatus === 'received'
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
+                                    : potaliStatus === 'delivered'
+                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                                }`}
+                                title="Potali Delivered Button: Click to mark potali as given to customer"
+                              >
+                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <span className="font-black text-slate-900 dark:text-slate-100 text-base">
-                          ₹{o.totalAmount}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -420,35 +529,49 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                           ? h.notes
                           : '';
                       const displayName = realName || (isHindi ? 'Paytm ग्राहक' : 'Paytm Customer');
+                      const cust = customers.find(c => c.name.toLowerCase() === displayName.toLowerCase());
+                      const potaliStatus = cust?.potaliStatus || 'none';
 
                       return (
-                        <div key={`h-${h.id}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between">
+                        <div key={`h-${h.id}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between gap-2">
                           <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs">
+                            <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
                               📲
                             </span>
                             <div>
-                              <h5
-                                onClick={() => {
-                                  const input = window.prompt(
-                                    isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
-                                    realName
-                                  );
-                                  if (input !== null && input.trim()) {
-                                    updateDailyHisab({
-                                      ...h,
-                                      incomeDescription: input.trim(),
-                                      notes: input.trim()
-                                    });
-                                  }
-                                }}
-                                className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer flex items-center gap-1 group"
-                                title={isHindi ? 'ग्राहक का नाम दर्ज करने के लिए क्लिक करें' : 'Click to edit customer name'}
-                              >
-                                <span>{displayName}</span>
-                                <span className="text-[10px] text-blue-400 opacity-60 group-hover:opacity-100">✏️</span>
-                              </h5>
-                              <span className="text-[10px] font-semibold text-slate-400 block">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h5
+                                  onClick={() => {
+                                    const input = window.prompt(
+                                      isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
+                                      realName
+                                    );
+                                    if (input !== null && input.trim()) {
+                                      updateDailyHisab({
+                                        ...h,
+                                        incomeDescription: input.trim(),
+                                        notes: input.trim()
+                                      });
+                                    }
+                                  }}
+                                  className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer flex items-center gap-1 group"
+                                  title={isHindi ? 'ग्राहक का नाम दर्ज करने के लिए क्लिक करें' : 'Click to edit customer name'}
+                                >
+                                  <span>{displayName}</span>
+                                  <span className="text-[10px] text-blue-400 opacity-60 group-hover:opacity-100">✏️</span>
+                                </h5>
+                                {potaliStatus === 'received' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
+                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
+                                  </span>
+                                )}
+                                {potaliStatus === 'delivered' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
                                 Paytm ({h.grainType})
                               </span>
                             </div>
@@ -457,6 +580,25 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                             <span className="font-black text-blue-600 dark:text-blue-400 text-base">
                               ₹{(h.revenue || h.amount || 0).toFixed(0)}
                             </span>
+                            {cust && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
+                                  updateCustomerPotaliStatus(cust.id, nextStatus);
+                                }}
+                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
+                                  potaliStatus === 'received'
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
+                                    : potaliStatus === 'delivered'
+                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                                }`}
+                                title="Potali Delivered Button: Click to mark potali as given to customer"
+                              >
+                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => handleDeleteHisab(h.id)}
@@ -470,26 +612,64 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                       );
                     })}
 
-                    {todayPaytmOrders.map(o => (
-                      <div key={`o-${o.id}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs">
-                            📲
-                          </span>
-                          <div>
-                            <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
-                              {o.customerName || (isHindi ? 'Paytm ग्राहक' : 'Paytm Customer')}
-                            </h5>
-                            <span className="text-[10px] font-semibold text-slate-400 block">
-                              Paytm ({o.grainType})
+                    {todayPaytmOrders.map(o => {
+                      const cust = customers.find(c => c.id === o.customerId);
+                      const potaliStatus = cust?.potaliStatus || o.potaliStatus || 'none';
+
+                      return (
+                        <div key={`o-${o.id}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                              📲
                             </span>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                  {o.customerName || (isHindi ? 'Paytm ग्राहक' : 'Paytm Customer')}
+                                </h5>
+                                {potaliStatus === 'received' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
+                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
+                                  </span>
+                                )}
+                                {potaliStatus === 'delivered' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
+                                Paytm ({o.grainType})
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-blue-600 dark:text-blue-400 text-base">
+                              ₹{o.totalAmount}
+                            </span>
+                            {cust && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
+                                  updateCustomerPotaliStatus(cust.id, nextStatus);
+                                }}
+                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
+                                  potaliStatus === 'received'
+                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
+                                    : potaliStatus === 'delivered'
+                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                                }`}
+                                title="Potali Delivered Button: Click to mark potali as given to customer"
+                              >
+                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <span className="font-black text-blue-600 dark:text-blue-400 text-base">
-                          ₹{o.totalAmount}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -618,17 +798,30 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                     {customers.filter(c => c.outstandingBalance > 0).map(c => {
                       const customerPaidRecords = creditRecords.filter(r => r.customerId === c.id && r.type === 'PAID');
                       const totalCustomerPaid = customerPaidRecords.reduce((sum, r) => sum + r.amount, 0);
+                      const potaliStatus = c.potaliStatus || 'none';
 
                       return (
-                        <div key={`cust-k-${c.id}`} className="p-3.5 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+                        <div key={`cust-k-${c.id}`} className="p-3.5 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-3 flex-wrap">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-sm shrink-0">
                               👤
                             </div>
                             <div>
-                              <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
-                                {c.name}
-                              </h5>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                  {c.name}
+                                </h5>
+                                {potaliStatus === 'received' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
+                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
+                                  </span>
+                                )}
+                                {potaliStatus === 'delivered' && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-[11px] font-semibold text-slate-400 flex items-center gap-2 mt-0.5">
                                 <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
                                   ✓ {isHindi ? 'खाता जमा: ₹' : 'Khata Jama: ₹'}{totalCustomerPaid.toFixed(0)}
@@ -637,13 +830,32 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                             </div>
                           </div>
 
-                          <div className="text-right shrink-0">
-                            <span className="text-[10px] font-bold text-slate-400 block uppercase">
-                              {isHindi ? 'खाता बकाया' : 'Khata Balance'}
-                            </span>
-                            <span className="text-sm font-black text-amber-600 dark:text-amber-400">
-                              ₹{c.outstandingBalance.toFixed(0)}
-                            </span>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right">
+                              <span className="text-[10px] font-bold text-slate-400 block uppercase">
+                                {isHindi ? 'खाता बकाया' : 'Khata Balance'}
+                              </span>
+                              <span className="text-sm font-black text-amber-600 dark:text-amber-400">
+                                ₹{c.outstandingBalance.toFixed(0)}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
+                                updateCustomerPotaliStatus(c.id, nextStatus);
+                              }}
+                              className={`px-2.5 py-1.5 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
+                                potaliStatus === 'received'
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
+                                  : potaliStatus === 'delivered'
+                                  ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                                  : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                              }`}
+                              title="Potali Delivered Button: Click to mark potali as given to customer"
+                            >
+                              ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी गई' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
+                            </button>
                           </div>
                         </div>
                       );
