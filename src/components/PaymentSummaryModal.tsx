@@ -106,10 +106,10 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
   const totalUdharAdded = todayCreditAddedRecords.reduce((sum, r) => sum + r.amount, 0);
   const totalUdharToday = totalUdharOrders + totalUdharHisabs + totalUdharAdded;
 
-  // Total Outstanding across all customers + daily hisabs
+  // Total Outstanding across all customers
   const totalCustomerOutstanding = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
   const totalHisabsUdharOutstanding = udharHisabsList.reduce((sum, h) => sum + getUdharDetails(h).udhar, 0);
-  const grandTotalUdharOutstanding = totalCustomerOutstanding + totalHisabsUdharOutstanding;
+  const grandTotalUdharOutstanding = totalCustomerOutstanding;
 
   // Open Jama Payment Collection Modal
   const openPaymentModal = (hisab: DailyHisab) => {
@@ -789,102 +789,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                   </p>
                 ) : (
                   <div className="space-y-2.5 pb-2">
-                    {/* 1. Daily Hisab Udhar Entries */}
-                    {udharHisabsList.map(h => {
-                      const udharInfo = getUdharDetails(h);
-                      const realName = (h.incomeDescription && !h.incomeDescription.includes('Log'))
-                        ? h.incomeDescription
-                        : (h.notes && !h.notes.includes('Log'))
-                          ? h.notes
-                          : '';
-
-                      return (
-                        <div key={`udhar-h-${h.id}`} className="p-3 bg-red-50/80 dark:bg-red-950/20 border border-red-200/70 dark:border-red-900/60 rounded-2xl space-y-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                                📝
-                              </span>
-                              <div>
-                                <h5
-                                  onClick={() => {
-                                    const input = window.prompt(
-                                      isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
-                                      realName
-                                    );
-                                    if (input !== null && input.trim()) {
-                                      updateDailyHisab({
-                                        ...h,
-                                        incomeDescription: input.trim(),
-                                        notes: input.trim()
-                                      });
-                                    }
-                                  }}
-                                  className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center gap-1 group"
-                                  title={isHindi ? 'ग्राहक का नाम बदलने या दर्ज करने के लिए क्लिक करें' : 'Click to edit or set customer name'}
-                                >
-                                  <span>{realName || (isHindi ? 'उधार ग्राहक' : 'Udhar Customer')}</span>
-                                  <span className="text-[10px] text-amber-500 opacity-60 group-hover:opacity-100">✏️</span>
-                                </h5>
-                                <span className="text-[10px] font-bold text-slate-400">
-                                  {h.date} • {h.grainType} ({h.wheatWeight}kg)
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <span className="font-black text-slate-900 dark:text-slate-100 text-sm">
-                                {isHindi ? 'कुल: ' : 'Total: '}₹{h.amount}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteHisab(h.id)}
-                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
-                                title={isHindi ? 'हिसाब मिटाएं' : 'Delete Log'}
-                              >
-                                <TrashIcon size={15} />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-1 border-t border-red-200/50 dark:border-red-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
-                                ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{udharInfo.jama}
-                              </span>
-
-                              <span className="text-amber-700 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-800">
-                                📝 {isHindi ? 'बाकी उधार: ₹' : 'Udhar Due: ₹'}{udharInfo.udhar}
-                              </span>
-                            </div>
-
-                            <div className="flex gap-1.5 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => handleAddUdhar(h)}
-                                className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
-                              >
-                                <span>➕</span>
-                                <span>{isHindi ? 'उधार बढ़ाएं' : '+Udhar'}</span>
-                              </button>
-
-                              {udharInfo.udhar > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => openPaymentModal(h)}
-                                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
-                                >
-                                  <span>💳</span>
-                                  <span>{isHindi ? 'जमा करें' : 'Jama'}</span>
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* 2. Customer Khata Accounts */}
+                    {/* 2. Customer Khata Accounts (Single Source of Truth for Udhar) */}
                     {customers.filter(c => c.outstandingBalance > 0).map(c => {
                       const customerPaidRecords = creditRecords.filter(r => r.customerId === c.id && r.type === 'PAID');
                       const totalCustomerPaid = customerPaidRecords.reduce((sum, r) => sum + r.amount, 0);
