@@ -207,6 +207,30 @@ export const HisabHistoryView: React.FC = () => {
     );
   };
 
+  // Handle adding more udhar to an existing record
+  const handleAddUdhar = (h: DailyHisab) => {
+    const amountStr = window.prompt(language === 'hi' ? 'कितना उधार और जोड़ना है?' : 'How much more udhar to add?');
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      alert(language === 'hi' ? 'कृपया सही राशि दर्ज करें!' : 'Please enter a valid amount!');
+      return;
+    }
+
+    const udharInfo = getUdharDetails(h);
+    const newUdhar = udharInfo.udhar + amount;
+    const newTotalAmount = h.amount + amount;
+    
+    const updatedHisab: DailyHisab = {
+      ...h,
+      amount: newTotalAmount,
+      expenseDescription: `UDHAR (Jama: ₹${udharInfo.jama.toFixed(0)}, Udhar: ₹${newUdhar.toFixed(0)})`
+    };
+
+    updateDailyHisab(updatedHisab);
+    alert(language === 'hi' ? `₹${amount} का उधार सफलतापूर्वक जोड़ा गया!` : `₹${amount} udhar added successfully!`);
+  };
+
   // Complete / Deliver Pending Hisab
   const handleMarkDelivered = (hisab: DailyHisab, mode: 'CASH' | 'PAYTM' | 'UDHAR' | 'KEEP') => {
     let updatedDesc = hisab.expenseDescription || 'CASH';
@@ -527,14 +551,24 @@ export const HisabHistoryView: React.FC = () => {
                               <span>{language === 'hi' ? 'डिलीवरी करें' : 'Deliver'}</span>
                             </button>
                           ) : udharInfo.isUdhar ? (
-                            <button
-                              type="button"
-                              onClick={() => openPaymentModal(hisab)}
-                              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
-                            >
-                              <span>💳</span>
-                              <span>{language === 'hi' ? 'जमा करें' : 'Jama'}</span>
-                            </button>
+                            <div className="flex gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleAddUdhar(hisab); }}
+                                className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                              >
+                                <span>➕</span>
+                                <span>{language === 'hi' ? 'उधार बढ़ाएं' : '+Udhar'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); openPaymentModal(hisab); }}
+                                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                              >
+                                <span>💳</span>
+                                <span>{language === 'hi' ? 'जमा करें' : 'Jama'}</span>
+                              </button>
+                            </div>
                           ) : (
                             <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] rounded-lg border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
                               <span>✅</span>
@@ -656,13 +690,22 @@ export const HisabHistoryView: React.FC = () => {
                                 🚚 {language === 'hi' ? 'डिलीवरी करें' : 'Deliver'}
                               </button>
                             ) : udharInfo.isUdhar ? (
-                              <button
-                                type="button"
-                                onClick={() => openPaymentModal(hisab)}
-                                className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-md transition-all shadow-2xs cursor-pointer active:scale-95"
-                              >
-                                💳 {language === 'hi' ? 'जमा करें' : 'Jama'}
-                              </button>
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); handleAddUdhar(hisab); }}
+                                  className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-md transition-all shadow-2xs cursor-pointer active:scale-95"
+                                >
+                                  ➕ {language === 'hi' ? 'उधार बढ़ाएं' : '+Udhar'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); openPaymentModal(hisab); }}
+                                  className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-md transition-all shadow-2xs cursor-pointer active:scale-95"
+                                >
+                                  💳 {language === 'hi' ? 'जमा करें' : 'Jama'}
+                                </button>
+                              </div>
                             ) : (
                               <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] rounded-md border border-emerald-300 dark:border-emerald-800 inline-flex items-center justify-center gap-1">
                                 <span>✅</span>

@@ -159,6 +159,36 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
     updateDailyHisab(updatedHisab);
     setSelectedHisabForPayment(null);
     setNewPaymentAmount('');
+
+    alert(
+      isHindi
+        ? `₹${addAmt} सफलता पूर्वक जमा किया गया! ${remainingUdhar > 0 ? `बाकी उधार: ₹${remainingUdhar}` : 'उधार पूरा चुकता हो गया!'}`
+        : `₹${addAmt} successfully recorded! ${remainingUdhar > 0 ? `Remaining Udhar: ₹${remainingUdhar}` : 'Fully paid!'}`
+    );
+  };
+
+  // Handle adding more udhar to an existing record
+  const handleAddUdhar = (h: DailyHisab) => {
+    const amountStr = window.prompt(isHindi ? 'कितना उधार और जोड़ना है?' : 'How much more udhar to add?');
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      alert(isHindi ? 'कृपया सही राशि दर्ज करें!' : 'Please enter a valid amount!');
+      return;
+    }
+
+    const udharInfo = getUdharDetails(h);
+    const newUdhar = udharInfo.udhar + amount;
+    const newTotalAmount = h.amount + amount;
+    
+    const updatedHisab: DailyHisab = {
+      ...h,
+      amount: newTotalAmount,
+      expenseDescription: `UDHAR (Jama: ₹${udharInfo.jama.toFixed(0)}, Udhar: ₹${newUdhar.toFixed(0)})`
+    };
+
+    updateDailyHisab(updatedHisab);
+    alert(isHindi ? `₹${amount} का उधार सफलतापूर्वक जोड़ा गया!` : `₹${amount} udhar added successfully!`);
   };
 
   const handleDeleteHisab = (id: number) => {
@@ -779,16 +809,27 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                               </span>
                             </div>
 
-                            {udharInfo.udhar > 0 && (
+                            <div className="flex gap-1.5 shrink-0">
                               <button
                                 type="button"
-                                onClick={() => openPaymentModal(h)}
-                                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                                onClick={() => handleAddUdhar(h)}
+                                className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
                               >
-                                <span>💳</span>
-                                <span>{isHindi ? 'जमा करें' : 'Jama'}</span>
+                                <span>➕</span>
+                                <span>{isHindi ? 'उधार बढ़ाएं' : '+Udhar'}</span>
                               </button>
-                            )}
+
+                              {udharInfo.udhar > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => openPaymentModal(h)}
+                                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                                >
+                                  <span>💳</span>
+                                  <span>{isHindi ? 'जमा करें' : 'Jama'}</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
