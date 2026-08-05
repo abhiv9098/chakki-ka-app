@@ -902,11 +902,6 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                                   {c.name}
                                 </h5>
                               </div>
-                              <p className="text-[11px] font-semibold text-slate-400 flex items-center gap-2 mt-0.5">
-                                <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
-                                  ✓ {isHindi ? 'खाता जमा: ₹' : 'Khata Jama: ₹'}{totalCustomerPaid.toFixed(0)}
-                                </span>
-                              </p>
                             </div>
                           </div>
 
@@ -920,23 +915,30 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                               </span>
                             </div>
                           </div>
-                          <div className="w-full flex justify-end gap-1.5 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 mt-1">
-                            <button
-                              type="button"
-                              onClick={() => handleAddKhataUdhar(c.id)}
-                              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400 font-extrabold text-[10px] rounded-lg border border-red-200 dark:border-red-900/50 cursor-pointer flex items-center gap-1 shrink-0 active:scale-95 transition-all"
-                            >
-                              <span>➕</span>
-                              <span>{isHindi ? 'उधार' : 'Udhar'}</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleKhataJama(c.id)}
-                              className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] rounded-lg border border-emerald-200 dark:border-emerald-900/50 cursor-pointer flex items-center gap-1 shrink-0 active:scale-95 transition-all"
-                            >
-                              <span>💳</span>
-                              <span>{isHindi ? 'जमा' : 'Jama'}</span>
-                            </button>
+                          <div className="w-full flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-slate-800/50 text-[11px] font-extrabold flex-wrap gap-1.5 mt-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
+                                ✓ {isHindi ? 'खाता जमा: ₹' : 'Khata Jama: ₹'}{totalCustomerPaid.toFixed(0)}
+                              </span>
+                            </div>
+                            <div className="flex gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleAddKhataUdhar(c.id)}
+                                className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                              >
+                                <span>➕</span>
+                                <span>{isHindi ? 'उधार बढ़ाएं' : '+Udhar'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleKhataJama(c.id)}
+                                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                              >
+                                <span>💳</span>
+                                <span>{isHindi ? 'जमा करें' : 'Jama'}</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
