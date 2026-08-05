@@ -317,7 +317,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
               onClick={() => setActiveTab('UDHAR')}
               className={`py-2.5 px-2 rounded-xl transition-all font-extrabold text-xs sm:text-sm cursor-pointer flex flex-col items-center justify-center gap-1 ${
                 activeTab === 'UDHAR'
-                  ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                  ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
               }`}
             >
@@ -758,9 +758,9 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
           {/* TAB 3: UDHAR (CREDIT & JAMA) HISTORY LEDGER */}
           {activeTab === 'UDHAR' && (
             <div className="space-y-4">
-              <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-5 text-white shadow-lg shadow-amber-500/20 grid grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-3xl p-5 text-white shadow-lg shadow-red-500/20 grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-[11px] font-bold text-amber-100 uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-red-100 uppercase tracking-wider block">
                     {isHindi ? 'आज का नया उधार' : "Today's New Udhar"}
                   </span>
                   <p className="text-3xl font-black mt-1 tracking-tight">
@@ -768,7 +768,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                   </p>
                 </div>
                 <div className="border-l border-white/20 pl-4">
-                  <span className="text-[11px] font-bold text-amber-100 uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-red-100 uppercase tracking-wider block">
                     {isHindi ? 'कुल बाकी उधार (Total Due)' : 'Total Outstanding'}
                   </span>
                   <p className="text-3xl font-black mt-1 tracking-tight">
