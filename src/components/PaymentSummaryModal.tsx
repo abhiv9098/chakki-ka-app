@@ -788,7 +788,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                     {isHindi ? 'कुल बाकी उधार (Total Due)' : 'Total Outstanding'}
                   </span>
                   <p className="text-3xl font-black mt-1 tracking-tight">
-                    {hideAmounts ? '₹••••' : formatCurrency(grandTotalUdharOutstanding)}
+                    {hideAmounts ? '₹••••' : `₹00`}
                   </p>
                 </div>
               </div>
