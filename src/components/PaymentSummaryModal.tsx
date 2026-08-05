@@ -11,7 +11,7 @@ interface PaymentSummaryModalProps {
 }
 
 export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen, onClose }) => {
-  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, updateCustomerPotaliStatus, cycleCustomerPotaliStatus } = useApp();
+  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, updateCustomerPotaliStatus, cycleCustomerPotaliStatus, recordPayment, recordManualDue } = useApp();
 
   const [activeTab, setActiveTab] = useState<'CASH' | 'PAYTM' | 'UDHAR'>('CASH');
   const [selectedHisabForPayment, setSelectedHisabForPayment] = useState<DailyHisab | null>(null);
@@ -165,6 +165,32 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
         ? `₹${addAmt} सफलता पूर्वक जमा किया गया! ${remainingUdhar > 0 ? `बाकी उधार: ₹${remainingUdhar}` : 'उधार पूरा चुकता हो गया!'}`
         : `₹${addAmt} successfully recorded! ${remainingUdhar > 0 ? `Remaining Udhar: ₹${remainingUdhar}` : 'Fully paid!'}`
     );
+  };
+
+  const handleAddKhataUdhar = (customerId: number) => {
+    const amountStr = window.prompt(isHindi ? 'कितना उधार और जोड़ना है?' : 'How much more udhar to add?');
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      alert(isHindi ? 'कृपया सही राशि दर्ज करें!' : 'Please enter a valid amount!');
+      return;
+    }
+    const description = window.prompt(isHindi ? 'विवरण दर्ज करें (optional):' : 'Enter description (optional):') || (isHindi ? 'नया उधार' : 'New Udhar');
+    recordManualDue(customerId, amount, description);
+    alert(isHindi ? 'उधार सफलतापूर्वक जोड़ा गया!' : 'Udhar added successfully!');
+  };
+
+  const handleKhataJama = (customerId: number) => {
+    const amountStr = window.prompt(isHindi ? 'कितनी राशि जमा करनी है?' : 'How much amount to Jama?');
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      alert(isHindi ? 'कृपया सही राशि दर्ज करें!' : 'Please enter a valid amount!');
+      return;
+    }
+    const description = window.prompt(isHindi ? 'विवरण दर्ज करें (optional):' : 'Enter description (optional):') || (isHindi ? 'नकद जमा' : 'Cash Jama');
+    recordPayment(customerId, amount, description);
+    alert(isHindi ? 'राशि सफलतापूर्वक जमा हो गई!' : 'Payment received successfully!');
   };
 
   // Handle adding more udhar to an existing record
@@ -889,10 +915,28 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                               <span className="text-[10px] font-bold text-slate-400 block uppercase">
                                 {isHindi ? 'खाता बकाया' : 'Khata Balance'}
                               </span>
-                              <span className="text-sm font-black text-amber-600 dark:text-amber-400">
+                              <span className="text-sm font-black text-amber-600 dark:text-amber-400 block mt-0.5">
                                 ₹{c.outstandingBalance.toFixed(0)}
                               </span>
                             </div>
+                          </div>
+                          <div className="w-full flex justify-end gap-1.5 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 mt-1">
+                            <button
+                              type="button"
+                              onClick={() => handleAddKhataUdhar(c.id)}
+                              className="px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400 font-extrabold text-[10px] rounded-lg border border-red-200 dark:border-red-900/50 cursor-pointer flex items-center gap-1 shrink-0 active:scale-95 transition-all"
+                            >
+                              <span>➕</span>
+                              <span>{isHindi ? 'उधार' : 'Udhar'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleKhataJama(c.id)}
+                              className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] rounded-lg border border-emerald-200 dark:border-emerald-900/50 cursor-pointer flex items-center gap-1 shrink-0 active:scale-95 transition-all"
+                            >
+                              <span>💳</span>
+                              <span>{isHindi ? 'जमा' : 'Jama'}</span>
+                            </button>
                           </div>
                         </div>
                       );
