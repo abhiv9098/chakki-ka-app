@@ -914,7 +914,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                             </div>
                           </div>
                           
-                          <div className="flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-slate-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
+                          <div className="flex items-center justify-between pt-1 border-t border-red-200/50 dark:border-red-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
                                 ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{totalCustomerPaid.toFixed(0)}
