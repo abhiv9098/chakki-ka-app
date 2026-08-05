@@ -191,6 +191,29 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
     alert(isHindi ? `₹${amount} का उधार सफलतापूर्वक जोड़ा गया!` : `₹${amount} udhar added successfully!`);
   };
 
+  // Handle adding more amount to an existing Cash/Paytm record
+  const handleAddAmount = (h: DailyHisab, mode: 'CASH' | 'PAYTM') => {
+    const amountStr = window.prompt(isHindi ? `कितना ${mode === 'CASH' ? 'कैश' : 'Paytm'} और जोड़ना है?` : `How much more ${mode.toLowerCase()} to add?`);
+    if (!amountStr) return;
+    const addedAmount = parseFloat(amountStr);
+    if (isNaN(addedAmount) || addedAmount <= 0) {
+      alert(isHindi ? 'कृपया सही राशि दर्ज करें!' : 'Please enter a valid amount!');
+      return;
+    }
+
+    const currentAmount = h.revenue || h.amount || 0;
+    const newTotalAmount = currentAmount + addedAmount;
+    
+    const updatedHisab: DailyHisab = {
+      ...h,
+      amount: newTotalAmount,
+      revenue: newTotalAmount
+    };
+
+    updateDailyHisab(updatedHisab);
+    alert(isHindi ? `₹${addedAmount} सफलतापूर्वक जोड़ा गया!` : `₹${addedAmount} added successfully!`);
+  };
+
   const handleDeleteHisab = (id: number) => {
     if (window.confirm(isHindi ? 'क्या आप इस हिसाब एंट्री को मिटाना चाहते हैं?' : 'Are you sure you want to delete this log?')) {
       deleteDailyHisab(id);
@@ -449,6 +472,14 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                             )}
                             <button
                               type="button"
+                              onClick={() => handleAddAmount(h, 'CASH')}
+                              className="px-2 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                            >
+                              <span>➕</span>
+                              <span>{isHindi ? 'पैसे' : '+Cash'}</span>
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => handleDeleteHisab(h.id)}
                               className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors cursor-pointer"
                               title={isHindi ? 'हिसाब मिटाएं' : 'Delete Log'}
@@ -629,6 +660,14 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                                 ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
                               </button>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => handleAddAmount(h, 'PAYTM')}
+                              className="px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                            >
+                              <span>➕</span>
+                              <span>Paytm</span>
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteHisab(h.id)}
