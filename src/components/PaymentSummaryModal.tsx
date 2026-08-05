@@ -799,7 +799,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                           : '';
 
                       return (
-                        <div key={`udhar-h-${h.id}`} className="p-3 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/60 rounded-2xl space-y-1.5">
+                        <div key={`udhar-h-${h.id}`} className="p-3 bg-red-50/80 dark:bg-red-950/20 border border-red-200/70 dark:border-red-900/60 rounded-2xl space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <span className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
@@ -847,7 +847,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between pt-1 border-t border-amber-200/40 dark:border-amber-900/40 text-[11px] font-extrabold flex-wrap gap-1.5">
+                          <div className="flex items-center justify-between pt-1 border-t border-red-200/50 dark:border-red-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
                                 ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{udharInfo.jama}
