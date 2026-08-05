@@ -891,36 +891,36 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                       const potaliStatus = c.potaliStatus || 'none';
 
                       return (
-                        <div key={`cust-k-${c.id}`} className="p-3.5 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl space-y-1.5">
+                        <div key={`cust-k-${c.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-sm shrink-0">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs shrink-0">
                                 👤
                               </div>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
+                              <div>
                                 <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
                                   {c.name}
                                 </h5>
-                              </div>
-                            </div>
-                          </div>
-
-                            <div className="flex items-center gap-3 shrink-0">
-                              <div className="text-right">
-                                <span className="text-[10px] font-bold text-slate-400 block uppercase">
-                                  {isHindi ? 'खाता बकाया' : 'Khata Balance'}
-                                </span>
-                                <span className="text-sm font-black text-amber-600 dark:text-amber-400 block mt-0.5">
-                                  ₹{c.outstandingBalance.toFixed(0)}
+                                <span className="text-[10px] font-bold text-slate-400">
+                                  {todayStr} • WHEAT (0kg)
                                 </span>
                               </div>
                             </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-slate-900 dark:text-slate-100 text-sm">
+                                {isHindi ? 'कुल: ' : 'Total: '}₹{(c.outstandingBalance + totalCustomerPaid).toFixed(0)}
+                              </span>
+                            </div>
                           </div>
-                          <div className="w-full flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-slate-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
+                          
+                          <div className="flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-slate-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
-                                ✓ {isHindi ? 'खाता जमा: ₹' : 'Khata Jama: ₹'}{totalCustomerPaid.toFixed(0)}
+                                ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{totalCustomerPaid.toFixed(0)}
+                              </span>
+                              <span className="text-amber-700 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-800">
+                                📝 {isHindi ? 'बाकी उधार: ₹' : 'Udhar Due: ₹'}{c.outstandingBalance.toFixed(0)}
                               </span>
                             </div>
                             <div className="flex gap-1.5 shrink-0">
