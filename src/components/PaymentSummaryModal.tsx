@@ -11,7 +11,7 @@ interface PaymentSummaryModalProps {
 }
 
 export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen, onClose }) => {
-  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, updateCustomerPotaliStatus, cycleCustomerPotaliStatus, recordPayment, recordManualDue, deleteCustomer } = useApp();
+  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, updateCustomerPotaliStatus, cycleCustomerPotaliStatus, recordPayment, recordManualDue } = useApp();
 
   const [activeTab, setActiveTab] = useState<'CASH' | 'PAYTM' | 'UDHAR'>('CASH');
   const [selectedHisabForPayment, setSelectedHisabForPayment] = useState<DailyHisab | null>(null);
@@ -816,22 +816,6 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                               <span className="font-black text-slate-900 dark:text-slate-100 text-sm">
                                 {isHindi ? 'कुल: ' : 'Total: '}₹{(c.outstandingBalance + totalCustomerPaid).toFixed(0)}
                               </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (window.confirm(
-                                    isHindi
-                                      ? 'क्या आप इस ग्राहक और उसके पूरे हिसाब को मिटाना चाहते हैं?'
-                                      : 'Are you sure you want to delete this customer and all their ledger history?'
-                                  )) {
-                                    deleteCustomer(c.id);
-                                  }
-                                }}
-                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
-                                title={isHindi ? 'खाता मिटाएं' : 'Delete Khata'}
-                              >
-                                <TrashIcon size={15} />
-                              </button>
                             </div>
                           </div>
                           
