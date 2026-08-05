@@ -106,10 +106,9 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
   const totalUdharAdded = todayCreditAddedRecords.reduce((sum, r) => sum + r.amount, 0);
   const totalUdharToday = totalUdharOrders + totalUdharHisabs + totalUdharAdded;
 
-  // Total Outstanding across all customers + daily hisabs
+  // Total Outstanding across all customers
   const totalCustomerOutstanding = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
-  const totalHisabsUdharOutstanding = udharHisabsList.reduce((sum, h) => sum + getUdharDetails(h).udhar, 0);
-  const grandTotalUdharOutstanding = totalCustomerOutstanding + totalHisabsUdharOutstanding;
+  const grandTotalUdharOutstanding = totalCustomerOutstanding;
 
   // Open Jama Payment Collection Modal
   const openPaymentModal = (hisab: DailyHisab) => {
@@ -884,67 +883,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                       );
                     })}
 
-                    {/* 2. Customer Khata Accounts */}
-                    {customers.filter(c => c.outstandingBalance > 0).map(c => {
-                      const customerPaidRecords = creditRecords.filter(r => r.customerId === c.id && r.type === 'PAID');
-                      const totalCustomerPaid = customerPaidRecords.reduce((sum, r) => sum + r.amount, 0);
-                      const potaliStatus = c.potaliStatus || 'none';
-
-                      return (
-                        <div key={`cust-k-${c.id}`} className="p-3 bg-red-50/80 dark:bg-red-950/20 border border-red-200/70 dark:border-red-900/60 rounded-2xl space-y-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs shrink-0">
-                                👤
-                              </div>
-                              <div>
-                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
-                                  {c.name}
-                                </h5>
-                                <span className="text-[10px] font-bold text-slate-400">
-                                  {todayStr} • WHEAT (0kg)
-                                </span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <span className="font-black text-slate-900 dark:text-slate-100 text-sm">
-                                {isHindi ? 'कुल: ' : 'Total: '}₹{(c.outstandingBalance + totalCustomerPaid).toFixed(0)}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-between pt-1 border-t border-red-200/50 dark:border-red-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
-                                ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{totalCustomerPaid.toFixed(0)}
-                              </span>
-                              <span className="text-amber-700 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-800">
-                                📝 {isHindi ? 'बाकी उधार: ₹' : 'Udhar Due: ₹'}{c.outstandingBalance.toFixed(0)}
-                              </span>
-                            </div>
-                            <div className="flex gap-1.5 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => handleAddKhataUdhar(c.id)}
-                                className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
-                              >
-                                <span>➕</span>
-                                <span>{isHindi ? 'उधार बढ़ाएं' : '+Udhar'}</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleKhataJama(c.id)}
-                                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
-                              >
-                                <span>💳</span>
-                                <span>{isHindi ? 'जमा करें' : 'Jama'}</span>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {/* 2. Customer Khata Accounts (Removed from Today's Modal) */}
                   </div>
                 )}
               </div>
