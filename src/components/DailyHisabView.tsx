@@ -167,7 +167,21 @@ export const DailyHisabView: React.FC = () => {
     }
   };
 
-  const pendingHisabsList = dailyHisabs.filter(h => h.isPending || h.expenseDescription?.includes('PENDING'));
+  // Deduplicate pending Hisabs by ID and content to prevent accidental duplicate renders
+  const seenIds = new Set();
+  const seenComposites = new Set();
+  const pendingHisabsList = dailyHisabs.filter(h => {
+    const isPending = h.isPending || h.expenseDescription?.includes('PENDING');
+    if (!isPending) return false;
+
+    if (seenIds.has(h.id)) return false;
+    const composite = `${h.date}_${h.amount}_${h.grainType}_${h.wheatWeight}_${h.incomeDescription}_${h.notes}`;
+    if (seenComposites.has(composite)) return false;
+
+    seenIds.add(h.id);
+    seenComposites.add(composite);
+    return true;
+  });
   const pendingCount = pendingHisabsList.length;
 
   return (
