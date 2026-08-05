@@ -264,7 +264,6 @@ export const HisabHistoryView: React.FC = () => {
         id: 0,
         name: customerName,
         phone: 'N/A',
-        address: '',
         outstandingBalance: 0,
         potaliStatus: 'none',
         createdAt: Date.now()
