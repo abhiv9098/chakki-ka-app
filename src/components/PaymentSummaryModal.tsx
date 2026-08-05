@@ -17,6 +17,14 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
   const [selectedHisabForPayment, setSelectedHisabForPayment] = useState<DailyHisab | null>(null);
   const [newPaymentAmount, setNewPaymentAmount] = useState<string>('');
   const [newPaymentMode, setNewPaymentMode] = useState<'CASH' | 'PAYTM'>('CASH');
+  
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
+    const todayObj = new Date();
+    const yyyy = todayObj.getFullYear();
+    const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(todayObj.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  });
 
   if (!isOpen) return null;
 
@@ -26,18 +34,15 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
   };
 
-  const todayStr = (() => {
-    const todayObj = new Date();
-    const yyyy = todayObj.getFullYear();
-    const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
-    const dd = String(todayObj.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  })();
+  const todayStr = selectedDateStr;
 
   const startOfToday = (() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    if (!selectedDateStr) return 0;
+    const [yyyy, mm, dd] = selectedDateStr.split('-').map(Number);
+    return new Date(yyyy, mm - 1, dd).getTime();
   })();
+
+  const endOfToday = startOfToday + 24 * 60 * 60 * 1000;
 
   // Helper to parse Jama and Udhar details from a DailyHisab entry
   const getUdharDetails = (hisab: DailyHisab) => {
@@ -62,13 +67,13 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
 
   // 1. CASH TRANSACTIONS
   const todayCashOrders = orders.filter(
-    o => o.createdAt >= startOfToday && (o.paymentType === 'CASH' || !o.paymentType)
+    o => o.createdAt >= startOfToday && o.createdAt < endOfToday && (o.paymentType === 'CASH' || !o.paymentType)
   );
   const todayCashHisabs = dailyHisabs.filter(
     h => h.date === todayStr && (h.expenseDescription === 'CASH' || !h.expenseDescription)
   );
   const todayPaidCreditRecords = creditRecords.filter(
-    r => r.createdAt >= startOfToday && r.type === 'PAID'
+    r => r.createdAt >= startOfToday && r.createdAt < endOfToday && r.type === 'PAID'
   );
 
   const totalCashOrders = todayCashOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -78,7 +83,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
 
   // 2. PAYTM TRANSACTIONS
   const todayPaytmOrders = orders.filter(
-    o => o.createdAt >= startOfToday && (o.paymentType === 'ONLINE' || o.paymentType === 'PAYTM')
+    o => o.createdAt >= startOfToday && o.createdAt < endOfToday && (o.paymentType === 'ONLINE' || o.paymentType === 'PAYTM')
   );
   const todayPaytmHisabs = dailyHisabs.filter(
     h => h.date === todayStr && h.expenseDescription === 'PAYTM'
@@ -89,22 +94,26 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
   const totalPaytmToday = totalPaytmOrders + totalPaytmHisabs;
 
   // 3. UDHAR (CREDIT & JAMA) TRANSACTIONS
-  const udharHisabsList = dailyHisabs.filter(h => getUdharDetails(h).isUdhar);
+  const udharHisabsList = dailyHisabs.filter(h => h.date === todayStr && getUdharDetails(h).isUdhar);
 
   const todayUdharOrders = orders.filter(
-    o => o.createdAt >= startOfToday && o.paymentType === 'CREDIT'
+    o => o.createdAt >= startOfToday && o.createdAt < endOfToday && o.paymentType === 'CREDIT'
   );
   const todayUdharHisabs = dailyHisabs.filter(
     h => h.date === todayStr && getUdharDetails(h).isUdhar
   );
   const todayCreditAddedRecords = creditRecords.filter(
-    r => r.createdAt >= startOfToday && r.type === 'DUE'
+    r => r.createdAt >= startOfToday && r.createdAt < endOfToday && r.type === 'DUE'
   );
 
   const totalUdharOrders = todayUdharOrders.reduce((sum, o) => sum + o.totalAmount, 0);
   const totalUdharHisabs = todayUdharHisabs.reduce((sum, h) => sum + getUdharDetails(h).udhar, 0);
   const totalUdharAdded = todayCreditAddedRecords.reduce((sum, r) => sum + r.amount, 0);
-  const totalUdharToday = totalUdharOrders + totalUdharHisabs + totalUdharAdded;
+  
+  // To avoid double counting, if an Udhar creates both a DailyHisab and a CreditRecord, we must deduplicate.
+  // We use totalUdharAdded as the single source of truth for all manual & hisab-generated Khata Udhar,
+  // plus totalUdharOrders for order Udhar.
+  const totalUdharToday = totalUdharOrders + totalUdharAdded;
 
   // Total Outstanding across all customers
   const totalCustomerOutstanding = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
@@ -263,13 +272,21 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <CloseIcon size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={selectedDateStr}
+              onChange={(e) => setSelectedDateStr(e.target.value)}
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 max-w-[130px]"
+            />
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            >
+              <CloseIcon size={18} />
+            </button>
+          </div>
         </div>
 
         <div className="p-5 overflow-y-auto space-y-5 flex-1">
@@ -788,95 +805,80 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                   </p>
                 ) : (
                   <div className="space-y-2.5 pb-2">
-                    {/* 1. Daily Hisab Udhar Entries */}
-                    {udharHisabsList.map(h => {
-                      const udharInfo = getUdharDetails(h);
-                      const realName = (h.incomeDescription && !h.incomeDescription.includes('Log'))
-                        ? h.incomeDescription
-                        : (h.notes && !h.notes.includes('Log'))
-                          ? h.notes
-                          : '';
-
+                    {/* Customer Khata Accounts with Activity Today */}
+                    {customers.filter(c => {
+                      const hasActivityToday = creditRecords.some(r => r.customerId === c.id && r.createdAt >= startOfToday && r.createdAt < endOfToday);
+                      return hasActivityToday;
+                    }).map(c => {
+                      const customerPaidRecords = creditRecords.filter(r => r.customerId === c.id && r.type === 'PAID');
+                      const totalCustomerPaid = customerPaidRecords.reduce((sum, r) => sum + r.amount, 0);
+                      
                       return (
-                        <div key={`udhar-h-${h.id}`} className="p-3 bg-red-50/80 dark:bg-red-950/20 border border-red-200/70 dark:border-red-900/60 rounded-2xl space-y-1.5">
+                        <div key={`cust-k-${c.id}`} className="p-3 bg-red-50/80 dark:bg-red-950/20 border border-red-200/70 dark:border-red-900/60 rounded-2xl space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
-                              <span className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                                📝
-                              </span>
+                              <div className="w-7 h-7 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs shrink-0">
+                                👤
+                              </div>
                               <div>
-                                <h5
-                                  onClick={() => {
-                                    const input = window.prompt(
-                                      isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
-                                      realName
-                                    );
-                                    if (input !== null && input.trim()) {
-                                      updateDailyHisab({
-                                        ...h,
-                                        incomeDescription: input.trim(),
-                                        notes: input.trim()
-                                      });
-                                    }
-                                  }}
-                                  className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center gap-1 group"
-                                  title={isHindi ? 'ग्राहक का नाम बदलने या दर्ज करने के लिए क्लिक करें' : 'Click to edit or set customer name'}
-                                >
-                                  <span>{realName || (isHindi ? 'उधार ग्राहक' : 'Udhar Customer')}</span>
-                                  <span className="text-[10px] text-amber-500 opacity-60 group-hover:opacity-100">✏️</span>
+                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                  {c.name}
                                 </h5>
                                 <span className="text-[10px] font-bold text-slate-400">
-                                  {h.date} • {h.grainType} ({h.wheatWeight}kg)
+                                  {todayStr} • Khata Ledger
                                 </span>
                               </div>
                             </div>
-
+                            
                             <div className="flex items-center gap-2">
                               <span className="font-black text-slate-900 dark:text-slate-100 text-sm">
-                                {isHindi ? 'कुल: ' : 'Total: '}₹{h.amount}
+                                {isHindi ? 'कुल: ' : 'Total: '}₹{(c.outstandingBalance + totalCustomerPaid).toFixed(0)}
                               </span>
                               <button
                                 type="button"
-                                onClick={() => handleDeleteHisab(h.id)}
+                                onClick={() => {
+                                  if (window.confirm(
+                                    isHindi
+                                      ? 'क्या आप इस ग्राहक और उसके पूरे हिसाब को मिटाना चाहते हैं?'
+                                      : 'Are you sure you want to delete this customer and all their ledger history?'
+                                  )) {
+                                    deleteCustomer(c.id);
+                                  }
+                                }}
                                 className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
-                                title={isHindi ? 'हिसाब मिटाएं' : 'Delete Log'}
+                                title={isHindi ? 'खाता मिटाएं' : 'Delete Khata'}
                               >
                                 <TrashIcon size={15} />
                               </button>
                             </div>
                           </div>
-
+                          
                           <div className="flex items-center justify-between pt-1 border-t border-red-200/50 dark:border-red-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
-                                ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{udharInfo.jama}
+                                ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{totalCustomerPaid.toFixed(0)}
                               </span>
-
                               <span className="text-amber-700 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-800">
-                                📝 {isHindi ? 'बाकी उधार: ₹' : 'Udhar Due: ₹'}{udharInfo.udhar}
+                                📝 {isHindi ? 'बाकी उधार: ₹' : 'Udhar Due: ₹'}{c.outstandingBalance.toFixed(0)}
                               </span>
                             </div>
-
                             <div className="flex gap-1.5 shrink-0">
                               <button
                                 type="button"
-                                onClick={() => handleAddUdhar(h)}
+                                onClick={() => handleAddKhataUdhar(c.id)}
                                 className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
                               >
                                 <span>➕</span>
                                 <span>{isHindi ? 'उधार बढ़ाएं' : '+Udhar'}</span>
                               </button>
-
-                              {udharInfo.udhar > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => openPaymentModal(h)}
-                                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
-                                >
-                                  <span>💳</span>
-                                  <span>{isHindi ? 'जमा करें' : 'Jama'}</span>
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleKhataJama(c.id)}
+                                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                              >
+                                <span>💳</span>
+                                <span>{isHindi ? 'जमा करें' : 'Jama'}</span>
+                              </button>
                             </div>
                           </div>
                         </div>
