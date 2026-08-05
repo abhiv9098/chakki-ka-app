@@ -28,7 +28,7 @@ const grainLabels: Record<string, { hi: string; en: string }> = {
 };
 
 export const DailyHisabView: React.FC = () => {
-  const { addDailyHisab, dailyHisabs, updateDailyHisab, deleteDailyHisab, customers, updateCustomerPotaliStatus, t, language, defaultGrindingRate, grainRates, setActiveView } = useApp();
+  const { addDailyHisab, dailyHisabs, updateDailyHisab, deleteDailyHisab, customers, updateCustomerPotaliStatus, t, language, defaultGrindingRate, grainRates, setActiveView, addCustomer, recordManualDue } = useApp();
 
   // Calculate today and 30 days ago date strings for date picker range restriction
   const { todayStr, minDateStr } = (() => {
@@ -56,7 +56,8 @@ export const DailyHisabView: React.FC = () => {
   const [customRate, setCustomRate] = useState<string>('5');
   const [revenue, setRevenue] = useState(0);
   const [customerNaam, setCustomerNaam] = useState('');
-  const [paymentMode, setPaymentMode] = useState<'CASH' | 'PAYTM' | 'UDHAR' | 'PENDING'>('CASH');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [paymentMode, setPaymentMode] = useState<'CASH' | 'PAYTM' | 'UDHAR' | 'PENDING'>('PENDING');
   const [jamaAmount, setJamaAmount] = useState<string>('');
   const [amount, setAmount] = useState('');
 
@@ -130,18 +131,30 @@ export const DailyHisabView: React.FC = () => {
       isPending: paymentMode === 'PENDING'
     });
 
-    // Auto mark customer's potaliStatus as received if customer profile exists
+    // Auto mark customer's potaliStatus as received if customer profile exists, and auto-create customer for UDHAR
     if (customerNaam.trim()) {
-      const cust = customers.find(c => c.name.toLowerCase() === customerNaam.trim().toLowerCase());
+      let cust = customers.find(c => c.name.toLowerCase() === customerNaam.trim().toLowerCase());
+      
+      // Auto-create customer if they don't exist and it's an Udhar entry
+      if (!cust && paymentMode === 'UDHAR') {
+        cust = addCustomer(customerNaam.trim(), customerPhone.trim());
+      }
+
       if (cust) {
         updateCustomerPotaliStatus(cust.id, 'received');
+        
+        // Auto-record Khata transaction for Udhar
+        if (paymentMode === 'UDHAR' && remainingUdhar > 0) {
+          recordManualDue(cust.id, remainingUdhar, `${grainType} Grinding - ${weightVal}kg`);
+        }
       }
     }
 
     // Reset fields
     setWheatWeight('');
     setCustomerNaam('');
-    setPaymentMode('CASH');
+    setCustomerPhone('');
+    setPaymentMode('PENDING');
     setJamaAmount('');
     
     alert(t('hisabSaved'));
@@ -241,7 +254,8 @@ export const DailyHisabView: React.FC = () => {
                 {language === 'hi' ? 'वजन (KG)' : 'WEIGHT (KG)'} *
               </label>
               <input
-                type="text"
+                type="number"
+                step="any"
                 inputMode="decimal"
                 required
                 placeholder="0.0 kg"
@@ -270,7 +284,8 @@ export const DailyHisabView: React.FC = () => {
               <div className="relative flex items-center">
                 <span className="absolute left-3 text-sm font-extrabold text-slate-400">₹</span>
                 <input
-                  type="text"
+                  type="number"
+                  step="any"
                   inputMode="decimal"
                   value={customRate}
                   onChange={(e) => {
@@ -307,113 +322,80 @@ export const DailyHisabView: React.FC = () => {
             />
           </div>
 
-          {/* Payment Method Selector (Cash / Paytm / Udhar / Pending) */}
+          {/* Payment Method / Udhar Toggle */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
               {language === 'hi' ? 'भुगतान का प्रकार (Payment Method)' : 'Payment Method'}
             </label>
-            <div className="grid grid-cols-4 gap-1.5 pt-1">
+            <div className="pt-0.5">
               <button
                 type="button"
-                onClick={() => { setPaymentMode('CASH'); setJamaAmount(''); }}
-                className={`py-2 px-1 rounded-xl text-xs font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                  paymentMode === 'CASH'
-                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
-                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <span>💵</span>
-                <span>Cash</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setPaymentMode('PAYTM'); setJamaAmount(''); }}
-                className={`py-2 px-1 rounded-xl text-xs font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                  paymentMode === 'PAYTM'
-                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
-                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <span>📲</span>
-                <span>Paytm</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMode('UDHAR')}
-                className={`py-2 px-1 rounded-xl text-xs font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                onClick={() => {
+                  if (paymentMode === 'UDHAR') {
+                    setPaymentMode('PENDING');
+                    setJamaAmount('');
+                  } else {
+                    setPaymentMode('UDHAR');
+                  }
+                }}
+                className={`py-2 px-3.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer flex items-center gap-1.5 ${
                   paymentMode === 'UDHAR'
                     ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20'
                     : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
                 <span>📝</span>
-                <span>{language === 'hi' ? 'उधार' : 'Udhar'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setPaymentMode('PENDING'); setJamaAmount(''); }}
-                className={`py-2 px-1 rounded-xl text-xs font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                  paymentMode === 'PENDING'
-                    ? 'bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/20'
-                    : 'bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-                title="Pending Potali / पिसाई पेंडिंग"
-              >
-                <span>⏳</span>
-                <span>{language === 'hi' ? 'पेंडिंग' : 'Pending'}</span>
+                <span>{language === 'hi' ? 'उधार (Udhar)' : 'Udhar'}</span>
               </button>
             </div>
           </div>
 
-          {/* Pending Potali Banner when PENDING mode is selected */}
-          {paymentMode === 'PENDING' && (
-            <div className="p-3 bg-rose-50/80 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/60 rounded-2xl space-y-1 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-rose-800 dark:text-rose-300">
-                  ⏳ {language === 'hi' ? 'पोटली दुकान पर जमा (पिसाई पेंडिंग)' : 'Potali stored at shop (Grinding Pending)'}
-                </span>
-                <span className="text-xs font-black text-rose-600 dark:text-rose-400">
-                  ⏳ ₹{amount} {language === 'hi' ? 'पेंडिंग' : 'Pending'}
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                {language === 'hi'
-                  ? 'यह एंट्री पेंडिंग पिसाई सूची में सेव होगी। ऊपर दिए गए (⏳ पेंडिंग) बटन से बाद में पूरा कर सकते हैं।'
-                  : 'This entry will be saved in Pending list. You can mark it completed anytime from top button.'}
-              </p>
-            </div>
-          )}
-
-          {/* Optional Jama Amount input when Udhar is selected */}
+          {/* Optional Jama Amount & Mobile Number when Udhar is selected */}
           {paymentMode === 'UDHAR' && (
-            <div className="p-3 bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/60 rounded-2xl space-y-2 animate-fade-in">
-              <div className="flex items-center justify-between">
+            <div className="p-3 bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/60 rounded-2xl space-y-3 animate-fade-in">
+              {/* Mobile Number */}
+              <div className="space-y-1">
                 <label className="text-[10px] font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">
-                  {language === 'hi' ? 'जमा किए पैसे (Jama Amount ₹) - Optional' : 'Cash Paid / Jama (₹) - Optional'}
+                  {language === 'hi' ? 'मोबाइल नंबर (Mobile Number) - Optional' : 'Mobile Number - Optional'}
                 </label>
-                <span className="text-[11px] font-black text-amber-700 dark:text-amber-300">
-                  {language === 'hi'
-                    ? `उधार बाकी: ₹${Math.max(0, revenue - (parseFloat(jamaAmount) || 0)).toFixed(1)}`
-                    : `Udhar Left: ₹${Math.max(0, revenue - (parseFloat(jamaAmount) || 0)).toFixed(1)}`}
-                </span>
+                <input
+                  type="tel"
+                  placeholder={language === 'hi' ? 'मोबाइल नंबर...' : 'Mobile number...'}
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full h-10 px-3.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
               </div>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder={language === 'hi' ? '0.0 (अगर कुछ पैसे जमा किए हैं)' : '0.0 (If partial cash paid)'}
-                value={jamaAmount}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                    setJamaAmount(val);
-                  }
-                }}
-                onKeyDown={handleKeyDown}
-                className="w-full h-10 px-3.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-              />
+
+              {/* Jama Amount */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">
+                    {language === 'hi' ? 'जमा किए पैसे (Jama Amount ₹) - Optional' : 'Cash Paid / Jama (₹) - Optional'}
+                  </label>
+                  <span className="text-[11px] font-black text-amber-700 dark:text-amber-300">
+                    {language === 'hi'
+                      ? `उधार बाकी: ₹${Math.max(0, revenue - (parseFloat(jamaAmount) || 0)).toFixed(1)}`
+                      : `Udhar Left: ₹${Math.max(0, revenue - (parseFloat(jamaAmount) || 0)).toFixed(1)}`}
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  step="any"
+                  inputMode="decimal"
+                  placeholder={language === 'hi' ? '0.0 (अगर कुछ पैसे जमा किए हैं)' : '0.0 (If partial cash paid)'}
+                  value={jamaAmount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                      setJamaAmount(val);
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  className="w-full h-10 px-3.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
             </div>
           )}
 
@@ -616,6 +598,7 @@ export const DailyHisabView: React.FC = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

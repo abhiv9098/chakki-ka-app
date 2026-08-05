@@ -49,7 +49,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
   const isHindi = language === 'hi';
   const thirtyDaysAgoTs = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-  // Filter orders based on filterMode (constrained within last 30 days)
+  // Filter orders based on filterMode
   const filteredOrders = orders.filter(o => {
     const oDate = new Date(o.createdAt);
     const yyyy = oDate.getFullYear();
@@ -58,14 +58,13 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
     if (filterMode === 'calendar') return dateStr === selectedDate;
-    return o.createdAt >= thirtyDaysAgoTs;
+    return true; // All time
   });
 
   // Filter dailyHisabs based on filterMode
   const filteredHisabs = dailyHisabs.filter(h => {
     if (filterMode === 'calendar') return h.date === selectedDate;
-    const hTs = new Date(h.date).getTime();
-    return hTs >= thirtyDaysAgoTs;
+    return true; // All time
   });
 
   const ordersKg = filteredOrders.reduce((sum, o) => sum + (o.weight || 0), 0);
@@ -131,7 +130,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
                 {isHindi ? 'पिसाई व पोटली हिसाब रिपोर्ट' : 'Grinding & Potli Volume Breakdown'}
               </h3>
               <p className="text-xs text-slate-400 font-semibold mt-0.5">
-                {isHindi ? '30 दिनों के भीतर तारीख चुनें और ग्राहक अनुसार पोटली व कुल पैसा देखें' : 'Select date within last 30 days to see customer & potli details'}
+                {isHindi ? 'तारीख चुनें और ग्राहक अनुसार पोटली व कुल पैसा देखें' : 'Select date to see customer & potli details'}
               </p>
             </div>
           </div>
@@ -149,11 +148,8 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                {isHindi ? 'तारीख चुनें (पिछले 30 दिनों के अंदर):' : 'Select Date (Within 30 Days):'}
+                {isHindi ? 'तारीख चुनें:' : 'Select Date:'}
               </label>
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                {isHindi ? '30 दिन की सीमा' : '30-day window'}
-              </span>
             </div>
             <div className="grid grid-cols-2 gap-2 bg-slate-100/90 dark:bg-slate-800/60 p-1.5 rounded-2xl">
               {/* Calendar Date Option */}
@@ -168,7 +164,6 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
                 <span>🗓️</span>
                 <input
                   type="date"
-                  min={thirtyDaysAgoStr}
                   max={todayStr}
                   value={selectedDate}
                   onChange={(e) => {
@@ -185,7 +180,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
                 />
               </div>
 
-              {/* 30 Days Option */}
+              {/* All Time Option */}
               <button
                 type="button"
                 onClick={() => setFilterMode('last30')}
@@ -195,7 +190,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
                 }`}
               >
-                📊 {isHindi ? 'पिछले 30 दिन (30 Days)' : 'Last 30 Days'}
+                📊 {isHindi ? 'कुल रिपोर्ट (All Time)' : 'All Time Total'}
               </button>
             </div>
           </div>
@@ -204,7 +199,7 @@ export const GrindingKgModal: React.FC<GrindingKgModalProps> = ({ isOpen, onClos
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-5 text-white shadow-lg shadow-emerald-500/20 flex items-center justify-between">
             <div>
               <span className="text-xs font-bold text-emerald-100 uppercase tracking-wider block">
-                {filterMode === 'calendar' ? (isHindi ? `तारीख (${selectedDate}) की कुल पिसाई` : `Date (${selectedDate}) Grinding`) : (isHindi ? '30 दिनों की कुल पिसाई' : '30 Days Total Grinding')}
+                {filterMode === 'calendar' ? (isHindi ? `तारीख (${selectedDate}) की कुल पिसाई` : `Date (${selectedDate}) Grinding`) : (isHindi ? 'कुल पिसाई रिपोर्ट (Total Grinding)' : 'Total Grinding Report')}
               </span>
               <p className="text-4xl font-black mt-1 tracking-tight">
                 {totalKg.toFixed(1)} <span className="text-xl font-bold">KG</span>

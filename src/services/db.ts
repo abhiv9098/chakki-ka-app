@@ -51,6 +51,13 @@ export const dbService = {
 
   saveCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>): Customer => {
     const customers = dbService.getCustomers();
+    
+    // Prevent duplicate customers by name
+    const existing = customers.find(c => c.name.toLowerCase() === customer.name.toLowerCase());
+    if (existing) {
+      return existing;
+    }
+
     const newId = customers.length > 0 ? Math.max(...customers.map(c => c.id)) + 1 : 1;
     const newCustomer: Customer = {
       ...customer,

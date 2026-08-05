@@ -5,7 +5,6 @@ import { useApp } from '../context/AppContext';
 import {
   DashboardIcon,
   CustomersIcon,
-  GrindingIcon,
   KhataIcon,
   ProfileIcon,
   SunIcon,
@@ -27,8 +26,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { view: 'dashboard' as const, label: t('dashboard'), icon: DashboardIcon },
     { view: 'daily-hisab' as const, label: t('dailyHisab'), icon: FileTextIcon },
     { view: 'hisab-history' as const, label: t('hisab-history' as any), icon: KhataIcon },
-    { view: 'grinding' as const, label: t('grindingOrders'), icon: GrindingIcon },
-    { view: 'customers' as const, label: t('customers'), icon: CustomersIcon },
   ];
 
   return (

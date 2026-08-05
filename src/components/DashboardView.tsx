@@ -59,7 +59,39 @@ export const DashboardView: React.FC = () => {
   const todayGroundWeightKg = todayOrdersWeight + todayHisabsWeight;
 
   const activeCustomersCount = customers.filter(c => c.outstandingBalance > 0).length;
-  const totalOutstandingAmount = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
+  
+  // Total complete Udhar across Customer Khata + Daily Hisab logs
+  const dailyHisabUdharTotal = dailyHisabs.reduce((sum, h) => {
+    const desc = h.expenseDescription || '';
+    if (h.isPending || desc.includes('PENDING')) return sum;
+    const jamaMatch = desc.match(/Jama:\s*₹?(\d+(?:\.\d+)?)/i);
+    const udharMatch = desc.match(/Udhar:\s*₹?(\d+(?:\.\d+)?)/i);
+    if (jamaMatch && udharMatch) {
+      return sum + (parseFloat(udharMatch[1]) || 0);
+    }
+    if (desc.startsWith('UDHAR')) {
+      return sum + (h.amount || 0);
+    }
+    return sum;
+  }, 0);
+  const customersUdharTotal = customers.reduce((sum, c) => sum + (c.outstandingBalance || 0), 0);
+  const totalOutstandingAmount = customersUdharTotal + dailyHisabUdharTotal;
+
+  // Combined 30-Days + Today Earnings
+  const thirtyDaysAgoTs = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const total30DaysOrdersAmount = orders
+    .filter(o => o.createdAt >= thirtyDaysAgoTs && o.paymentType !== 'CREDIT')
+    .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const total30DaysReceivedAmount = creditRecords
+    .filter(r => r.type === 'PAID' && r.createdAt >= thirtyDaysAgoTs)
+    .reduce((sum, r) => sum + (r.amount || 0), 0);
+  const total30DaysHisabsIncome = dailyHisabs
+    .filter(h => {
+      const hTs = new Date(h.date).getTime();
+      return (hTs >= thirtyDaysAgoTs || h.date === todayDateStr) && !h.isPending && !h.expenseDescription?.includes('PENDING') && h.isProfit;
+    })
+    .reduce((sum, h) => sum + (h.revenue || h.amount || 0), 0);
+  const combined30DaysAndTodayEarnings = total30DaysOrdersAmount + total30DaysReceivedAmount + total30DaysHisabsIncome;
 
   // Format currency
   const formatCurrency = (val: number) => {
@@ -131,8 +163,8 @@ export const DashboardView: React.FC = () => {
       onClick: () => setIsPaymentSummaryModalOpen(true)
     },
     {
-      label: t('todayEarnings'),
-      value: hideAmounts ? '₹••••' : formatCurrency(todayEarningsAmount),
+      label: language === 'hi' ? '30-दिन व आज की कुल कमाई' : '30-DAY & TODAY EARNINGS',
+      value: hideAmounts ? '₹••••' : formatCurrency(combined30DaysAndTodayEarnings),
       icon: ReportsIcon,
       colorClass: 'from-teal-500 to-cyan-600',
       bgClass: 'bg-teal-50 dark:bg-teal-950/20',
@@ -148,12 +180,13 @@ export const DashboardView: React.FC = () => {
       onClick: () => setIsGrindingKgModalOpen(true)
     },
     {
-      label: t('totalOutstanding'),
+      label: language === 'hi' ? 'कुल बकाया उधार (सभी खाते)' : 'TOTAL OUTSTANDING UDHAR',
       value: hideAmounts ? '₹••••' : formatCurrency(totalOutstandingAmount),
       icon: KhataIcon,
       colorClass: 'from-amber-500 to-orange-600',
       bgClass: 'bg-amber-50 dark:bg-amber-950/20',
-      iconColor: 'text-amber-500'
+      iconColor: 'text-amber-500',
+      onClick: () => setActiveView('customers')
     }
   ];
 
@@ -298,14 +331,14 @@ export const DashboardView: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setActiveView('grinding')}
+                onClick={() => setActiveView('hisab-history')}
                 className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-20"
               >
                 <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-500">
-                  <PlusIcon size={16} />
+                  <KhataIcon size={16} />
                 </div>
                 <span className="text-[10px] leading-tight text-center font-bold">
-                  {t('logNewGrinding')}
+                  {t('hisab-history' as any)}
                 </span>
               </button>
 
@@ -335,7 +368,7 @@ export const DashboardView: React.FC = () => {
                 <p className="text-[10px] text-slate-400 dark:text-slate-550 font-medium">Last 5 processing records</p>
               </div>
               <button
-                onClick={() => setActiveView('grinding')}
+                onClick={() => setActiveView('hisab-history')}
                 className="text-xs font-bold text-emerald-600 dark:text-emerald-450 hover:underline cursor-pointer"
               >
                 {t('viewAll')}

@@ -2,12 +2,15 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { DailyHisab } from '../types';
+import { DailyHisab, Customer } from '../types';
 import { TrashIcon } from './Icons';
+import { CustomerQrModal } from './CustomerQrModal';
 
 export const HisabHistoryView: React.FC = () => {
   const {
     dailyHisabs,
+    orders,
+    creditRecords,
     deleteDailyHisab,
     updateDailyHisab,
     language,
@@ -27,6 +30,10 @@ export const HisabHistoryView: React.FC = () => {
   const [selectedHisabForPayment, setSelectedHisabForPayment] = useState<DailyHisab | null>(null);
   const [newPaymentAmount, setNewPaymentAmount] = useState<string>('');
   const [newPaymentMode, setNewPaymentMode] = useState<'CASH' | 'PAYTM'>('CASH');
+
+  // QR Modal State
+  const [selectedCustomerForQr, setSelectedCustomerForQr] = useState<Customer | null>(null);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const todayObj = new Date();
   const yyyy = todayObj.getFullYear();
@@ -71,10 +78,21 @@ export const HisabHistoryView: React.FC = () => {
   const nowTs = new Date().getTime();
   const thirtyDaysAgoTs = nowTs - 30 * 24 * 60 * 60 * 1000;
 
-  // Filter out entries older than 30 days
+  // Filter out entries older than 30 days and deduplicate by ID and content
+  const seenHisabIds = new Set();
+  const seenComposites = new Set();
   const hisabsWithin30Days = dailyHisabs.filter(h => {
     const logTime = new Date(h.date).getTime();
-    return !isNaN(logTime) && logTime >= thirtyDaysAgoTs;
+    if (isNaN(logTime) || logTime < thirtyDaysAgoTs) return false;
+    if (seenHisabIds.has(h.id)) return false;
+    
+    // Create composite key for double-click duplicates
+    const composite = `${h.date}_${h.amount}_${h.grainType}_${h.wheatWeight}_${h.incomeDescription}_${h.notes}`;
+    if (seenComposites.has(composite)) return false;
+    
+    seenHisabIds.add(h.id);
+    seenComposites.add(composite);
+    return true;
   });
 
   // Sort daily logs by date descending & creation order
@@ -119,6 +137,13 @@ export const HisabHistoryView: React.FC = () => {
   // 30-day net profit
   const last30DaysHisabs = dailyHisabs.filter(h => new Date(h.date).getTime() >= thirtyDaysAgoTs);
   const net30DaysTotal = last30DaysHisabs.reduce((sum, h) => sum + (h.isProfit ? h.amount : -h.amount), 0);
+
+  // Today's total cash earnings (from completed daily hisabs, non-credit orders, and khata payments)
+  const startOfToday = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate()).getTime();
+  const todayOrdersTotal = (orders || []).filter(o => o.createdAt >= startOfToday && o.paymentType !== 'CREDIT').reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const todayKhataPaidTotal = (creditRecords || []).filter(r => r.type === 'PAID' && r.createdAt >= startOfToday).reduce((sum, r) => sum + (r.amount || 0), 0);
+  const todayHisabsPaidTotal = dailyHisabs.filter(h => h.date === todayStr && !isHisabPending(h)).reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
+  const todayCashEarnings = todayOrdersTotal + todayKhataPaidTotal + todayHisabsPaidTotal;
 
   const handleDelete = (id: number) => {
     if (window.confirm(language === 'hi' ? 'क्या आप इस हिसाब एंट्री को मिटाना चाहते हैं?' : 'Are you sure you want to delete this log?')) {
@@ -228,6 +253,26 @@ export const HisabHistoryView: React.FC = () => {
     updateDailyHisab(updatedHisab);
   };
 
+  const handleCardClick = (customerName: string) => {
+    if (!customerName || customerName === '—') return;
+    const cust = customers.find(c => c.name.toLowerCase() === customerName.toLowerCase());
+    if (cust) {
+      setSelectedCustomerForQr(cust);
+      setIsQrModalOpen(true);
+    } else {
+      setSelectedCustomerForQr({
+        id: 0,
+        name: customerName,
+        phone: 'N/A',
+        address: '',
+        outstandingBalance: 0,
+        potaliStatus: 'none',
+        createdAt: Date.now()
+      });
+      setIsQrModalOpen(true);
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto px-1 sm:px-4 space-y-4 pb-12 animate-fade-in">
       {/* Main Card */}
@@ -256,12 +301,12 @@ export const HisabHistoryView: React.FC = () => {
 
         {/* Compact Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div className="p-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-2xl">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-              {language === 'hi' ? 'एंट्रियां' : 'Logs'}
+          <div className="p-2.5 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-2xl">
+            <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
+              {language === 'hi' ? 'आज की कमाई' : 'Today Cash'}
             </span>
-            <span className="text-base font-black text-slate-800 dark:text-slate-100 mt-0.5 block">
-              {totalEntries}
+            <span className="text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+              {hideAmounts ? '₹••' : `+₹${todayCashEarnings.toFixed(0)}`}
             </span>
           </div>
 
@@ -395,7 +440,10 @@ export const HisabHistoryView: React.FC = () => {
                     >
                       {/* Top Header Row with Profile */}
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
+                        <div 
+                          className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => handleCardClick(customerName)}
+                        >
                           {/* Profile Avatar Badge */}
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 shadow-2xs ${
                             isPending
@@ -407,8 +455,8 @@ export const HisabHistoryView: React.FC = () => {
                             {avatarChar}
                           </div>
 
-                          <div className="min-w-0">
-                            <div className="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-extrabold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 min-w-0">
                               <span className="truncate">{customerName}</span>
                               {isPending && (
                                 <span className="text-[9px] font-black text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/80 px-1.5 py-0.5 rounded-md border border-rose-300 dark:border-rose-800 animate-pulse shrink-0">
@@ -416,7 +464,7 @@ export const HisabHistoryView: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1 mt-0.5">
+                            <div className="text-[10px] font-bold text-slate-400 flex flex-wrap items-center gap-1 mt-0.5 min-w-0">
                               <span>{isToday ? (language === 'hi' ? '☀️ आज' : '☀️ Today') : formattedDate}</span>
                               <span>•</span>
                               <span className="text-emerald-700 dark:text-emerald-300 font-extrabold">
@@ -442,7 +490,7 @@ export const HisabHistoryView: React.FC = () => {
                       </div>
 
                       {/* Bottom Action / Details Row */}
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/80">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/80 min-w-0">
                         <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
                           {udharInfo.isUdhar && !isPending && (
                             <div className="flex items-center gap-1.5 flex-wrap">
@@ -489,15 +537,10 @@ export const HisabHistoryView: React.FC = () => {
                               <span>{language === 'hi' ? 'जमा करें' : 'Jama'}</span>
                             </button>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleTogglePending(hisab)}
-                              className="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-rose-50 text-emerald-700 dark:text-emerald-300 hover:text-rose-600 font-bold text-[10px] rounded-lg border border-emerald-300 dark:border-emerald-800 transition-all cursor-pointer flex items-center gap-1"
-                              title="Click to toggle status"
-                            >
+                            <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] rounded-lg border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
                               <span>✅</span>
-                              <span>{language === 'hi' ? 'डिलीवर्ड (Complete)' : 'Delivered'}</span>
-                            </button>
+                              <span>{language === 'hi' ? 'Complete (पूर्ण)' : 'Complete'}</span>
+                            </span>
                           )}
                         </div>
                       </div>
@@ -558,7 +601,10 @@ export const HisabHistoryView: React.FC = () => {
 
                           {/* Profile */}
                           <td className="py-3 px-3 whitespace-nowrap">
-                            <div className="flex items-center gap-2">
+                            <div 
+                              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => handleCardClick(customerName)}
+                            >
                               <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
                                 isPending
                                   ? 'bg-rose-500 text-white ring-2 ring-rose-400 animate-pulse'
@@ -619,13 +665,10 @@ export const HisabHistoryView: React.FC = () => {
                                 💳 {language === 'hi' ? 'जमा करें' : 'Jama'}
                               </button>
                             ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleTogglePending(hisab)}
-                                className="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-rose-50 text-emerald-700 dark:text-emerald-300 hover:text-rose-600 font-bold text-[10px] rounded-md border border-emerald-300 dark:border-emerald-800 transition-all cursor-pointer"
-                              >
-                                ✅ {language === 'hi' ? 'डिलीवर्ड' : 'Delivered'}
-                              </button>
+                              <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] rounded-md border border-emerald-300 dark:border-emerald-800 inline-flex items-center justify-center gap-1">
+                                <span>✅</span>
+                                <span>{language === 'hi' ? 'Complete' : 'Complete'}</span>
+                              </span>
                             )}
                           </td>
 
@@ -906,6 +949,13 @@ export const HisabHistoryView: React.FC = () => {
           </div>
         );
       })()}
+
+      {/* Customer QR Modal */}
+      <CustomerQrModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        customer={selectedCustomerForQr}
+      />
     </div>
   );
 };

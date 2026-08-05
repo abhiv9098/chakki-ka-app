@@ -176,7 +176,7 @@ export const QrScannerModal: React.FC<QrScannerModalProps> = ({
     if (onSelectOrder) {
       onSelectOrder(ord);
     } else {
-      setActiveView('grinding');
+      setActiveView('hisab-history');
     }
     onClose();
   };
