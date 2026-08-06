@@ -163,8 +163,8 @@ export const DashboardView: React.FC = () => {
       onClick: () => setIsPaymentSummaryModalOpen(true)
     },
     {
-      label: language === 'hi' ? '30-दिन व आज की कुल कमाई' : '30-DAY & TODAY EARNINGS',
-      value: hideAmounts ? '₹••••' : formatCurrency(combined30DaysAndTodayEarnings),
+      label: language === 'hi' ? 'आज की कुल कमाई' : "TODAY'S TOTAL EARNINGS",
+      value: hideAmounts ? '₹••••' : formatCurrency(todayEarningsAmount),
       icon: ReportsIcon,
       colorClass: 'from-teal-500 to-cyan-600',
       bgClass: 'bg-teal-50 dark:bg-teal-950/20',
