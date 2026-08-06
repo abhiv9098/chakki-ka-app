@@ -33,6 +33,7 @@ export const HisabHistoryView: React.FC = () => {
 
   // QR Modal State
   const [selectedCustomerForQr, setSelectedCustomerForQr] = useState<Customer | null>(null);
+  const [selectedHisabForQr, setSelectedHisabForQr] = useState<DailyHisab | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const todayObj = new Date();
@@ -277,9 +278,10 @@ export const HisabHistoryView: React.FC = () => {
     updateDailyHisab(updatedHisab);
   };
 
-  const handleCardClick = (customerName: string) => {
+  const handleCardClick = (customerName: string, hisab: DailyHisab) => {
     if (!customerName || customerName === '—') return;
     const cust = customers.find(c => c.name.toLowerCase() === customerName.toLowerCase());
+    setSelectedHisabForQr(hisab);
     if (cust) {
       setSelectedCustomerForQr(cust);
       setIsQrModalOpen(true);
@@ -465,7 +467,7 @@ export const HisabHistoryView: React.FC = () => {
                       <div className="flex items-center justify-between gap-2">
                         <div 
                           className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => handleCardClick(customerName)}
+                          onClick={() => handleCardClick(customerName, hisab)}
                         >
                           {/* Profile Avatar Badge */}
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 shadow-2xs ${
@@ -636,7 +638,7 @@ export const HisabHistoryView: React.FC = () => {
                           <td className="py-3 px-3 whitespace-nowrap">
                             <div 
                               className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => handleCardClick(customerName)}
+                              onClick={() => handleCardClick(customerName, hisab)}
                             >
                               <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
                                 isPending
@@ -997,6 +999,7 @@ export const HisabHistoryView: React.FC = () => {
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
         customer={selectedCustomerForQr}
+        dailyHisab={selectedHisabForQr}
       />
     </div>
   );

@@ -2,17 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Customer } from '../types';
+import { Customer, DailyHisab } from '../types';
 import { useApp } from '../context/AppContext';
 import { CloseIcon, PrinterIcon, QrCodeIcon } from './Icons';
 
 interface CustomerQrModalProps {
   customer: Customer | null;
+  dailyHisab?: DailyHisab | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, isOpen, onClose }) => {
+export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, dailyHisab, isOpen, onClose }) => {
   const { t } = useApp();
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
@@ -60,7 +61,7 @@ export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, isOp
             {/* Header info */}
             <div className="flex justify-between items-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               <span>🌾 VISHWAKARMA CHAKKI</span>
-              {customer.id > 0 && <span>ID: #{customer.id}</span>}
+              {dailyHisab ? <span>{dailyHisab.date}</span> : (customer.id > 0 && <span>ID: #{customer.id}</span>)}
             </div>
 
             <div className="py-2">
@@ -70,11 +71,24 @@ export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, isOp
               )}
             </div>
 
-            {/* Outstanding Balance */}
-            <div className="bg-rose-50 dark:bg-rose-950/30 p-3.5 rounded-2xl border border-rose-100 dark:border-rose-900/50">
-              <p className="text-[11px] font-black uppercase text-rose-500 tracking-wider mb-1">Total Due / कुल बाकी</p>
-              <p className="text-4xl font-black text-rose-600 tracking-tighter">₹{customer.outstandingBalance || 0}</p>
-            </div>
+            {dailyHisab ? (
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 space-y-2">
+                <div className="flex justify-between text-sm font-bold text-slate-700 dark:text-slate-300">
+                  <span>{dailyHisab.grainType} (पिसाई):</span>
+                  <span>{dailyHisab.wheatWeight} kg</span>
+                </div>
+                <div className="flex justify-between text-lg font-black text-emerald-700 dark:text-emerald-400 border-t border-emerald-200/50 dark:border-emerald-800/50 pt-2 mt-2">
+                  <span>Total (कुल):</span>
+                  <span>₹{dailyHisab.amount}</span>
+                </div>
+                <p className="text-xs text-center font-black text-slate-500 mt-2">Thank you / धन्यवाद 🙏</p>
+              </div>
+            ) : (
+              <div className="bg-rose-50 dark:bg-rose-950/30 p-3.5 rounded-2xl border border-rose-100 dark:border-rose-900/50">
+                <p className="text-[11px] font-black uppercase text-rose-500 tracking-wider mb-1">Total Due / कुल बाकी</p>
+                <p className="text-4xl font-black text-rose-600 tracking-tighter">₹{customer.outstandingBalance || 0}</p>
+              </div>
+            )}
 
             {/* QR Image */}
             <div className="flex justify-center py-2">
@@ -96,7 +110,13 @@ export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, isOp
           <div className="flex gap-2 pt-4">
             {customer.phone !== 'N/A' && customer.phone.length >= 10 && (
               <a
-                href={`https://wa.me/91${customer.phone.replace(/\D/g, '')}?text=Hello ${customer.name},`}
+                href={(() => {
+                  let text = `Hello ${customer.name},`;
+                  if (dailyHisab) {
+                    text = `*VISHWAKARMA AATA CHAKKI* (विश्वकर्मा आटा चक्की)\n\nName: ${customer.name}\nDate: ${dailyHisab.date}\nGround: ${dailyHisab.wheatWeight}kg ${dailyHisab.grainType}\nTotal Amount: ₹${dailyHisab.amount}\n\nThank you / धन्यवाद 🙏`;
+                  }
+                  return `https://wa.me/91${customer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
+                })()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-[#25D366] hover:bg-[#1ebd5a] text-white text-xs font-black rounded-xl transition-all shadow-md shadow-green-500/20 cursor-pointer"
