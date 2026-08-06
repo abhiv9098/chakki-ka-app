@@ -14,17 +14,24 @@ interface CustomerQrModalProps {
 }
 
 export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, dailyHisab, isOpen, onClose }) => {
-  const { t } = useApp();
+  const { t, upiId } = useApp();
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   useEffect(() => {
     if (customer && isOpen) {
-      const qrPayload = JSON.stringify({
-        type: 'customer',
-        customerId: customer.id,
-        name: customer.name,
-        phone: customer.phone
-      });
+      let qrPayload = '';
+      const amountToPay = dailyHisab ? dailyHisab.amount : (customer.outstandingBalance || 0);
+
+      if (upiId && amountToPay > 0) {
+        qrPayload = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Vishwakarma%20Aata%20Chakki&am=${amountToPay}&cu=INR`;
+      } else {
+        qrPayload = JSON.stringify({
+          type: 'customer',
+          customerId: customer.id,
+          name: customer.name,
+          phone: customer.phone
+        });
+      }
 
       QRCode.toDataURL(qrPayload, { width: 300, margin: 2, color: { dark: '#047857', light: '#FFFFFF' } })
         .then(url => setQrDataUrl(url))
@@ -91,15 +98,26 @@ export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, dail
             )}
 
             {/* QR Image */}
-            <div className="flex justify-center py-2">
+            <div className="flex justify-center py-2 relative">
               {qrDataUrl ? (
-                <img
-                  src={qrDataUrl}
-                  alt={`${customer.name} QR Code`}
-                  className="w-40 h-40 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 bg-white"
-                />
+                <div className="text-center">
+                  <img
+                    src={qrDataUrl}
+                    alt={`${customer.name} QR Code`}
+                    className="w-40 h-40 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 bg-white mx-auto"
+                  />
+                  {upiId && (dailyHisab ? dailyHisab.amount > 0 : customer.outstandingBalance > 0) ? (
+                    <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 mt-2">
+                      Scan to Pay via UPI (Paytm/PhonePe/GPay)
+                    </p>
+                  ) : (
+                    <p className="text-[10px] font-black text-slate-400 mt-2">
+                      {!upiId ? "Add UPI ID in Settings to enable payments" : "No amount due"}
+                    </p>
+                  )}
+                </div>
               ) : (
-                <div className="w-40 h-40 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-400">
+                <div className="w-40 h-40 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse flex items-center justify-center text-xs text-slate-400 mx-auto">
                   Generating QR...
                 </div>
               )}
