@@ -774,21 +774,13 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
           {/* TAB 3: UDHAR (CREDIT & JAMA) HISTORY LEDGER */}
           {activeTab === 'UDHAR' && (
             <div className="space-y-4">
-              <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-3xl p-5 text-white shadow-lg shadow-red-500/20 grid grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-3xl p-5 text-white shadow-lg shadow-red-500/20">
                 <div>
                   <span className="text-[11px] font-bold text-red-100 uppercase tracking-wider block">
                     {isHindi ? 'आज का नया उधार' : "Today's New Udhar"}
                   </span>
                   <p className="text-3xl font-black mt-1 tracking-tight">
                     {hideAmounts ? '₹••••' : `₹${totalUdharToday.toFixed(0)}`}
-                  </p>
-                </div>
-                <div className="border-l border-white/20 pl-4">
-                  <span className="text-[11px] font-bold text-red-100 uppercase tracking-wider block">
-                    {isHindi ? 'कुल बाकी उधार (Total Due)' : 'Total Outstanding'}
-                  </span>
-                  <p className="text-3xl font-black mt-1 tracking-tight">
-                    {hideAmounts ? '₹••••' : `₹00`}
                   </p>
                 </div>
               </div>
