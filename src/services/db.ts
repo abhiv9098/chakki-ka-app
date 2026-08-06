@@ -119,14 +119,31 @@ export const dbService = {
   },
 
   deleteCustomer: (customerId: number): void => {
-    const customers = dbService.getCustomers().filter(c => c.id !== customerId);
-    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+    const customers = dbService.getCustomers();
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    const filteredCustomers = customers.filter(c => c.id !== customerId);
+    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(filteredCustomers));
 
     const orders = dbService.getOrders().filter(o => o.customerId !== customerId);
     localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
 
     const creditRecords = dbService.getCreditRecords().filter(r => r.customerId !== customerId);
     localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(creditRecords));
+
+    const dailyHisabs = dbService.getDailyHisabs().filter(h => {
+      const name1 = h.incomeDescription || '';
+      const name2 = h.notes || '';
+      const cName = customer.name;
+      
+      const isMatch = name1 === cName || 
+                      name2 === cName || 
+                      name1 === `Customer: ${cName}` || 
+                      name2 === `Customer: ${cName}`;
+      return !isMatch;
+    });
+    localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(dailyHisabs));
   },
 
   getOrders: (): Order[] => {
