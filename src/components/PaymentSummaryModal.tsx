@@ -11,7 +11,7 @@ interface PaymentSummaryModalProps {
 }
 
 export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen, onClose }) => {
-  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, updateCustomerPotaliStatus, cycleCustomerPotaliStatus, recordPayment, recordManualDue } = useApp();
+  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, updateCustomerPotaliStatus, cycleCustomerPotaliStatus, recordPayment, recordManualDue, deleteCustomer } = useApp();
 
   const [activeTab, setActiveTab] = useState<'CASH' | 'PAYTM' | 'UDHAR'>('CASH');
   const [selectedHisabForPayment, setSelectedHisabForPayment] = useState<DailyHisab | null>(null);
