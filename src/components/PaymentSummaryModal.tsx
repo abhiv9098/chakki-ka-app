@@ -11,7 +11,7 @@ interface PaymentSummaryModalProps {
 }
 
 export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen, onClose }) => {
-  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, updateCustomerPotaliStatus, cycleCustomerPotaliStatus, recordPayment, recordManualDue, deleteCustomer } = useApp();
+  const { orders, dailyHisabs, creditRecords, customers, language, hideAmounts, updateDailyHisab, deleteDailyHisab, deleteOrder, deleteCreditRecord, updateCustomerPotaliStatus, cycleCustomerPotaliStatus, recordPayment, recordManualDue, deleteCustomer } = useApp();
 
   const [activeTab, setActiveTab] = useState<'CASH' | 'PAYTM' | 'UDHAR'>('CASH');
   const [selectedHisabForPayment, setSelectedHisabForPayment] = useState<DailyHisab | null>(null);
@@ -94,7 +94,11 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
   const totalPaytmToday = totalPaytmOrders + totalPaytmHisabs;
 
   // 3. UDHAR (CREDIT & JAMA) TRANSACTIONS
-  const udharHisabsList = dailyHisabs.filter(h => h.date === todayStr && getUdharDetails(h).isUdhar);
+  const udharHisabsList = dailyHisabs.filter(h => {
+    const desc = h.expenseDescription || '';
+    if (h.isPending || desc.includes('PENDING')) return false;
+    return getUdharDetails(h).isUdhar;
+  });
 
   const todayUdharOrders = orders.filter(
     o => o.createdAt >= startOfToday && o.createdAt < endOfToday && o.paymentType === 'CREDIT'
@@ -117,7 +121,21 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
 
   // Total Outstanding across all customers
   const totalCustomerOutstanding = customers.reduce((sum, c) => sum + c.outstandingBalance, 0);
-  const grandTotalUdharOutstanding = totalCustomerOutstanding;
+  const dailyHisabUdharTotal = dailyHisabs.reduce((sum, h) => {
+    const desc = h.expenseDescription || '';
+    if (h.isPending || desc.includes('PENDING')) return sum;
+    const jamaMatch = desc.match(/Jama:\s*₹?(\d+(?:\.\d+)?)/i);
+    const udharMatch = desc.match(/Udhar:\s*₹?(\d+(?:\.\d+)?)/i);
+    if (jamaMatch && udharMatch) {
+      return sum + (parseFloat(udharMatch[1]) || 0);
+    }
+    if (desc.startsWith('UDHAR')) {
+      return sum + (h.amount || 0);
+    }
+    return sum;
+  }, 0);
+  
+  const grandTotalUdharOutstanding = totalCustomerOutstanding + dailyHisabUdharTotal;
 
   // Open Jama Payment Collection Modal
   const openPaymentModal = (hisab: DailyHisab) => {
@@ -289,9 +307,9 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
           </div>
         </div>
 
-        <div className="p-5 overflow-y-auto space-y-5 flex-1">
+        <div className="p-5 space-y-5 flex-1">
           {/* 3 Main Tabs: CASH | PAYTM | UDHAR */}
-          <div className="grid grid-cols-3 gap-2 bg-slate-100/90 dark:bg-slate-800/60 p-1.5 rounded-2xl">
+          <div className="grid grid-cols-2 gap-2 bg-slate-100/90 dark:bg-slate-800/60 p-1.5 rounded-2xl">
             <button
               type="button"
               onClick={() => setActiveTab('CASH')}
@@ -328,23 +346,6 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
               </span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('UDHAR')}
-              className={`py-2.5 px-2 rounded-xl transition-all font-extrabold text-xs sm:text-sm cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                activeTab === 'UDHAR'
-                  ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
-              }`}
-            >
-              <div className="flex items-center gap-1.5">
-                <span>📝</span>
-                <span>{isHindi ? 'उधार (Udhar)' : 'Udhar'}</span>
-              </div>
-              <span className="text-[11px] font-black opacity-90">
-                {hideAmounts ? '₹••' : `₹${grandTotalUdharOutstanding.toFixed(0)}`}
-              </span>
-            </button>
           </div>
 
           {/* TAB 1: CASH DETAILS */}
@@ -376,213 +377,122 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                   </p>
                 ) : (
                   <div className="space-y-2 pb-2">
-                    {todayPaidCreditRecords.map(r => {
-                      const cust = customers.find(c => c.id === r.customerId);
-                      const potaliStatus = cust?.potaliStatus || 'none';
+                    {(() => {
+                      const groups = new Map();
+                      const getGroup = (name: string, cust: any) => {
+                        const key = (name || '').trim().toLowerCase() || 'cash customer';
+                        if (!groups.has(key)) {
+                          groups.set(key, {
+                            displayName: name || (isHindi ? 'नकद ग्राहक' : 'Cash Customer'),
+                            cust,
+                            amount: 0,
+                            descList: [],
+                            deleteHisabIds: [],
+                            deleteOrderIds: [],
+                            deleteCreditRecordIds: []
+                          });
+                        }
+                        return groups.get(key);
+                      };
 
-                      return (
-                        <div key={`c-${r.id}`} className="p-3 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900 rounded-2xl flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black text-xs shrink-0">
-                              ✓
-                            </span>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
-                                  {cust?.name || r.description || (isHindi ? 'ग्राहक' : 'Customer')}
-                                </h5>
-                                {potaliStatus === 'received' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
-                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
-                                  </span>
-                                )}
-                                {potaliStatus === 'delivered' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
-                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">
-                                {isHindi ? 'उधार जमा कैश' : 'Udhar Paid Cash'}
+                      todayPaidCreditRecords.forEach(r => {
+                        const cust = customers.find(c => c.id === r.customerId);
+                        const g = getGroup(cust?.name || r.description || '', cust);
+                        g.amount += r.amount;
+                        g.descList.push(isHindi ? 'उधार जमा कैश' : 'Udhar Paid Cash');
+                        g.deleteCreditRecordIds.push(r.id);
+                      });
+
+                      todayCashHisabs.forEach(h => {
+                        const name = (h.incomeDescription && !h.incomeDescription.includes('Log') && h.incomeDescription !== '5') ? h.incomeDescription : (h.notes && !h.notes.includes('Log') && h.notes !== '5') ? h.notes : '';
+                        const cust = customers.find(c => c.name.toLowerCase() === name.toLowerCase());
+                        const g = getGroup(name, cust);
+                        g.amount += (h.revenue || h.amount || 0);
+                        g.descList.push(`${h.grainType} (${h.wheatWeight}kg)`);
+                        g.deleteHisabIds.push(h.id);
+                      });
+
+                      todayCashOrders.forEach(o => {
+                        const cust = customers.find(c => c.id === o.customerId);
+                        const g = getGroup(o.customerName || '', cust);
+                        g.amount += o.totalAmount;
+                        g.descList.push(`${o.grainType} (${o.weight}kg)`);
+                        g.deleteOrderIds.push(o.id);
+                      });
+
+                      return Array.from(groups.values()).map((g, i) => {
+                        const potaliStatus = g.cust?.potaliStatus || 'none';
+                        return (
+                          <div key={`cash-g-${i}`} className="p-3 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900 rounded-2xl flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              <span className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-black text-xs shrink-0">
+                                ✓
                               </span>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                    {g.displayName}
+                                  </h5>
+                                  {potaliStatus === 'received' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
+                                      🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
+                                    </span>
+                                  )}
+                                  {potaliStatus === 'delivered' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                                      🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] font-semibold text-slate-500 block mt-0.5">
+                                  {g.descList.join(' + ')}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-emerald-600 dark:text-emerald-400 text-base">
-                              +₹{r.amount}
-                            </span>
-                            {cust && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
-                                  updateCustomerPotaliStatus(cust.id, nextStatus);
-                                }}
-                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
-                                  potaliStatus === 'received'
-                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
-                                    : potaliStatus === 'delivered'
-                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
-                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                }`}
-                                title="Potali Delivered Button: Click to mark potali as given to customer"
-                              >
-                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {todayCashHisabs.map(h => {
-                      const realName = (h.incomeDescription && !h.incomeDescription.includes('Log') && h.incomeDescription !== '5')
-                        ? h.incomeDescription
-                        : (h.notes && !h.notes.includes('Log') && h.notes !== '5')
-                          ? h.notes
-                          : '';
-                      const displayName = realName || (isHindi ? 'नकद ग्राहक' : 'Cash Customer');
-                      const cust = customers.find(c => c.name.toLowerCase() === displayName.toLowerCase());
-                      const potaliStatus = cust?.potaliStatus || 'none';
-
-                      return (
-                        <div key={`h-${h.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0">
-                              📋
-                            </span>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h5
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-emerald-600 dark:text-emerald-400 text-base">
+                                +₹{g.amount.toFixed(0)}
+                              </span>
+                              {g.cust && (
+                                <button
+                                  type="button"
                                   onClick={() => {
-                                    const input = window.prompt(
-                                      isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
-                                      realName
-                                    );
-                                    if (input !== null && input.trim()) {
-                                      updateDailyHisab({
-                                        ...h,
-                                        incomeDescription: input.trim(),
-                                        notes: input.trim()
-                                      });
+                                    const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
+                                    updateCustomerPotaliStatus(g.cust.id, nextStatus);
+                                  }}
+                                  className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
+                                    potaliStatus === 'received'
+                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
+                                      : potaliStatus === 'delivered'
+                                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                                      : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                                  }`}
+                                  title="Potali Delivered Button"
+                                >
+                                  ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
+                                </button>
+                              )}
+                              {(g.deleteHisabIds.length > 0 || g.deleteOrderIds.length > 0 || g.deleteCreditRecordIds.length > 0) && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (window.confirm(isHindi ? 'क्या आप इस ग्राहक के आज के सभी कैश हिसाब मिटाना चाहते हैं?' : 'Delete all cash logs for this customer today?')) {
+                                      g.deleteHisabIds.forEach((id: number) => deleteDailyHisab(id));
+                                      g.deleteOrderIds.forEach((id: number) => deleteOrder(id));
+                                      g.deleteCreditRecordIds.forEach((id: number) => deleteCreditRecord(id));
                                     }
                                   }}
-                                  className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer flex items-center gap-1 group"
-                                  title={isHindi ? 'ग्राहक का नाम दर्ज करने के लिए क्लिक करें' : 'Click to edit customer name'}
+                                  className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors cursor-pointer"
+                                  title={isHindi ? 'हिसाब मिटाएं' : 'Delete Logs'}
                                 >
-                                  <span>{displayName}</span>
-                                  <span className="text-[10px] text-slate-400 opacity-60 group-hover:opacity-100">✏️</span>
-                                </h5>
-                                {potaliStatus === 'received' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
-                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
-                                  </span>
-                                )}
-                                {potaliStatus === 'delivered' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
-                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
-                                {h.grainType} ({h.wheatWeight} kg)
-                              </span>
+                                  <TrashIcon size={16} />
+                                </button>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-slate-900 dark:text-slate-100 text-base">
-                              ₹{(h.revenue || h.amount || 0).toFixed(0)}
-                            </span>
-                            {cust && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
-                                  updateCustomerPotaliStatus(cust.id, nextStatus);
-                                }}
-                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
-                                  potaliStatus === 'received'
-                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
-                                    : potaliStatus === 'delivered'
-                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
-                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                }`}
-                                title="Potali Delivered Button: Click to mark potali as given to customer"
-                              >
-                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteHisab(h.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors cursor-pointer"
-                              title={isHindi ? 'हिसाब मिटाएं' : 'Delete Log'}
-                            >
-                              <TrashIcon size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {todayCashOrders.map(o => {
-                      const cust = customers.find(c => c.id === o.customerId);
-                      const potaliStatus = cust?.potaliStatus || o.potaliStatus || 'none';
-
-                      return (
-                        <div key={`o-${o.id}`} className="p-3 bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0">
-                              🌾
-                            </span>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
-                                  {o.customerName || (isHindi ? 'नकद ग्राहक' : 'Cash Customer')}
-                                </h5>
-                                {potaliStatus === 'received' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
-                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
-                                  </span>
-                                )}
-                                {potaliStatus === 'delivered' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
-                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
-                                {o.grainType} ({o.weight} kg)
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-slate-900 dark:text-slate-100 text-base">
-                              ₹{o.totalAmount}
-                            </span>
-                            {cust && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
-                                  updateCustomerPotaliStatus(cust.id, nextStatus);
-                                }}
-                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
-                                  potaliStatus === 'received'
-                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
-                                    : potaliStatus === 'delivered'
-                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
-                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                }`}
-                                title="Potali Delivered Button: Click to mark potali as given to customer"
-                              >
-                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                 )}
               </div>
@@ -617,277 +527,112 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                   </p>
                 ) : (
                   <div className="space-y-2 pb-2">
-                    {todayPaytmHisabs.map(h => {
-                      const realName = (h.incomeDescription && !h.incomeDescription.includes('Log') && h.incomeDescription !== '5')
-                        ? h.incomeDescription
-                        : (h.notes && !h.notes.includes('Log') && h.notes !== '5')
-                          ? h.notes
-                          : '';
-                      const displayName = realName || (isHindi ? 'Paytm ग्राहक' : 'Paytm Customer');
-                      const cust = customers.find(c => c.name.toLowerCase() === displayName.toLowerCase());
-                      const potaliStatus = cust?.potaliStatus || 'none';
+                    {(() => {
+                      const groups = new Map();
+                      const getGroup = (name: string, cust: any) => {
+                        const key = (name || '').trim().toLowerCase() || 'paytm customer';
+                        if (!groups.has(key)) {
+                          groups.set(key, {
+                            displayName: name || (isHindi ? 'Paytm ग्राहक' : 'Paytm Customer'),
+                            cust,
+                            amount: 0,
+                            descList: [],
+                            deleteHisabIds: [],
+                            deleteOrderIds: []
+                          });
+                        }
+                        return groups.get(key);
+                      };
 
-                      return (
-                        <div key={`h-${h.id}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                              📲
-                            </span>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h5
-                                  onClick={() => {
-                                    const input = window.prompt(
-                                      isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
-                                      realName
-                                    );
-                                    if (input !== null && input.trim()) {
-                                      updateDailyHisab({
-                                        ...h,
-                                        incomeDescription: input.trim(),
-                                        notes: input.trim()
-                                      });
-                                    }
-                                  }}
-                                  className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer flex items-center gap-1 group"
-                                  title={isHindi ? 'ग्राहक का नाम दर्ज करने के लिए क्लिक करें' : 'Click to edit customer name'}
-                                >
-                                  <span>{displayName}</span>
-                                  <span className="text-[10px] text-blue-400 opacity-60 group-hover:opacity-100">✏️</span>
-                                </h5>
-                                {potaliStatus === 'received' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
-                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
-                                  </span>
-                                )}
-                                {potaliStatus === 'delivered' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
-                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
-                                Paytm ({h.grainType})
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-blue-600 dark:text-blue-400 text-base">
-                              ₹{(h.revenue || h.amount || 0).toFixed(0)}
-                            </span>
-                            {cust && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
-                                  updateCustomerPotaliStatus(cust.id, nextStatus);
-                                }}
-                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
-                                  potaliStatus === 'received'
-                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
-                                    : potaliStatus === 'delivered'
-                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
-                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                }`}
-                                title="Potali Delivered Button: Click to mark potali as given to customer"
-                              >
-                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteHisab(h.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors cursor-pointer"
-                              title={isHindi ? 'हिसाब मिटाएं' : 'Delete Log'}
-                            >
-                              <TrashIcon size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                      todayPaytmHisabs.forEach(h => {
+                        const name = (h.incomeDescription && !h.incomeDescription.includes('Log') && h.incomeDescription !== '5') ? h.incomeDescription : (h.notes && !h.notes.includes('Log') && h.notes !== '5') ? h.notes : '';
+                        const cust = customers.find(c => c.name.toLowerCase() === name.toLowerCase());
+                        const g = getGroup(name, cust);
+                        g.amount += (h.revenue || h.amount || 0);
+                        g.descList.push(`${h.grainType} (${h.wheatWeight}kg)`);
+                        g.deleteHisabIds.push(h.id);
+                      });
 
-                    {todayPaytmOrders.map(o => {
-                      const cust = customers.find(c => c.id === o.customerId);
-                      const potaliStatus = cust?.potaliStatus || o.potaliStatus || 'none';
+                      todayPaytmOrders.forEach(o => {
+                        const cust = customers.find(c => c.id === o.customerId);
+                        const g = getGroup(o.customerName || '', cust);
+                        g.amount += o.totalAmount;
+                        g.descList.push(`${o.grainType} (${o.weight}kg)`);
+                        g.deleteOrderIds.push(o.id);
+                      });
 
-                      return (
-                        <div key={`o-${o.id}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                              📲
-                            </span>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
-                                  {o.customerName || (isHindi ? 'Paytm ग्राहक' : 'Paytm Customer')}
-                                </h5>
-                                {potaliStatus === 'received' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
-                                    🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
-                                  </span>
-                                )}
-                                {potaliStatus === 'delivered' && (
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
-                                    🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">
-                                Paytm ({o.grainType})
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-black text-blue-600 dark:text-blue-400 text-base">
-                              ₹{o.totalAmount}
-                            </span>
-                            {cust && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
-                                  updateCustomerPotaliStatus(cust.id, nextStatus);
-                                }}
-                                className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
-                                  potaliStatus === 'received'
-                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
-                                    : potaliStatus === 'delivered'
-                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
-                                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                }`}
-                                title="Potali Delivered Button: Click to mark potali as given to customer"
-                              >
-                                ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: UDHAR (CREDIT & JAMA) HISTORY LEDGER */}
-          {activeTab === 'UDHAR' && (
-            <div className="space-y-4">
-              <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-3xl p-5 text-white shadow-lg shadow-red-500/20">
-                <div>
-                  <span className="text-[11px] font-bold text-red-100 uppercase tracking-wider block">
-                    {isHindi ? 'आज का नया उधार' : "Today's New Udhar"}
-                  </span>
-                  <p className="text-3xl font-black mt-1 tracking-tight">
-                    {hideAmounts ? '₹••••' : `₹${totalUdharToday.toFixed(0)}`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Comprehensive Udhar Transactions & Khata History List */}
-              <div className="space-y-2">
-                <h4 className="font-extrabold text-slate-800 dark:text-slate-200 text-xs uppercase tracking-wider">
-                  {isHindi ? 'उधार व जमा इतिहास विवरण (Udhar & Jama History)' : 'Udhar & Jama History Ledger'}
-                </h4>
-
-                {udharHisabsList.length === 0 && customers.filter(c => c.outstandingBalance > 0).length === 0 ? (
-                  <p className="text-xs text-slate-400 font-semibold italic py-6 text-center bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                    {isHindi ? 'कोई उधार रिकॉर्ड मौजूद नहीं है।' : 'No active credit records.'}
-                  </p>
-                ) : (
-                  <div className="space-y-2.5 pb-2">
-                    {/* 1. Daily Hisab Udhar Entries */}
-                    {udharHisabsList.map(h => {
-                      const udharInfo = getUdharDetails(h);
-                      const realName = (h.incomeDescription && !h.incomeDescription.includes('Log'))
-                        ? h.incomeDescription
-                        : (h.notes && !h.notes.includes('Log'))
-                          ? h.notes
-                          : '';
-
-                      return (
-                        <div key={`udhar-h-${h.id}`} className="p-3 bg-red-50/80 dark:bg-red-950/20 border border-red-200/70 dark:border-red-900/60 rounded-2xl space-y-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                                📝
+                      return Array.from(groups.values()).map((g, i) => {
+                        const potaliStatus = g.cust?.potaliStatus || 'none';
+                        return (
+                          <div key={`paytm-g-${i}`} className="p-3 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900 rounded-2xl flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              <span className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                📲
                               </span>
                               <div>
-                                <h5
-                                  onClick={() => {
-                                    const input = window.prompt(
-                                      isHindi ? 'ग्राहक का नाम दर्ज करें (Enter Customer Name):' : 'Enter Customer Name:',
-                                      realName
-                                    );
-                                    if (input !== null && input.trim()) {
-                                      updateDailyHisab({
-                                        ...h,
-                                        incomeDescription: input.trim(),
-                                        notes: input.trim()
-                                      });
-                                    }
-                                  }}
-                                  className="font-black text-slate-850 dark:text-slate-100 text-sm hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer flex items-center gap-1 group"
-                                  title={isHindi ? 'ग्राहक का नाम बदलने या दर्ज करने के लिए क्लिक करें' : 'Click to edit or set customer name'}
-                                >
-                                  <span>{realName || (isHindi ? 'उधार ग्राहक' : 'Udhar Customer')}</span>
-                                  <span className="text-[10px] text-amber-500 opacity-60 group-hover:opacity-100">✏️</span>
-                                </h5>
-                                <span className="text-[10px] font-bold text-slate-400">
-                                  {h.date} • {h.grainType} ({h.wheatWeight}kg)
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
+                                    {g.displayName}
+                                  </h5>
+                                  {potaliStatus === 'received' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
+                                      🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
+                                    </span>
+                                  )}
+                                  {potaliStatus === 'delivered' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                                      🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] font-semibold text-slate-500 block mt-0.5">
+                                  Paytm ({g.descList.join(' + ')})
                                 </span>
                               </div>
                             </div>
-
                             <div className="flex items-center gap-2">
-                              <span className="font-black text-slate-900 dark:text-slate-100 text-sm">
-                                {isHindi ? 'कुल: ' : 'Total: '}₹{h.amount}
+                              <span className="font-black text-blue-600 dark:text-blue-400 text-base">
+                                +₹{g.amount.toFixed(0)}
                               </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (window.confirm(isHindi ? 'क्या आप इस हिसाब को मिटाना चाहते हैं?' : 'Are you sure you want to delete this log?')) {
-                                    deleteDailyHisab(h.id);
-                                  }
-                                }}
-                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors cursor-pointer"
-                                title={isHindi ? 'हिसाब मिटाएं' : 'Delete Log'}
-                              >
-                                <TrashIcon size={15} />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between pt-1 border-t border-red-200/50 dark:border-red-800/50 text-[11px] font-extrabold flex-wrap gap-1.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-300 dark:border-emerald-800">
-                                ✓ {isHindi ? 'जमा: ₹' : 'Jama: ₹'}{udharInfo.jama}
-                              </span>
-
-                              <span className="text-amber-700 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-800">
-                                📝 {isHindi ? 'बाकी उधार: ₹' : 'Udhar Due: ₹'}{udharInfo.udhar}
-                              </span>
-                            </div>
-
-                            <div className="flex gap-1.5 shrink-0">
-                              {udharInfo.udhar > 0 && (
+                              {g.cust && (
                                 <button
                                   type="button"
-                                  onClick={() => openPaymentModal(h)}
-                                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                                  onClick={() => {
+                                    const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
+                                    updateCustomerPotaliStatus(g.cust.id, nextStatus);
+                                  }}
+                                  className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
+                                    potaliStatus === 'received'
+                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
+                                      : potaliStatus === 'delivered'
+                                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                                      : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                                  }`}
+                                  title="Potali Delivered Button"
                                 >
-                                  <span>💳</span>
-                                  <span>{isHindi ? 'जमा करें' : 'Jama'}</span>
+                                  ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
+                                </button>
+                              )}
+                              {(g.deleteHisabIds.length > 0 || g.deleteOrderIds.length > 0) && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (window.confirm(isHindi ? 'क्या आप इस ग्राहक के आज के सभी Paytm हिसाब मिटाना चाहते हैं?' : 'Delete all Paytm logs for this customer today?')) {
+                                      g.deleteHisabIds.forEach((id: number) => deleteDailyHisab(id));
+                                      g.deleteOrderIds.forEach((id: number) => deleteOrder(id));
+                                    }
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors cursor-pointer"
+                                  title={isHindi ? 'हिसाब मिटाएं' : 'Delete Logs'}
+                                >
+                                  <TrashIcon size={16} />
                                 </button>
                               )}
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* 2. Customer Khata Accounts (Removed from Today's Modal) */}
+                        );
+                      });
+                    })()}
                   </div>
                 )}
               </div>
@@ -895,149 +640,6 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
           )}
         </div>
       </div>
-
-      {/* Udhar Payment Collection Modal Popup */}
-      {selectedHisabForPayment && (() => {
-        const details = getUdharDetails(selectedHisabForPayment);
-        return (
-          <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in"
-            onClick={() => setSelectedHisabForPayment(null)}
-          >
-            <div
-              className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden p-5 space-y-4 my-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div>
-                  <h3 className="font-extrabold text-slate-850 dark:text-slate-100 text-base">
-                    💳 {isHindi ? 'उधार राशि जमा करें' : 'Collect Udhar Payment'}
-                  </h3>
-                  <p className="text-xs text-slate-400 font-medium">
-                    {selectedHisabForPayment.incomeDescription || (isHindi ? 'उधार ग्राहक' : 'Udhar Customer')}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedHisabForPayment(null)}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  <CloseIcon size={18} />
-                </button>
-              </div>
-
-              {/* Outstanding Due Banner */}
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 rounded-2xl flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider block">
-                    {isHindi ? 'कुल बाकी उधार' : 'Remaining Due'}
-                  </span>
-                  <span className="text-xl font-black text-amber-600 dark:text-amber-400">
-                    ₹{details.udhar}
-                  </span>
-                </div>
-                <div className="text-right text-[11px] font-semibold text-slate-500">
-                  <span>{isHindi ? 'कुल बिल:' : 'Bill:'} ₹{selectedHisabForPayment.amount}</span>
-                  <span className="block text-emerald-600 dark:text-emerald-400 font-extrabold">
-                    {isHindi ? 'जमा:' : 'Paid:'} ₹{details.jama}
-                  </span>
-                </div>
-              </div>
-
-              <form onSubmit={handleCollectPayment} className="space-y-4">
-                {/* Payment Mode Selector */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 block">
-                    {isHindi ? 'भुगतान का तरीका (Payment Mode)' : 'Payment Method'}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 pt-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setNewPaymentMode('CASH')}
-                      className={`py-2 px-2 rounded-xl text-xs font-black border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        newPaymentMode === 'CASH'
-                          ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                      }`}
-                    >
-                      💵 Cash
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setNewPaymentMode('PAYTM')}
-                      className={`py-2 px-2 rounded-xl text-xs font-black border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        newPaymentMode === 'PAYTM'
-                          ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                      }`}
-                    >
-                      📲 Paytm
-                    </button>
-                  </div>
-                </div>
-
-                {/* Amount to collect input */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 block">
-                    {isHindi ? 'नई जमा राशि (New Cash Collected ₹) *' : 'New Payment Amount (₹) *'}
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    required
-                    placeholder={`Max ₹${details.udhar}`}
-                    value={newPaymentAmount}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                        setNewPaymentAmount(val);
-                      }
-                    }}
-                    className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-base font-extrabold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                {/* Quick Presets */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setNewPaymentAmount(details.udhar.toString())}
-                    className="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-extrabold rounded-xl transition-all cursor-pointer"
-                  >
-                    {isHindi ? `पूरा ₹${details.udhar}` : `Full ₹${details.udhar}`}
-                  </button>
-
-                  {details.udhar > 10 && (
-                    <button
-                      type="button"
-                      onClick={() => setNewPaymentAmount(Math.round(details.udhar / 2).toString())}
-                      className="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-extrabold rounded-xl transition-all cursor-pointer"
-                    >
-                      {isHindi ? `आधा ₹${Math.round(details.udhar / 2)}` : `Half ₹${Math.round(details.udhar / 2)}`}
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedHisabForPayment(null)}
-                    className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold rounded-xl text-xs cursor-pointer"
-                  >
-                    {isHindi ? 'रद्द करें' : 'Cancel'}
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl text-xs shadow-md shadow-emerald-500/20 cursor-pointer"
-                  >
-                    {isHindi ? '✓ जमा दर्ज करें' : '✓ Save Payment'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 };

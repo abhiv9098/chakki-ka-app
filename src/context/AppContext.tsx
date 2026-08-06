@@ -32,6 +32,7 @@ interface AppContextType {
   deleteOrder: (orderId: number) => void;
   recordPayment: (customerId: number, amount: number, description: string) => void;
   recordManualDue: (customerId: number, amount: number, description: string) => void;
+  deleteCreditRecord: (recordId: number) => void;
   addDailyHisab: (hisab: Omit<DailyHisab, 'id' | 'createdAt'>) => DailyHisab;
   updateDailyHisab: (hisab: DailyHisab) => void;
   deleteDailyHisab: (id: number) => void;
@@ -263,6 +264,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const deleteCreditRecord = (recordId: number) => {
+    dbService.deleteCreditRecord(recordId);
+    refreshData();
+  };
+
   const exportBackup = () => {
     return dbService.exportData();
   };
@@ -324,6 +330,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteOrder,
         recordPayment,
         recordManualDue,
+        deleteCreditRecord,
         addDailyHisab,
         updateDailyHisab,
         deleteDailyHisab,

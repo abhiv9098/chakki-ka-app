@@ -135,8 +135,8 @@ export const DailyHisabView: React.FC = () => {
     if (customerNaam.trim()) {
       let cust = customers.find(c => c.name.toLowerCase() === customerNaam.trim().toLowerCase());
       
-      // Auto-create customer if they don't exist and it's an Udhar entry
-      if (!cust && paymentMode === 'UDHAR') {
+      // Auto-create customer if they don't exist and it's an Udhar entry, or if they provided a phone number
+      if (!cust && (paymentMode === 'UDHAR' || customerPhone.trim())) {
         cust = addCustomer(customerNaam.trim(), customerPhone.trim());
       }
 
@@ -163,6 +163,7 @@ export const DailyHisabView: React.FC = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+      e.stopPropagation();
       handleSubmit(e);
     }
   };
@@ -336,6 +337,26 @@ export const DailyHisabView: React.FC = () => {
             />
           </div>
 
+          {/* Mobile Number */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              {language === 'hi' ? 'मोबाइल नंबर (Mobile Number) - Optional' : 'Mobile Number - Optional'}
+            </label>
+            <input
+              type="tel"
+              maxLength={10}
+              pattern="[0-9]*"
+              placeholder={language === 'hi' ? 'मोबाइल नंबर...' : 'Mobile number...'}
+              value={customerPhone}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                if (val.length <= 10) setCustomerPhone(val);
+              }}
+              onKeyDown={handleKeyDown}
+              className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 dark:text-slate-100 font-semibold"
+            />
+          </div>
+
           {/* Payment Method / Udhar Toggle */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
@@ -364,23 +385,9 @@ export const DailyHisabView: React.FC = () => {
             </div>
           </div>
 
-          {/* Optional Jama Amount & Mobile Number when Udhar is selected */}
+          {/* Optional Jama Amount when Udhar is selected */}
           {paymentMode === 'UDHAR' && (
             <div className="p-3 bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/60 rounded-2xl space-y-3 animate-fade-in">
-              {/* Mobile Number */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">
-                  {language === 'hi' ? 'मोबाइल नंबर (Mobile Number) - Optional' : 'Mobile Number - Optional'}
-                </label>
-                <input
-                  type="tel"
-                  placeholder={language === 'hi' ? 'मोबाइल नंबर...' : 'Mobile number...'}
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="w-full h-10 px-3.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
 
               {/* Jama Amount */}
               <div className="space-y-1">
@@ -542,6 +549,11 @@ export const DailyHisabView: React.FC = () => {
                           <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
                             {custName}
                           </h5>
+                          {cust?.phone && (
+                            <p className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 mt-0.5 mb-0.5 flex items-center gap-1">
+                              <span>📞</span> {cust.phone}
+                            </p>
+                          )}
                           <p className="text-[11px] font-bold text-slate-400 mt-0.5">
                             {h.grainType} ({h.wheatWeight} kg) • {h.date}
                           </p>

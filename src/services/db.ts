@@ -22,11 +22,12 @@ export const dbService = {
 
     // Check version to handle migration/clearance of old mock data
     const version = localStorage.getItem('chakkimitra_db_version');
-    if (version !== '2.1') {
+    if (version !== '2.3') {
       localStorage.removeItem(STORAGE_KEYS.CUSTOMERS);
       localStorage.removeItem(STORAGE_KEYS.ORDERS);
       localStorage.removeItem(STORAGE_KEYS.CREDIT_RECORDS);
-      localStorage.setItem('chakkimitra_db_version', '2.1');
+      localStorage.removeItem(STORAGE_KEYS.DAILY_HISAB);
+      localStorage.setItem('chakkimitra_db_version', '2.3');
     }
 
     const customers = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);
@@ -133,14 +134,14 @@ export const dbService = {
     localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(creditRecords));
 
     const dailyHisabs = dbService.getDailyHisabs().filter(h => {
-      const name1 = h.incomeDescription || '';
-      const name2 = h.notes || '';
-      const cName = customer.name;
+      const name1 = (h.incomeDescription || '').trim().toLowerCase();
+      const name2 = (h.notes || '').trim().toLowerCase();
+      const cName = customer.name.trim().toLowerCase();
       
       const isMatch = name1 === cName || 
                       name2 === cName || 
-                      name1 === `Customer: ${cName}` || 
-                      name2 === `Customer: ${cName}`;
+                      name1 === `customer: ${cName}` || 
+                      name2 === `customer: ${cName}`;
       return !isMatch;
     });
     localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(dailyHisabs));
@@ -338,5 +339,15 @@ export const dbService = {
       localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(updatedRecords));
       dbService.recalculateCustomerBalance(targetOrder.customerId);
     }
+  },
+
+  deleteCreditRecord: (recordId: number): void => {
+    const records = dbService.getCreditRecords();
+    const targetRecord = records.find(r => r.id === recordId);
+    if (!targetRecord) return;
+
+    const updatedRecords = records.filter(r => r.id !== recordId);
+    localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(updatedRecords));
+    dbService.recalculateCustomerBalance(targetRecord.customerId);
   }
 };
