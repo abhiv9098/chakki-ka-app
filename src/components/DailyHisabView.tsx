@@ -28,7 +28,7 @@ const grainLabels: Record<string, { hi: string; en: string }> = {
 };
 
 export const DailyHisabView: React.FC = () => {
-  const { addDailyHisab, dailyHisabs, updateDailyHisab, deleteDailyHisab, customers, updateCustomerPotaliStatus, t, language, defaultGrindingRate, grainRates, setActiveView, addCustomer, recordManualDue } = useApp();
+  const { addDailyHisab, dailyHisabs, updateDailyHisab, deleteDailyHisab, customers, updateCustomerPotaliStatus, t, language, defaultGrindingRate, grainRates, setActiveView, addCustomer, recordManualDue, recordPayment, addOrder, selectedCustomer } = useApp();
 
   // Calculate today and 30 days ago date strings for date picker range restriction
   const { todayStr, minDateStr } = (() => {
@@ -55,11 +55,40 @@ export const DailyHisabView: React.FC = () => {
   const [wheatWeight, setWheatWeight] = useState('');
   const [customRate, setCustomRate] = useState<string>('5');
   const [revenue, setRevenue] = useState(0);
-  const [customerNaam, setCustomerNaam] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerNaam, setCustomerNaam] = useState(selectedCustomer ? selectedCustomer.name : '');
+  const [customerPhone, setCustomerPhone] = useState(selectedCustomer && selectedCustomer.phone !== 'N/A' ? selectedCustomer.phone : '');
   const [paymentMode, setPaymentMode] = useState<'CASH' | 'PAYTM' | 'UDHAR' | 'PENDING'>('PENDING');
+  const isSubmittingRef = React.useRef(false);
   const [jamaAmount, setJamaAmount] = useState<string>('');
   const [amount, setAmount] = useState('');
+
+  // Customer Profile Sidebar states
+  const [matchedCustomer, setMatchedCustomer] = useState<any>(null);
+  const [showProfileSidebar, setShowProfileSidebar] = useState(false);
+  const [autoOpenTriggered, setAutoOpenTriggered] = useState<number | null>(null);
+
+  useEffect(() => {
+    let match = null;
+    const nameQuery = customerNaam.trim().toLowerCase();
+    const phoneQuery = customerPhone.trim();
+
+    if (nameQuery.length >= 3) {
+      match = customers.find(c => c.name.toLowerCase() === nameQuery);
+    }
+    if (!match && phoneQuery.length >= 10) {
+      match = customers.find(c => c.phone && c.phone === phoneQuery && c.phone !== 'N/A');
+    }
+    
+    if (match) {
+      setMatchedCustomer(match);
+      if (autoOpenTriggered !== match.id) {
+        setShowProfileSidebar(true);
+        setAutoOpenTriggered(match.id);
+      }
+    } else {
+      setMatchedCustomer(null);
+    }
+  }, [customerNaam, customerPhone, customers, autoOpenTriggered]);
 
   // Update custom rate when grain type or saved rates change
   useEffect(() => {
@@ -78,6 +107,8 @@ export const DailyHisabView: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
     if (date < minDateStr || date > todayStr) {
       alert(
@@ -85,6 +116,7 @@ export const DailyHisabView: React.FC = () => {
           ? 'केवल पिछले 30 दिनों के भीतर का हिसाब ही दर्ज किया जा सकता है!'
           : 'You can only log summaries for the last 30 days!'
       );
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -94,6 +126,7 @@ export const DailyHisabView: React.FC = () => {
 
     if (isNaN(weightVal) || weightVal <= 0) {
       alert(language === 'hi' ? 'कृपया पिसाई का वजन लिखें!' : 'Please enter grain weight!');
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -103,6 +136,7 @@ export const DailyHisabView: React.FC = () => {
           ? 'उधार/पेंडिंग एंट्री दर्ज करने के लिए ग्राहक का नाम (Naam) लिखना अनिवार्य है!'
           : 'Please enter customer name for Udhar or Pending entry!'
       );
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -131,21 +165,41 @@ export const DailyHisabView: React.FC = () => {
       isPending: paymentMode === 'PENDING'
     });
 
-    // Auto mark customer's potaliStatus as received if customer profile exists, and auto-create customer for UDHAR
+    // Auto mark customer's potaliStatus as received if customer profile exists
     if (customerNaam.trim()) {
       let cust = customers.find(c => c.name.toLowerCase() === customerNaam.trim().toLowerCase());
       
-      // Auto-create customer if they don't exist and it's an Udhar entry, or if they provided a phone number
-      if (!cust && (paymentMode === 'UDHAR' || customerPhone.trim())) {
+      // Always auto-create customer if they don't exist
+      if (!cust) {
         cust = addCustomer(customerNaam.trim(), customerPhone.trim());
       }
 
       if (cust) {
         updateCustomerPotaliStatus(cust.id, 'received');
         
-        // Auto-record Khata transaction for Udhar
-        if (paymentMode === 'UDHAR' && remainingUdhar > 0) {
-          recordManualDue(cust.id, remainingUdhar, `${grainType} Grinding - ${weightVal}kg`);
+        // Auto-record Khata transaction for Jama if Udhar
+        if (paymentMode === 'UDHAR' && jamaVal > 0) {
+          // addOrder with CREDIT will add the FULL amount to the balance.
+          // So we record a PAID transaction for the Jama amount, leaving the correct remaining balance.
+          recordPayment(cust.id, jamaVal, `Jama for ${grainType} Grinding`);
+        }
+        
+        // Add grinding order if not pending (completed immediately)
+        if (paymentMode !== 'PENDING') {
+          let paymentType: 'CASH' | 'CREDIT' | 'ONLINE' | 'PAYTM' = 'CASH';
+          if (paymentMode === 'PAYTM') paymentType = 'PAYTM';
+          else if (paymentMode === 'UDHAR') paymentType = 'CREDIT';
+          
+          addOrder({
+            customerId: cust.id,
+            customerName: cust.name,
+            grainType: grainType,
+            weight: weightVal,
+            rate: rateVal,
+            totalAmount: netAmount,
+            paymentType: paymentType,
+            potaliStatus: 'delivered'
+          });
         }
       }
     }
@@ -158,6 +212,7 @@ export const DailyHisabView: React.FC = () => {
     setJamaAmount('');
     
     alert(t('hisabSaved'));
+    setTimeout(() => { isSubmittingRef.current = false; }, 500);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -168,19 +223,15 @@ export const DailyHisabView: React.FC = () => {
     }
   };
 
-  // Deduplicate pending Hisabs by ID and content to prevent accidental duplicate renders
+  // Deduplicate pending Hisabs by ID to prevent accidental duplicate renders
   const seenIds = new Set();
-  const seenComposites = new Set();
   const pendingHisabsList = dailyHisabs.filter(h => {
     const isPending = h.isPending || h.expenseDescription?.includes('PENDING');
     if (!isPending) return false;
 
     if (seenIds.has(h.id)) return false;
-    const composite = `${h.date}_${h.amount}_${h.grainType}_${h.wheatWeight}_${h.incomeDescription}_${h.notes}`;
-    if (seenComposites.has(composite)) return false;
 
     seenIds.add(h.id);
-    seenComposites.add(composite);
     return true;
   });
   const pendingCount = pendingHisabsList.length;
@@ -606,9 +657,12 @@ export const DailyHisabView: React.FC = () => {
                             updateDailyHisab({
                               ...h,
                               isPending: false,
-                              expenseDescription: 'UDHAR'
+                              expenseDescription: `UDHAR (Jama: ₹0, Udhar: ₹${h.amount.toFixed(0)})`
                             });
-                            if (cust) updateCustomerPotaliStatus(cust.id, 'delivered');
+                            if (cust) {
+                              updateCustomerPotaliStatus(cust.id, 'delivered');
+                              recordManualDue(cust.id, h.amount, `Grinding - ${h.grainType} ${h.wheatWeight}kg`);
+                            }
                           }}
                           className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-black transition-all shadow-xs cursor-pointer"
                           title="Mark Grinding Done & Udhar Logged"
@@ -621,6 +675,70 @@ export const DailyHisabView: React.FC = () => {
                 })}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Customer Profile Sidebar */}
+      {showProfileSidebar && matchedCustomer && (
+        <div className="fixed inset-y-0 right-0 z-[60] w-full max-w-sm bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800 transform transition-transform animate-slide-in-right overflow-y-auto">
+          <div className="p-4 sm:p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-xl text-slate-800 dark:text-slate-100">
+                {language === 'hi' ? 'ग्राहक प्रोफाइल' : 'Customer Profile'}
+              </h3>
+              <button
+                onClick={() => setShowProfileSidebar(false)}
+                className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 text-center space-y-2">
+              <div className="w-16 h-16 mx-auto bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center text-2xl font-black shadow-inner">
+                {matchedCustomer.name.charAt(0).toUpperCase()}
+              </div>
+              <h4 className="font-black text-2xl text-slate-800 dark:text-slate-100">{matchedCustomer.name}</h4>
+              {matchedCustomer.phone && matchedCustomer.phone !== 'N/A' && (
+                <p className="text-slate-500 font-bold">📞 {matchedCustomer.phone}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-rose-50 dark:bg-rose-950/30 p-3 rounded-2xl border border-rose-100 dark:border-rose-900/30">
+                <p className="text-[10px] font-black uppercase tracking-wider text-rose-500 mb-1">
+                  {language === 'hi' ? 'कुल बाकी' : 'Total Due'}
+                </p>
+                <p className="font-black text-xl text-rose-600">₹{matchedCustomer.outstandingBalance || 0}</p>
+              </div>
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
+                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600 mb-1">
+                  {language === 'hi' ? 'पोटली स्थिति' : 'Potali Status'}
+                </p>
+                <p className="font-black text-sm text-emerald-700 uppercase">
+                  {matchedCustomer.potaliStatus === 'received' ? 'Received' : matchedCustomer.potaliStatus === 'delivered' ? 'Delivered' : 'None'}
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => {
+                  setCustomerNaam(matchedCustomer.name);
+                  setCustomerPhone(matchedCustomer.phone !== 'N/A' ? matchedCustomer.phone : '');
+                  setWheatWeight('');
+                  setPaymentMode('PENDING');
+                  setJamaAmount('');
+                  setShowProfileSidebar(false);
+                  alert(language === 'hi' ? 'नई पोटली के लिए फॉर्म तैयार है!' : 'Ready to add new potli!');
+                }}
+                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+              >
+                <span className="text-xl">+</span>
+                <span>{language === 'hi' ? 'नई पोटली जोड़ें (Add New Potli)' : 'Add New Potli'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

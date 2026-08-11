@@ -8,6 +8,7 @@ import { DashboardView } from '@/components/DashboardView';
 import { SettingsView } from '@/components/SettingsView';
 import { DailyHisabView } from '@/components/DailyHisabView';
 import { HisabHistoryView } from '@/components/HisabHistoryView';
+import { CustomersView } from '@/components/CustomersView';
 import { QrScannerModal } from '@/components/QrScannerModal';
 
 export default function Home() {
@@ -69,6 +70,8 @@ export default function Home() {
         return <DailyHisabView />;
       case 'hisab-history':
         return <HisabHistoryView />;
+      case 'customers':
+        return <CustomersView />;
       default:
         return <DashboardView />;
     }
@@ -135,37 +138,36 @@ export default function Home() {
             </h2>
           </div>
           
-          {/* Top Bar Actions Group */}
           <div className="flex items-center gap-2.5" id="top-bar-actions">
 
-            {/* Visibility Toggle Button */}
-            <button
-              onClick={toggleHideAmounts}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-sm cursor-pointer focus:outline-none"
-              title={hideAmounts ? "Show Amounts" : "Hide Amounts"}
-              aria-label="Toggle Amount Visibility"
-            >
-              {hideAmounts ? <EyeOffIcon size={19} /> : <EyeIcon size={19} />}
-            </button>
-
-            {/* Profile / Account button */}
-            <button
-              onClick={() => setActiveView('settings')}
-              className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-95 cursor-pointer focus:outline-none ${
-                activeView === 'settings'
-                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/20'
-                  : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm'
-              }`}
-              title={t('settings')}
-              aria-label="Profile Settings"
-            >
-              <ProfileIcon size={19} />
-            </button>
+            {activeView !== 'customers' && (
+              <>
+                <button
+                  onClick={toggleHideAmounts}
+                  className="flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-95 cursor-pointer focus:outline-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm"
+                  title="Hide/Show Amounts"
+                >
+                  {hideAmounts ? <EyeOffIcon size={19} /> : <EyeIcon size={19} />}
+                </button>
+                <button
+                  onClick={() => setActiveView('settings')}
+                  className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-95 cursor-pointer focus:outline-none ${
+                    activeView === 'settings'
+                      ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/20'
+                      : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-sm'
+                  }`}
+                  title={t('settings')}
+                  aria-label="Profile Settings"
+                >
+                  <ProfileIcon size={19} />
+                </button>
+              </>
+            )}
           </div>
         </header>
 
         {/* View Component Wrapper */}
-        <section className="animate-fade-in px-4 md:px-8 pb-6 md:pb-8">
+        <section className={`${activeView !== 'customers' ? 'animate-fade-in ' : ''}px-4 md:px-8 pb-6 md:pb-8`}>
           {renderView()}
         </section>
 

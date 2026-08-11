@@ -16,9 +16,12 @@ const getMockData = () => {
   return { mockCustomers, mockOrders, mockCreditRecords };
 };
 
+let isInitialized = false;
+
 export const dbService = {
   init: () => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isInitialized) return;
+    isInitialized = true;
 
     // Check version to handle migration/clearance of old mock data
     const version = localStorage.getItem('chakkimitra_db_version');
@@ -41,13 +44,66 @@ export const dbService = {
       localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(mockCreditRecords));
     }
 
+    // Auto-fix: Remove duplicate entries caused by double-tap bug (within 2 seconds)
+    try {
+      const cleanDuplicates = (key: string, matchFields: string[]) => {
+        const dataStr = localStorage.getItem(key);
+        if (!dataStr) return;
+        const data = JSON.parse(dataStr);
+        if (!Array.isArray(data)) return;
+        
+        let hasDuplicates = false;
+        // Sort by createdAt or date to process newest first
+        const sorted = [...data].sort((a, b) => {
+          const tA = a.createdAt || new Date(a.date).getTime() || 0;
+          const tB = b.createdAt || new Date(b.date).getTime() || 0;
+          return tB - tA;
+        });
+        
+        const unique = [];
+        for (const curr of sorted) {
+          const tCurr = curr.createdAt || new Date(curr.date).getTime() || 0;
+          const isDuplicate = unique.some(u => {
+            const tU = u.createdAt || new Date(u.date).getTime() || 0;
+            const timeDiff = Math.abs(tU - tCurr);
+            if (timeDiff > 2000) return false; // Not within 2 seconds
+            
+            // Check all match fields
+            return matchFields.every(field => u[field] === curr[field]);
+          });
+          
+          if (!isDuplicate) {
+            unique.push(curr);
+          } else {
+            hasDuplicates = true;
+          }
+        }
+        
+        if (hasDuplicates) {
+          localStorage.setItem(key, JSON.stringify(unique));
+        }
+      };
+
+      cleanDuplicates(STORAGE_KEYS.ORDERS, ['customerId', 'totalAmount', 'grainType', 'paymentType']);
+      cleanDuplicates(STORAGE_KEYS.CREDIT_RECORDS, ['customerId', 'amount', 'type']);
+      // For DailyHisab, we check amount, expenseDescription, and notes
+      cleanDuplicates(STORAGE_KEYS.DAILY_HISAB, ['amount', 'expenseDescription', 'notes', 'date']);
+    } catch (e) {
+      console.error("Cleanup failed", e);
+    }
+
     dbService.recalculateAllCustomerBalances();
   },
 
   getCustomers: (): Customer[] => {
     if (typeof window === 'undefined') return [];
     dbService.init();
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || '[]');
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   saveCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>): Customer => {
@@ -149,12 +205,16 @@ export const dbService = {
 
   getOrders: (): Order[] => {
     if (typeof window === 'undefined') return [];
-    dbService.init();
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   recalculateCustomerBalance: (customerId: number) => {
-    const records = JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]') as CreditRecord[];
+    const records = dbService.getCreditRecords();
     const custRecords = records.filter(r => r.customerId === customerId);
     const computedBalance = custRecords.reduce((sum, r) => {
       return r.type === 'DUE' ? sum + r.amount : sum - r.amount;
@@ -172,8 +232,8 @@ export const dbService = {
 
   recalculateAllCustomerBalances: () => {
     if (typeof window === 'undefined') return;
-    const customers = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || '[]') as Customer[];
-    const records = JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]') as CreditRecord[];
+    const customers = dbService.getCustomers();
+    const records = dbService.getCreditRecords();
     
     if (customers.length === 0) return;
 
@@ -221,12 +281,17 @@ export const dbService = {
 
   getCreditRecords: (): CreditRecord[] => {
     if (typeof window === 'undefined') return [];
-    dbService.init();
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]');
+    try {
+      dbService.init();
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   saveCreditRecord: (record: Omit<CreditRecord, 'id' | 'createdAt'>): CreditRecord => {
-    const records = JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]') as CreditRecord[];
+    const records = dbService.getCreditRecords();
     const newId = records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1;
     const newRecord: CreditRecord = {
       ...record,
@@ -287,17 +352,24 @@ export const dbService = {
     localStorage.removeItem(STORAGE_KEYS.ORDERS);
     localStorage.removeItem(STORAGE_KEYS.CREDIT_RECORDS);
     localStorage.removeItem(STORAGE_KEYS.DAILY_HISAB);
+    isInitialized = false;
     dbService.init();
   },
 
   getDailyHisabs: (): DailyHisab[] => {
     if (typeof window === 'undefined') return [];
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.DAILY_HISAB) || '[]');
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEYS.DAILY_HISAB) || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   saveDailyHisab: (hisab: Omit<DailyHisab, 'id' | 'createdAt'>): DailyHisab => {
     const hisabs = dbService.getDailyHisabs();
-    const newId = hisabs.length > 0 ? Math.max(...hisabs.map(h => h.id)) + 1 : 1;
+    const validIds = hisabs.map(h => Number(h.id)).filter(id => !isNaN(id));
+    const newId = validIds.length > 0 ? Math.max(...validIds) + 1 : 1;
     const newHisab: DailyHisab = {
       ...hisab,
       id: newId,

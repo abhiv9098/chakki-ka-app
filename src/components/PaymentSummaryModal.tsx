@@ -376,7 +376,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                     {isHindi ? 'आज कोई कैश एंट्री नहीं पाई गई।' : 'No cash transactions today.'}
                   </p>
                 ) : (
-                  <div className="space-y-2 pb-2">
+                  <div className="pb-2">
                     {(() => {
                       const groups = new Map();
                       const getGroup = (name: string, cust: any) => {
@@ -526,7 +526,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                     {isHindi ? 'आज Paytm से कोई भुगतान नहीं प्राप्त हुआ है।' : 'No Paytm payments received today.'}
                   </p>
                 ) : (
-                  <div className="space-y-2 pb-2">
+                  <div className="pb-2">
                     {(() => {
                       const groups = new Map();
                       const getGroup = (name: string, cust: any) => {

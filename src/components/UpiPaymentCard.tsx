@@ -26,8 +26,8 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
   const isHindi = language === 'hi';
 
   const formattedAmount = (Math.max(0, amount)).toFixed(2);
+  const [trId] = useState(() => `TR_${orderId || Date.now()}`);
   const tnText = orderId ? `Bill_${orderId}` : note.replace(/\s+/g, '_');
-  const trId = `TR_${orderId || Date.now()}`;
 
   // Standard UPI URI format with locked fixed amount (am) & transaction reference (tr)
   const upiString = upiId

@@ -17,7 +17,10 @@ export const HisabHistoryView: React.FC = () => {
     hideAmounts,
     setActiveView,
     customers,
-    updateCustomerPotaliStatus
+    updateCustomerPotaliStatus,
+    addOrder,
+    recordManualDue,
+    recordPayment
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'today' | 'pending' | 'udhar' | 'past'>('today');
@@ -79,20 +82,15 @@ export const HisabHistoryView: React.FC = () => {
   const nowTs = new Date().getTime();
   const thirtyDaysAgoTs = nowTs - 30 * 24 * 60 * 60 * 1000;
 
-  // Filter out entries older than 30 days and deduplicate by ID and content
+  // Filter out entries older than 30 days and deduplicate by ID
   const seenHisabIds = new Set();
-  const seenComposites = new Set();
   const hisabsWithin30Days = dailyHisabs.filter(h => {
     const logTime = new Date(h.date).getTime();
     if (isNaN(logTime) || logTime < thirtyDaysAgoTs) return false;
-    if (seenHisabIds.has(h.id)) return false;
-    
-    // Create composite key for double-click duplicates
-    const composite = `${h.date}_${h.amount}_${h.grainType}_${h.wheatWeight}_${h.incomeDescription}_${h.notes}`;
-    if (seenComposites.has(composite)) return false;
-    
-    seenHisabIds.add(h.id);
-    seenComposites.add(composite);
+    if (h.id) {
+      if (seenHisabIds.has(h.id)) return false;
+      seenHisabIds.add(h.id);
+    }
     return true;
   });
 
@@ -198,6 +196,16 @@ export const HisabHistoryView: React.FC = () => {
     };
 
     updateDailyHisab(updatedHisab);
+
+    // Sync with customer khata if customer exists
+    const custName = selectedHisabForPayment.incomeDescription || selectedHisabForPayment.notes || '';
+    if (custName.trim()) {
+      const cust = customers.find(c => c.name.toLowerCase() === custName.trim().toLowerCase());
+      if (cust) {
+        recordPayment(cust.id, addAmt, `Jama for Udhar - ${selectedHisabForPayment.grainType || 'Grinding'}`);
+      }
+    }
+
     setSelectedHisabForPayment(null);
     setNewPaymentAmount('');
 
@@ -229,6 +237,16 @@ export const HisabHistoryView: React.FC = () => {
     };
 
     updateDailyHisab(updatedHisab);
+
+    // Sync with customer khata if customer exists
+    const custName = h.incomeDescription || h.notes || '';
+    if (custName.trim()) {
+      const cust = customers.find(c => c.name.toLowerCase() === custName.trim().toLowerCase());
+      if (cust) {
+        recordManualDue(cust.id, amount, `Extra Udhar - ${h.grainType || 'Grinding'}`);
+      }
+    }
+
     alert(language === 'hi' ? `₹${amount} का उधार सफलतापूर्वक जोड़ा गया!` : `₹${amount} udhar added successfully!`);
   };
 
@@ -248,12 +266,28 @@ export const HisabHistoryView: React.FC = () => {
 
     updateDailyHisab(updatedHisab);
 
-    // Update customer potali status if customer exists
+    // Update customer potali status and add grinding order if customer exists
     const custName = hisab.incomeDescription || hisab.notes || '';
     if (custName.trim()) {
       const cust = customers.find(c => c.name.toLowerCase() === custName.trim().toLowerCase());
       if (cust) {
         updateCustomerPotaliStatus(cust.id, 'delivered');
+        
+        // Convert mode to valid payment type for order
+        let paymentType: 'CASH' | 'CREDIT' | 'ONLINE' | 'PAYTM' = 'CASH';
+        if (mode === 'PAYTM') paymentType = 'PAYTM';
+        else if (mode === 'UDHAR') paymentType = 'CREDIT';
+        
+        addOrder({
+          customerId: cust.id,
+          customerName: cust.name,
+          grainType: hisab.grainType || 'Grinding',
+          weight: hisab.wheatWeight || 0,
+          rate: hisab.rate || 0,
+          totalAmount: hisab.amount || 0,
+          paymentType: paymentType,
+          potaliStatus: 'delivered'
+        });
       }
     }
 

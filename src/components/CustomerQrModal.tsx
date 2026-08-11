@@ -79,7 +79,7 @@ export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, dail
             </div>
 
             {dailyHisab ? (
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-100 dark:border-emerald-900/50 space-y-2">
+              <div className="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
                 <div className="flex justify-between text-sm font-bold text-slate-700 dark:text-slate-300">
                   <span>{dailyHisab.grainType} (पिसाई):</span>
                   <span>{dailyHisab.wheatWeight} kg</span>
@@ -91,7 +91,7 @@ export const CustomerQrModal: React.FC<CustomerQrModalProps> = ({ customer, dail
                 <p className="text-xs text-center font-black text-slate-500 mt-2">Thank you / धन्यवाद 🙏</p>
               </div>
             ) : (
-              <div className="bg-rose-50 dark:bg-rose-950/30 p-3.5 rounded-2xl border border-rose-100 dark:border-rose-900/50">
+              <div className="bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p className="text-[11px] font-black uppercase text-rose-500 tracking-wider mb-1">Total Due / कुल बाकी</p>
                 <p className="text-4xl font-black text-rose-600 tracking-tighter">₹{customer.outstandingBalance || 0}</p>
               </div>

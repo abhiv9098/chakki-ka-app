@@ -20,12 +20,13 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { activeView, setActiveView, theme, toggleTheme, language, setLanguage, t } = useApp();
+  const { activeView, setActiveView, theme, toggleTheme, language, setLanguage, t, setSelectedCustomer } = useApp();
 
   const navItems = [
     { view: 'dashboard' as const, label: t('dashboard'), icon: DashboardIcon },
     { view: 'daily-hisab' as const, label: t('dailyHisab'), icon: FileTextIcon },
     { view: 'hisab-history' as const, label: t('hisab-history' as any), icon: KhataIcon },
+    { view: 'customers' as const, label: t('customers'), icon: CustomersIcon },
   ];
 
   return (
@@ -76,6 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <button
                 key={item.view}
                 onClick={() => {
+                  setSelectedCustomer(null);
                   setActiveView(item.view);
                   onClose();
                 }}
@@ -165,7 +167,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             return (
               <button
                 key={item.view}
-                onClick={() => setActiveView(item.view)}
+                onClick={() => {
+                  setSelectedCustomer(null);
+                  setActiveView(item.view);
+                }}
                 className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 group ${
                   isActive
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 scale-[1.02]'
