@@ -491,7 +491,7 @@ export const CustomersView: React.FC = () => {
                 
               const custTotalWeight = orders
                 .filter(o => o.customerId === cust.id)
-                .reduce((sum, o) => sum + (o.wheatWeight || 0), 0);
+                .reduce((sum, o) => sum + (o.weight || 0), 0);
                 
               return (
                 <div
