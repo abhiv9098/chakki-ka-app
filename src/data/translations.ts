@@ -150,7 +150,9 @@ export const translations = {
     deleteCustomerTooltip: "Delete Customer",
     registeredDate: "Registered:",
     addPhone: "Add Phone",
-    editProfile: "Edit Profile"
+    editProfile: "Edit Profile",
+    receivePaymentBtn: "Receive Payment (Jama)",
+    addDueTooltip: "Add Manual Due (Udhar)"
   },
   hi: {
     grain: "अनाज",
@@ -303,6 +305,8 @@ export const translations = {
     deleteCustomerTooltip: "ग्राहक हटाएं",
     registeredDate: "पंजीकृत:",
     addPhone: "फ़ोन जोड़ें",
-    editProfile: "विवरण बदलें"
+    editProfile: "प्रोफ़ाइल संपादित करें",
+    receivePaymentBtn: "पैसे जमा करें (Jama)",
+    addDueTooltip: "उधार जोड़ें (Due)"
   }
 };
