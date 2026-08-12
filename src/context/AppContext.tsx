@@ -246,6 +246,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const recordPayment = (customerId: number, amount: number, description: string) => {
     dbService.recordKhataTransaction(customerId, amount, 'PAID', description);
+    
+    // Auto-settle Udhar DailyHisabs for this customer
+    let remainingPayment = amount;
+    const allHisabs = dbService.getDailyHisabs();
+    const customer = dbService.getCustomers().find(c => c.id === customerId);
+    
+    if (customer) {
+      const customerName = customer.name.toLowerCase();
+      const udharHisabs = allHisabs.filter(h => {
+        if (h.isPending) return false;
+        const hName = (h.incomeDescription || h.notes || '').toLowerCase();
+        if (hName.trim() !== customerName.trim()) return false;
+        
+        const desc = h.expenseDescription || '';
+        return desc.startsWith('UDHAR');
+      }).sort((a, b) => a.id - b.id); // oldest first
+      
+      for (const h of udharHisabs) {
+        if (remainingPayment <= 0) break;
+        
+        const total = h.amount || 0;
+        const desc = h.expenseDescription || '';
+        
+        let jama = 0;
+        let udhar = total;
+        const jamaMatch = desc.match(/Jama:\s*₹?(\d+(?:\.\d+)?)/i);
+        const udharMatch = desc.match(/Udhar:\s*₹?(\d+(?:\.\d+)?)/i);
+        if (jamaMatch && udharMatch) {
+          jama = parseFloat(jamaMatch[1]) || 0;
+          udhar = parseFloat(udharMatch[1]) || 0;
+        }
+
+        if (udhar > 0) {
+          const deduct = Math.min(udhar, remainingPayment);
+          remainingPayment -= deduct;
+          
+          const newJama = jama + deduct;
+          const newUdhar = udhar - deduct;
+          
+          let newDesc = '';
+          if (newUdhar <= 0) {
+            newDesc = description.toLowerCase().includes('upi') || description.toLowerCase().includes('paytm') ? 'PAYTM' : 'CASH';
+          } else {
+            newDesc = `UDHAR (Jama: ₹${newJama.toFixed(0)}, Udhar: ₹${newUdhar.toFixed(0)})`;
+          }
+          
+          dbService.updateDailyHisab({ ...h, expenseDescription: newDesc });
+        }
+      }
+    }
+    
     refreshData();
     // Update selected customer if applicable
     if (selectedCustomer && selectedCustomer.id === customerId) {

@@ -16,6 +16,7 @@ export const HisabHistoryView: React.FC = () => {
     language,
     hideAmounts,
     setActiveView,
+    setSelectedCustomer,
     customers,
     updateCustomerPotaliStatus,
     addOrder,
@@ -150,70 +151,18 @@ export const HisabHistoryView: React.FC = () => {
     }
   };
 
-  // Open Jama Payment Collection Modal
-  const openPaymentModal = (hisab: DailyHisab) => {
-    setSelectedHisabForPayment(hisab);
-    const details = getUdharDetails(hisab);
-    setNewPaymentAmount(details.udhar > 0 ? details.udhar.toString() : '');
-    setNewPaymentMode('CASH');
-  };
-
-  // Handle Jama Payment Submission
-  const handleCollectPayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedHisabForPayment) return;
-
-    const details = getUdharDetails(selectedHisabForPayment);
-    const addAmt = parseFloat(newPaymentAmount) || 0;
-
-    if (addAmt <= 0) {
-      alert(language === 'hi' ? 'कृपया सही जमा राशि दर्ज करें!' : 'Please enter a valid payment amount!');
-      return;
-    }
-
-    if (addAmt > details.udhar) {
-      alert(
-        language === 'hi'
-          ? `जमा राशि बाकी उधार (₹${details.udhar}) से अधिक नहीं हो सकती!`
-          : `Collected amount cannot exceed remaining Udhar (₹${details.udhar})!`
-      );
-      return;
-    }
-
-    const updatedJama = details.jama + addAmt;
-    const remainingUdhar = Math.max(0, details.udhar - addAmt);
-
-    let updatedExpenseDesc = '';
-    if (remainingUdhar === 0) {
-      updatedExpenseDesc = newPaymentMode === 'PAYTM' ? 'PAYTM' : 'CASH';
-    } else {
-      updatedExpenseDesc = `UDHAR (Jama: ₹${updatedJama.toFixed(0)}, Udhar: ₹${remainingUdhar.toFixed(0)})`;
-    }
-
-    const updatedHisab: DailyHisab = {
-      ...selectedHisabForPayment,
-      expenseDescription: updatedExpenseDesc
-    };
-
-    updateDailyHisab(updatedHisab);
-
-    // Sync with customer khata if customer exists
-    const custName = selectedHisabForPayment.incomeDescription || selectedHisabForPayment.notes || '';
+  // Navigate to customer page for Jama
+  const navigateToCustomerForJama = (hisab: DailyHisab) => {
+    const custName = hisab.incomeDescription || hisab.notes || '';
     if (custName.trim()) {
       const cust = customers.find(c => c.name.toLowerCase() === custName.trim().toLowerCase());
       if (cust) {
-        recordPayment(cust.id, addAmt, `Jama for Udhar - ${selectedHisabForPayment.grainType || 'Grinding'}`);
+        setSelectedCustomer(cust);
+        setActiveView('customers');
+        return;
       }
     }
-
-    setSelectedHisabForPayment(null);
-    setNewPaymentAmount('');
-
-    alert(
-      language === 'hi'
-        ? `₹${addAmt} सफलता पूर्वक जमा किया गया! ${remainingUdhar > 0 ? `बाकी उधार: ₹${remainingUdhar}` : 'उधार पूरा चुकता हो गया!'}`
-        : `₹${addAmt} successfully recorded! ${remainingUdhar > 0 ? `Remaining Udhar: ₹${remainingUdhar}` : 'Fully paid!'}`
-    );
+    alert(language === 'hi' ? 'इस उधार का कोई ग्राहक खाता नहीं मिला! कृपया इसे हटाकर नया हिसाब दर्ज करें।' : 'No customer account found for this Udhar! Please delete this entry and create a new Hisab.');
   };
 
   // Handle adding more udhar to an existing record
@@ -588,17 +537,10 @@ export const HisabHistoryView: React.FC = () => {
                             </button>
                           ) : udharInfo.isUdhar ? (
                             <div className="flex gap-1.5 shrink-0">
+
                               <button
                                 type="button"
-                                onClick={(e) => { e.stopPropagation(); handleAddUdhar(hisab); }}
-                                className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
-                              >
-                                <span>➕</span>
-                                <span>{language === 'hi' ? 'उधार बढ़ाएं' : '+Udhar'}</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); openPaymentModal(hisab); }}
+                                onClick={(e) => { e.stopPropagation(); navigateToCustomerForJama(hisab); }}
                                 className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-lg shadow-xs cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
                               >
                                 <span>💳</span>
@@ -727,16 +669,10 @@ export const HisabHistoryView: React.FC = () => {
                               </button>
                             ) : udharInfo.isUdhar ? (
                               <div className="flex items-center justify-center gap-1.5">
+
                                 <button
                                   type="button"
-                                  onClick={(e) => { e.stopPropagation(); handleAddUdhar(hisab); }}
-                                  className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] rounded-md transition-all shadow-2xs cursor-pointer active:scale-95"
-                                >
-                                  ➕ {language === 'hi' ? 'उधार बढ़ाएं' : '+Udhar'}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); openPaymentModal(hisab); }}
+                                  onClick={(e) => { e.stopPropagation(); navigateToCustomerForJama(hisab); }}
                                   className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] rounded-md transition-all shadow-2xs cursor-pointer active:scale-95"
                                 >
                                   💳 {language === 'hi' ? 'जमा करें' : 'Jama'}
@@ -890,143 +826,7 @@ export const HisabHistoryView: React.FC = () => {
         </div>
       )}
 
-      {/* Udhar Payment Settlement Modal */}
-      {selectedHisabForPayment && (() => {
-        const details = getUdharDetails(selectedHisabForPayment);
-        return (
-          <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in"
-            onClick={() => setSelectedHisabForPayment(null)}
-          >
-            <div
-              className="bg-white dark:bg-slate-900 w-[95%] max-w-md rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden my-auto p-6 space-y-5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div>
-                  <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg">
-                    {language === 'hi' ? 'उधार जमा भुगतान दर्ज करें' : 'Record Udhar Payment'}
-                  </h4>
-                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
-                    {selectedHisabForPayment.incomeDescription || 'ग्राहक'} ({selectedHisabForPayment.grainType} - {selectedHisabForPayment.wheatWeight}kg)
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedHisabForPayment(null)}
-                  className="text-slate-400 hover:text-slate-600 font-bold p-1 cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
 
-              {/* Udhar Summary Card */}
-              <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-2xl text-center">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">कुल बिल</span>
-                  <span className="text-sm font-black text-slate-800 dark:text-slate-100 mt-0.5 block">
-                    ₹{selectedHisabForPayment.amount}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">जमा राशि</span>
-                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-                    ₹{details.jama}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">उधार बाकी</span>
-                  <span className="text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5 block">
-                    ₹{details.udhar}
-                  </span>
-                </div>
-              </div>
-
-              {/* Payment Entry Form */}
-              <form onSubmit={handleCollectPayment} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 block">
-                    {language === 'hi' ? 'नई जमा राशि (New Cash Collected ₹) *' : 'New Payment Amount (₹) *'}
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    max={details.udhar}
-                    step="any"
-                    placeholder={`Max ₹${details.udhar}`}
-                    value={newPaymentAmount}
-                    onChange={(e) => setNewPaymentAmount(e.target.value)}
-                    className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-base font-extrabold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                {/* Quick Presets */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setNewPaymentAmount(details.udhar.toString())}
-                    className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs rounded-xl cursor-pointer hover:bg-emerald-100"
-                  >
-                    Full ₹{details.udhar} (पूरा जमा)
-                  </button>
-                  {details.udhar > 10 && (
-                    <button
-                      type="button"
-                      onClick={() => setNewPaymentAmount((details.udhar / 2).toFixed(0))}
-                      className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs rounded-xl cursor-pointer hover:bg-slate-200"
-                    >
-                      Half ₹{(details.udhar / 2).toFixed(0)}
-                    </button>
-                  )}
-                </div>
-
-                {/* Payment Method */}
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    {language === 'hi' ? 'भुगतान का प्रकार' : 'Payment Method'}
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setNewPaymentMode('CASH')}
-                      className={`py-2 rounded-xl text-xs font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                        newPaymentMode === 'CASH'
-                          ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'
-                      }`}
-                    >
-                      <span>💵</span>
-                      <span>Cash</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setNewPaymentMode('PAYTM')}
-                      className={`py-2 rounded-xl text-xs font-extrabold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                        newPaymentMode === 'PAYTM'
-                          ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
-                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800'
-                      }`}
-                    >
-                      <span>📲</span>
-                      <span>Paytm</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm rounded-xl transition-all shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-98"
-                >
-                  💳 {language === 'hi' ? 'भुगतान जमा करें' : 'Record Payment'}
-                </button>
-              </form>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* Customer QR Modal */}
       <CustomerQrModal

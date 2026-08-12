@@ -433,16 +433,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                                   <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
                                     {g.displayName}
                                   </h5>
-                                  {potaliStatus === 'received' && (
-                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
-                                      🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
-                                    </span>
-                                  )}
-                                  {potaliStatus === 'delivered' && (
-                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
-                                      🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
-                                    </span>
-                                  )}
+
                                 </div>
                                 <span className="text-[10px] font-semibold text-slate-500 block mt-0.5">
                                   {g.descList.join(' + ')}
@@ -453,25 +444,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                               <span className="font-black text-emerald-600 dark:text-emerald-400 text-base">
                                 +₹{g.amount.toFixed(0)}
                               </span>
-                              {g.cust && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
-                                    updateCustomerPotaliStatus(g.cust.id, nextStatus);
-                                  }}
-                                  className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
-                                    potaliStatus === 'received'
-                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
-                                      : potaliStatus === 'delivered'
-                                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
-                                      : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                  }`}
-                                  title="Potali Delivered Button"
-                                >
-                                  ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
-                                </button>
-                              )}
+
                               {(g.deleteHisabIds.length > 0 || g.deleteOrderIds.length > 0 || g.deleteCreditRecordIds.length > 0) && (
                                 <button
                                   type="button"
@@ -574,16 +547,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                                   <h5 className="font-black text-slate-850 dark:text-slate-100 text-sm">
                                     {g.displayName}
                                   </h5>
-                                  {potaliStatus === 'received' && (
-                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white shadow-xs">
-                                      🔴 {isHindi ? 'पोटली जमा' : 'Potali Received'}
-                                    </span>
-                                  )}
-                                  {potaliStatus === 'delivered' && (
-                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs">
-                                      🟢 {isHindi ? 'पोटली दे दी' : 'Potali Delivered'}
-                                    </span>
-                                  )}
+
                                 </div>
                                 <span className="text-[10px] font-semibold text-slate-500 block mt-0.5">
                                   Paytm ({g.descList.join(' + ')})
@@ -594,25 +558,7 @@ export const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({ isOpen
                               <span className="font-black text-blue-600 dark:text-blue-400 text-base">
                                 +₹{g.amount.toFixed(0)}
                               </span>
-                              {g.cust && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const nextStatus = potaliStatus === 'received' ? 'delivered' : 'received';
-                                    updateCustomerPotaliStatus(g.cust.id, nextStatus);
-                                  }}
-                                  className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer border flex items-center gap-1 shrink-0 ${
-                                    potaliStatus === 'received'
-                                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-sm'
-                                      : potaliStatus === 'delivered'
-                                      ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
-                                      : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                                  }`}
-                                  title="Potali Delivered Button"
-                                >
-                                  ✔ {potaliStatus === 'delivered' ? (isHindi ? 'दे दी' : 'Delivered') : (isHindi ? 'पोटली दी' : 'Potali Di')}
-                                </button>
-                              )}
+
                               {(g.deleteHisabIds.length > 0 || g.deleteOrderIds.length > 0) && (
                                 <button
                                   type="button"

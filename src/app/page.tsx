@@ -122,7 +122,7 @@ export default function Home() {
       <Sidebar isOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} />
 
       {/* Main Content Area */}
-      <main className="flex-1 md:ml-64 max-w-7xl min-h-screen md:h-screen md:overflow-y-auto flex flex-col">
+      <main className="flex-1 w-full overflow-x-hidden md:ml-64 max-w-7xl min-h-screen md:h-screen md:overflow-y-auto flex flex-col">
         {/* Top bar header */}
         <header className="sticky top-0 z-20 flex justify-between items-center px-4 md:px-8 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 mb-6 transition-colors duration-200">
           <div className="flex items-center gap-3">
@@ -139,6 +139,15 @@ export default function Home() {
           </div>
           
           <div className="flex items-center gap-2.5" id="top-bar-actions">
+            
+            {activeView === 'customers' && (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('open-new-hisab-global'))}
+                className="h-9 px-3 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg text-xs font-extrabold transition-all shadow-md shadow-blue-500/20 active:scale-95 flex items-center gap-1 cursor-pointer"
+              >
+                ➕ {language === 'hi' ? 'नया हिसाब' : 'New Hisab'}
+              </button>
+            )}
 
             {activeView !== 'customers' && (
               <>

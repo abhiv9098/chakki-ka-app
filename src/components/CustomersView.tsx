@@ -82,6 +82,20 @@ export const CustomersView: React.FC = () => {
   const isSubmittingRef = React.useRef(false);
 
   React.useEffect(() => {
+    const handleGlobalNewHisab = () => {
+      if (!selectedCustomer) {
+        alert(language === 'hi' ? 'कृपया पहले एक ग्राहक चुनें!' : 'Please select a customer first!');
+      } else {
+        setShowNewHisabModal(true);
+      }
+    };
+    window.addEventListener('open-new-hisab-global', handleGlobalNewHisab);
+    return () => {
+      window.removeEventListener('open-new-hisab-global', handleGlobalNewHisab);
+    };
+  }, [selectedCustomer, language]);
+
+  React.useEffect(() => {
     const fixedRate = grainRates[entryGrainType] !== undefined ? grainRates[entryGrainType] : (parseFloat(defaultGrindingRate) || 5);
     setEntryRate(String(fixedRate));
   }, [entryGrainType, grainRates, defaultGrindingRate]);
@@ -467,9 +481,17 @@ export const CustomersView: React.FC = () => {
                 .filter(h => h.isPending && (h.incomeDescription === cust.name || h.notes === cust.name))
                 .reduce((sum, h) => sum + (h.amount || h.revenue || 0), 0);
               
+              const custPendingWeight = dailyHisabs
+                .filter(h => h.isPending && (h.incomeDescription === cust.name || h.notes === cust.name))
+                .reduce((sum, h) => sum + (h.wheatWeight || 0), 0);
+              
               const custTotalAmount = orders
                 .filter(o => o.customerId === cust.id)
                 .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+                
+              const custTotalWeight = orders
+                .filter(o => o.customerId === cust.id)
+                .reduce((sum, o) => sum + (o.wheatWeight || 0), 0);
                 
               return (
                 <div
@@ -482,7 +504,7 @@ export const CustomersView: React.FC = () => {
                   className={`w-full text-left p-3.5 rounded-2xl flex justify-between items-center transition-all duration-200 cursor-pointer border shadow-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-md`}
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">
                         {cust.name}
                       </h4>
@@ -504,14 +526,14 @@ export const CustomersView: React.FC = () => {
                           {hideAmounts ? '₹••••' : `₹${cust.outstandingBalance.toFixed(0)}`}
                         </span>
                       )}
-                      {custPending > 0 && (
-                        <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 whitespace-nowrap leading-tight">
-                          Pending: {hideAmounts ? '₹••••' : `₹${custPending.toFixed(0)}`}
+                      {(custPending > 0 || custPendingWeight > 0) && (
+                        <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 break-words max-w-[120px] text-right leading-tight">
+                          Pending: {custPendingWeight > 0 ? `${custPendingWeight}kg ` : ''}{custPending > 0 ? (hideAmounts ? '₹••••' : `(₹${custPending.toFixed(0)})`) : ''}
                         </span>
                       )}
-                      {custTotalAmount > 0 && (
-                        <span className="inline-block text-[10px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap leading-tight">
-                          Total: {hideAmounts ? '₹••••' : `₹${custTotalAmount.toFixed(0)}`}
+                      {(custTotalAmount > 0 || custTotalWeight > 0) && (
+                        <span className="inline-block text-[10px] font-bold text-slate-500 dark:text-slate-400 break-words max-w-[120px] text-right leading-tight">
+                          Total: {custTotalWeight > 0 ? `${custTotalWeight}kg ` : ''}{custTotalAmount > 0 ? (hideAmounts ? '₹••••' : `(₹${custTotalAmount.toFixed(0)})`) : ''}
                         </span>
                       )}
                     </div>
@@ -549,13 +571,6 @@ export const CustomersView: React.FC = () => {
                       <span className="text-lg" title="Potali De Di (Customer)">🟢</span>
                     )}
                   </h3>
-                  <button
-                    onClick={() => setShowNewHisabModal(true)}
-                    className="ml-1 h-8 md:h-9 px-3 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg text-[11px] md:text-xs font-extrabold transition-all shadow-md shadow-blue-500/20 active:scale-95 cursor-pointer flex items-center gap-1"
-                  >
-                    ➕ {language === 'hi' ? 'नया हिसाब' : 'New Hisab'}
-                  </button>
-
                   <button
                     onClick={() => {
                       setEditCustName(selectedCustomer.name);
@@ -637,15 +652,7 @@ export const CustomersView: React.FC = () => {
                       >
                         💬 SMS
                       </a>
-                      <a
-                        href={`https://wa.me/${selectedCustomer.phone.replace(/\D/g, '').length >= 10 ? (selectedCustomer.phone.replace(/\D/g, '').length === 10 ? `91${selectedCustomer.phone.replace(/\D/g, '')}` : selectedCustomer.phone.replace(/\D/g, '')) : ''}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-all flex items-center justify-center border border-emerald-500/10 cursor-pointer shrink-0"
-                        title="WhatsApp"
-                      >
-                        <WhatsAppIcon size={14} />
-                      </a>
+
                       {selectedCustomer.outstandingBalance > 0 && (
                         <button
                           onClick={() => handleSendWhatsAppReminder(selectedCustomer)}
