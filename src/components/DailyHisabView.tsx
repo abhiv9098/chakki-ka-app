@@ -627,7 +627,19 @@ export const DailyHisabView: React.FC = () => {
                               isPending: false,
                               expenseDescription: 'CASH'
                             });
-                            if (cust) updateCustomerPotaliStatus(cust.id, 'delivered');
+                            if (cust) {
+                              updateCustomerPotaliStatus(cust.id, 'delivered');
+                              addOrder({
+                                customerId: cust.id,
+                                customerName: cust.name,
+                                grainType: h.grainType || 'Grinding',
+                                weight: h.wheatWeight || 0,
+                                rate: h.rate || 0,
+                                totalAmount: h.amount || 0,
+                                paymentType: 'CASH',
+                                potaliStatus: 'delivered'
+                              });
+                            }
                           }}
                           className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black transition-all shadow-xs cursor-pointer"
                           title="Mark Grinding Done & Cash Collected"
@@ -643,7 +655,19 @@ export const DailyHisabView: React.FC = () => {
                               isPending: false,
                               expenseDescription: 'PAYTM'
                             });
-                            if (cust) updateCustomerPotaliStatus(cust.id, 'delivered');
+                            if (cust) {
+                              updateCustomerPotaliStatus(cust.id, 'delivered');
+                              addOrder({
+                                customerId: cust.id,
+                                customerName: cust.name,
+                                grainType: h.grainType || 'Grinding',
+                                weight: h.wheatWeight || 0,
+                                rate: h.rate || 0,
+                                totalAmount: h.amount || 0,
+                                paymentType: 'PAYTM',
+                                potaliStatus: 'delivered'
+                              });
+                            }
                           }}
                           className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-black transition-all shadow-xs cursor-pointer"
                           title="Mark Grinding Done & Paytm Collected"
@@ -662,6 +686,16 @@ export const DailyHisabView: React.FC = () => {
                             if (cust) {
                               updateCustomerPotaliStatus(cust.id, 'delivered');
                               recordManualDue(cust.id, h.amount, `Grinding - ${h.grainType} ${h.wheatWeight}kg`);
+                              addOrder({
+                                customerId: cust.id,
+                                customerName: cust.name,
+                                grainType: h.grainType || 'Grinding',
+                                weight: h.wheatWeight || 0,
+                                rate: h.rate || 0,
+                                totalAmount: h.amount || 0,
+                                paymentType: 'CREDIT',
+                                potaliStatus: 'delivered'
+                              });
                             }
                           }}
                           className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-black transition-all shadow-xs cursor-pointer"

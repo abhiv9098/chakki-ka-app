@@ -284,7 +284,7 @@ export const HisabHistoryView: React.FC = () => {
   return (
     <div className="w-full max-w-2xl mx-auto px-1 sm:px-4 space-y-4 pb-12 animate-fade-in">
       {/* Main Card */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xl space-y-4 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4 overflow-hidden">
         
         {/* Header */}
         <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
