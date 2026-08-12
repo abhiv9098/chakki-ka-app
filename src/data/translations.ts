@@ -152,7 +152,8 @@ export const translations = {
     addPhone: "Add Phone",
     editProfile: "Edit Profile",
     receivePaymentBtn: "Receive Payment (Jama)",
-    addDueTooltip: "Add Manual Due (Udhar)"
+    addDueTooltip: "Add Manual Due (Udhar)",
+    newHisab: "New Hisab"
   },
   hi: {
     grain: "अनाज",
@@ -307,6 +308,7 @@ export const translations = {
     addPhone: "फ़ोन जोड़ें",
     editProfile: "प्रोफ़ाइल संपादित करें",
     receivePaymentBtn: "पैसे जमा करें (Jama)",
-    addDueTooltip: "उधार जोड़ें (Due)"
+    addDueTooltip: "उधार जोड़ें (Due)",
+    newHisab: "नया हिसाब"
   }
 };

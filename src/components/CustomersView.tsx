@@ -466,6 +466,10 @@ export const CustomersView: React.FC = () => {
               const custPending = dailyHisabs
                 .filter(h => h.isPending && (h.incomeDescription === cust.name || h.notes === cust.name))
                 .reduce((sum, h) => sum + (h.amount || h.revenue || 0), 0);
+              
+              const custTotalAmount = orders
+                .filter(o => o.customerId === cust.id)
+                .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
                 
               return (
                 <div
@@ -495,43 +499,23 @@ export const CustomersView: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3 md:gap-4 shrink-0">
                     <div className="text-right flex flex-col items-end gap-1.5 mt-0.5">
-                      <span className={`inline-block text-xs font-black px-2.5 py-1 rounded-xl transition-all ${
-                        cust.outstandingBalance > 0
-                          ? 'bg-amber-50 text-amber-650 dark:bg-amber-950/30 dark:text-amber-400'
-                          : 'bg-emerald-50 text-emerald-655 dark:bg-emerald-950/30 dark:text-emerald-400'
-                      }`}>
-                        {hideAmounts ? '₹••••' : `₹${cust.outstandingBalance.toFixed(0)}`}
-                      </span>
+                      {cust.outstandingBalance > 0 && (
+                        <span className="inline-block text-xs font-black px-2.5 py-1 rounded-xl transition-all bg-amber-50 text-amber-650 dark:bg-amber-950/30 dark:text-amber-400">
+                          {hideAmounts ? '₹••••' : `₹${cust.outstandingBalance.toFixed(0)}`}
+                        </span>
+                      )}
                       {custPending > 0 && (
                         <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 whitespace-nowrap leading-tight">
                           Pending: {hideAmounts ? '₹••••' : `₹${custPending.toFixed(0)}`}
                         </span>
                       )}
+                      {custTotalAmount > 0 && (
+                        <span className="inline-block text-[10px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap leading-tight">
+                          Total: {hideAmounts ? '₹••••' : `₹${custTotalAmount.toFixed(0)}`}
+                        </span>
+                      )}
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActionCustomer(cust);
-                        setAmountStr('');
-                        setNotes('');
-                        setShowPaymentModal(true);
-                      }}
-                      className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center shrink-0 border border-emerald-500/20 shadow-sm active:scale-95"
-                      title={t('receivePaymentBtn')}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActionCustomer(cust);
-                        setShowNewHisabModal(true);
-                      }}
-                      className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center shrink-0 border border-blue-500/20 shadow-sm active:scale-95"
-                      title={t('newHisab')}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                    </button>
+
                   </div>
                 </div>
               );
@@ -652,6 +636,15 @@ export const CustomersView: React.FC = () => {
                         title={t('sms')}
                       >
                         💬 SMS
+                      </a>
+                      <a
+                        href={`https://wa.me/${selectedCustomer.phone.replace(/\D/g, '').length >= 10 ? (selectedCustomer.phone.replace(/\D/g, '').length === 10 ? `91${selectedCustomer.phone.replace(/\D/g, '')}` : selectedCustomer.phone.replace(/\D/g, '')) : ''}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-all flex items-center justify-center border border-emerald-500/10 cursor-pointer shrink-0"
+                        title="WhatsApp"
+                      >
+                        <WhatsAppIcon size={14} />
                       </a>
                       {selectedCustomer.outstandingBalance > 0 && (
                         <button

@@ -60,7 +60,7 @@ export const dbService = {
           return tB - tA;
         });
         
-        const unique = [];
+        const unique: any[] = [];
         for (const curr of sorted) {
           const tCurr = curr.createdAt || new Date(curr.date).getTime() || 0;
           const isDuplicate = unique.some(u => {

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Sidebar } from '@/components/Sidebar';
-import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon, FontSizeIcon } from '@/components/Icons';
+import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon, FontSizeIcon, WhatsAppIcon } from '@/components/Icons';
 import { DashboardView } from '@/components/DashboardView';
 import { SettingsView } from '@/components/SettingsView';
 import { DailyHisabView } from '@/components/DailyHisabView';
