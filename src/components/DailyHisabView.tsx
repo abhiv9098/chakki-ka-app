@@ -61,6 +61,7 @@ export const DailyHisabView: React.FC = () => {
   const isSubmittingRef = React.useRef(false);
   const [jamaAmount, setJamaAmount] = useState<string>('');
   const [amount, setAmount] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Customer Profile Sidebar states
   const [matchedCustomer, setMatchedCustomer] = useState<any>(null);
@@ -89,6 +90,10 @@ export const DailyHisabView: React.FC = () => {
       setMatchedCustomer(null);
     }
   }, [customerNaam, customerPhone, customers, autoOpenTriggered]);
+
+  const suggestedCustomers = customerNaam.trim().length > 0 
+    ? customers.filter(c => c.name.toLowerCase().includes(customerNaam.trim().toLowerCase()) && c.name.toLowerCase() !== customerNaam.trim().toLowerCase())
+    : [];
 
   // Update custom rate when grain type or saved rates change
   useEffect(() => {
@@ -368,7 +373,7 @@ export const DailyHisabView: React.FC = () => {
           </div>
 
           {/* Naam / Customer Name */}
-          <div className="space-y-1">
+          <div className="space-y-1 relative">
             <label className="text-[10px] font-bold uppercase tracking-wider flex items-center justify-between">
               <span className={paymentMode === 'UDHAR' ? 'text-amber-600 dark:text-amber-400 font-extrabold' : 'text-slate-400 dark:text-slate-500'}>
                 {language === 'hi' ? 'नाम (Naam)' : 'NAAM (नाम)'} {paymentMode === 'UDHAR' && (language === 'hi' ? '* (उधार के लिए अनिवार्य)' : '* Required for Udhar')}
@@ -378,7 +383,12 @@ export const DailyHisabView: React.FC = () => {
               type="text"
               placeholder={language === 'hi' ? 'ग्राहक का नाम (जैसे: रमेश, सुरेश)...' : 'Customer Name...'}
               value={customerNaam}
-              onChange={(e) => setCustomerNaam(e.target.value)}
+              onChange={(e) => {
+                setCustomerNaam(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               onKeyDown={handleKeyDown}
               className={`w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border rounded-xl text-base focus:outline-none text-slate-800 dark:text-slate-100 font-semibold ${
                 paymentMode === 'UDHAR'
@@ -386,6 +396,26 @@ export const DailyHisabView: React.FC = () => {
                   : 'border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500'
               }`}
             />
+            {/* Auto-complete suggestions */}
+            {showSuggestions && suggestedCustomers.length > 0 && (
+              <div className="absolute z-50 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg top-[70px] max-h-48 overflow-y-auto">
+                {suggestedCustomers.map(cust => (
+                  <div
+                    key={cust.id}
+                    onClick={() => {
+                      setCustomerNaam(cust.name);
+                      setCustomerPhone(cust.phone !== 'N/A' ? cust.phone : '');
+                      setPaymentMode('PENDING');
+                      setShowSuggestions(false);
+                    }}
+                    className="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0"
+                  >
+                    <div className="font-bold text-slate-800 dark:text-slate-100">{cust.name}</div>
+                    {cust.phone && cust.phone !== 'N/A' && <div className="text-xs text-slate-500">{cust.phone}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Mobile Number */}

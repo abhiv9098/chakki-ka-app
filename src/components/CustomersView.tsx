@@ -302,7 +302,7 @@ export const CustomersView: React.FC = () => {
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.phone.includes(searchQuery)
     )
-    .sort((a, b) => b.createdAt - a.createdAt);
+    .sort((a, b) => Math.max(b.createdAt, b.potaliUpdatedAt || 0) - Math.max(a.createdAt, a.potaliUpdatedAt || 0));
 
   const handleAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
