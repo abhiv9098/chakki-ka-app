@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { ArrowLeftIcon } from './Icons';
 
 const grainOptions = [
   "Wheat",
@@ -246,13 +247,23 @@ export const DailyHisabView: React.FC = () => {
       {/* Form Panel */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl space-y-6 overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div>
-            <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg sm:text-xl tracking-tight">
-              {language === 'hi' ? 'डेली पिसाई दर्ज करें' : 'Daily Entry'}
-            </h3>
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
-              {language === 'hi' ? 'आज की कुल पिसाई व बिक्री दर्ज करें' : 'Record daily grinding entry'}
-            </p>
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveView('dashboard')}
+              className="mt-1 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeftIcon size={20} />
+            </button>
+            <div>
+              <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg sm:text-xl tracking-tight">
+                {language === 'hi' ? 'डेली पिसाई दर्ज करें' : 'Daily Entry'}
+              </h3>
+              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+                {language === 'hi' ? 'आज की कुल पिसाई व बिक्री दर्ज करें' : 'Record daily grinding entry'}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 flex-wrap">

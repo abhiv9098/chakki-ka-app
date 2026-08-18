@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { DailyHisab, Customer } from '../types';
-import { TrashIcon } from './Icons';
+import { TrashIcon, ArrowLeftIcon } from './Icons';
 import { CustomerQrModal } from './CustomerQrModal';
 
 export const HisabHistoryView: React.FC = () => {
@@ -288,13 +288,23 @@ export const HisabHistoryView: React.FC = () => {
         
         {/* Header */}
         <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div>
-            <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg tracking-tight">
-              {language === 'hi' ? 'डेली हिसाब इतिहास' : 'Daily Logs History'}
-            </h3>
-            <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
-              {language === 'hi' ? 'पिसाई व डिलीवरी एंट्रियों का विवरण' : 'Grinding & delivery logs details'}
-            </p>
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveView('dashboard')}
+              className="mt-1 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeftIcon size={20} />
+            </button>
+            <div>
+              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg tracking-tight">
+                {language === 'hi' ? 'डेली हिसाब इतिहास' : 'Daily Logs History'}
+              </h3>
+              <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+                {language === 'hi' ? 'पिसाई व डिलीवरी एंट्रियों का विवरण' : 'Grinding & delivery logs details'}
+              </p>
+            </div>
           </div>
 
           <button

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Sidebar } from '@/components/Sidebar';
-import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon, FontSizeIcon, WhatsAppIcon } from '@/components/Icons';
+import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon, FontSizeIcon, WhatsAppIcon, ArrowLeftIcon } from '@/components/Icons';
 import { DashboardView } from '@/components/DashboardView';
 import { SettingsView } from '@/components/SettingsView';
 import { DailyHisabView } from '@/components/DailyHisabView';
@@ -125,15 +125,26 @@ export default function Home() {
       <main className="flex-1 w-full overflow-x-hidden md:ml-64 max-w-7xl min-h-screen md:h-screen md:overflow-y-auto flex flex-col">
         {/* Top bar header */}
         <header className="sticky top-0 z-20 flex justify-between items-center px-4 md:px-8 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 mb-6 transition-colors duration-200">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-sm flex items-center justify-center cursor-pointer"
+              className="md:hidden p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
               aria-label="Open menu"
             >
               <MenuIcon size={20} />
             </button>
-            <h2 className="text-lg md:text-xl font-black tracking-tight text-slate-800 dark:text-slate-100 uppercase">
+            
+            {['customers', 'settings'].includes(activeView) && (
+              <button
+                onClick={() => setActiveView('dashboard')}
+                className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
+                aria-label="Go back to dashboard"
+              >
+                <ArrowLeftIcon size={20} />
+              </button>
+            )}
+
+            <h2 className="text-lg md:text-xl font-black tracking-tight text-slate-800 dark:text-slate-100 uppercase truncate">
               {t(activeView as any)}
             </h2>
           </div>
