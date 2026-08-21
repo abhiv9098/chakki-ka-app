@@ -62,10 +62,9 @@ export const dbService = {
         
         const unique: any[] = [];
         for (const curr of sorted) {
-          const tCurr = curr.createdAt || new Date(curr.date).getTime() || 0;
           const isDuplicate = unique.some(u => {
-            const tU = u.createdAt || new Date(u.date).getTime() || 0;
-            const timeDiff = Math.abs(tU - tCurr);
+            if (!u.createdAt || !curr.createdAt) return false; // Don't guess if missing createdAt
+            const timeDiff = Math.abs(u.createdAt - curr.createdAt);
             if (timeDiff > 2000) return false; // Not within 2 seconds
             
             // Check all match fields
@@ -140,6 +139,7 @@ export const dbService = {
     const customers = dbService.getCustomers();
     const index = customers.findIndex(c => c.id === customerId);
     if (index !== -1) {
+      const oldName = customers[index].name;
       const trimmedName = name.trim();
       const trimmedPhone = phone.trim();
       customers[index].name = trimmedName;
@@ -158,6 +158,24 @@ export const dbService = {
       if (ordersUpdated) {
         localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
       }
+
+      // Update name in daily hisab to prevent detachment
+      const hisabs = dbService.getDailyHisabs();
+      let hisabsUpdated = false;
+      hisabs.forEach(h => {
+        if (h.incomeDescription && h.incomeDescription.trim().toLowerCase() === oldName.trim().toLowerCase()) {
+          h.incomeDescription = trimmedName;
+          hisabsUpdated = true;
+        }
+        if (h.notes && h.notes.trim().toLowerCase() === oldName.trim().toLowerCase()) {
+          h.notes = trimmedName;
+          hisabsUpdated = true;
+        }
+      });
+      if (hisabsUpdated) {
+        localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
+      }
+
       return customers[index];
     }
     return null;
@@ -190,6 +208,10 @@ export const dbService = {
     localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(creditRecords));
 
     const dailyHisabs = dbService.getDailyHisabs().filter(h => {
+      // Only delete PENDING hisabs for this customer.
+      // We must keep completed hisabs so the shop's historical cash/earnings charts don't break!
+      if (!h.isPending) return true; 
+
       const name1 = (h.incomeDescription || '').trim().toLowerCase();
       const name2 = (h.notes || '').trim().toLowerCase();
       const cName = customer.name.trim().toLowerCase();
@@ -198,7 +220,7 @@ export const dbService = {
                       name2 === cName || 
                       name1 === `customer: ${cName}` || 
                       name2 === `customer: ${cName}`;
-      return !isMatch;
+      return !isMatch; // delete if it's a match AND isPending
     });
     localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(dailyHisabs));
   },

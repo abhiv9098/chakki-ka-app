@@ -33,30 +33,29 @@ export const DashboardView: React.FC = () => {
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
-  const todayOrders = orders.filter(o => o.createdAt >= startOfToday);
-  const todayCashOrdersAmount = todayOrders
-    .filter(o => o.paymentType === 'CASH')
-    .reduce((sum, o) => sum + o.totalAmount, 0);
+  const todayCashOrdersAmount = orders
+    .filter(o => o.createdAt >= startOfToday && o.paymentType === 'CASH')
+    .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
-  // Today's Received Khata Payments
   const todayReceivedAmount = creditRecords
     .filter(r => r.type === 'PAID' && r.createdAt >= startOfToday)
-    .reduce((sum, r) => sum + r.amount, 0);
+    .reduce((sum, r) => sum + (r.amount || 0), 0);
 
-  // Today's Daily Hisab Income & Expenses
-  const todayHisabsIncome = todayHisabsList.reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
+  // ONLY sum hisabs for income to avoid double counting! (Orders and Khata payments mirror into DailyHisabs)
+  const todayEarningsAmount = todayHisabsList
+    .filter(h => h.isProfit && !h.isPending && !(h.expenseDescription || '').includes('PENDING'))
+    .reduce((sum, h) => sum + h.amount, 0);
+
   const todayHisabsExpense = todayHisabsList.reduce((sum, h) => {
     if (h.expenses > 0) return sum + h.expenses;
     if (!h.isProfit) return sum + h.amount;
     return sum;
   }, 0);
 
-  const todayEarningsAmount = todayCashOrdersAmount + todayReceivedAmount + todayHisabsIncome;
   const todayExpensesAmount = todayHisabsExpense;
 
-  const todayOrdersWeight = todayOrders.reduce((sum, o) => sum + (o.weight || 0), 0);
-  const todayHisabsWeight = todayHisabsList.reduce((sum, h) => sum + (h.wheatWeight || 0), 0);
-  const todayGroundWeightKg = todayOrdersWeight + todayHisabsWeight;
+  // For weight, we just use DailyHisabs (which mirrors orders) to avoid double counting
+  const todayGroundWeightKg = todayHisabsList.reduce((sum, h) => sum + (h.wheatWeight || 0), 0);
 
   const activeCustomersCount = customers.filter(c => c.outstandingBalance > 0).length;
   
@@ -79,19 +78,12 @@ export const DashboardView: React.FC = () => {
 
   // Combined 30-Days + Today Earnings
   const thirtyDaysAgoTs = Date.now() - 30 * 24 * 60 * 60 * 1000;
-  const total30DaysOrdersAmount = orders
-    .filter(o => o.createdAt >= thirtyDaysAgoTs && o.paymentType !== 'CREDIT')
-    .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const total30DaysReceivedAmount = creditRecords
-    .filter(r => r.type === 'PAID' && r.createdAt >= thirtyDaysAgoTs)
-    .reduce((sum, r) => sum + (r.amount || 0), 0);
-  const total30DaysHisabsIncome = dailyHisabs
+  const combined30DaysAndTodayEarnings = dailyHisabs
     .filter(h => {
       const hTs = new Date(h.date).getTime();
-      return (hTs >= thirtyDaysAgoTs || h.date === todayDateStr) && !h.isPending && !h.expenseDescription?.includes('PENDING') && h.isProfit;
+      return (hTs >= thirtyDaysAgoTs || h.date === todayDateStr) && !h.isPending && !(h.expenseDescription || '').includes('PENDING') && h.isProfit;
     })
     .reduce((sum, h) => sum + (h.revenue || h.amount || 0), 0);
-  const combined30DaysAndTodayEarnings = total30DaysOrdersAmount + total30DaysReceivedAmount + total30DaysHisabsIncome;
 
   // Format currency
   const formatCurrency = (val: number) => {
@@ -116,37 +108,12 @@ export const DashboardView: React.FC = () => {
     const dd = String(dayDate.getDate()).padStart(2, '0');
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    // Filter CASH orders for that day
-    const dayCashOrders = orders.filter((o) => {
-      const oDate = new Date(o.createdAt);
-      return (
-        o.paymentType === 'CASH' &&
-        oDate.getDate() === dayDate.getDate() &&
-        oDate.getMonth() === dayDate.getMonth() &&
-        oDate.getFullYear() === dayDate.getFullYear()
-      );
-    });
-
-    const cashEarnings = dayCashOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-
-    // Filter Received Payments (PAID Khata records) for that day
-    const dayPaidRecords = creditRecords.filter((r) => {
-      const rDate = new Date(r.createdAt);
-      return (
-        r.type === 'PAID' &&
-        rDate.getDate() === dayDate.getDate() &&
-        rDate.getMonth() === dayDate.getMonth() &&
-        rDate.getFullYear() === dayDate.getFullYear()
-      );
-    });
-
-    const paidEarnings = dayPaidRecords.reduce((sum, r) => sum + r.amount, 0);
-
-    // Daily Hisab logs for this date
+    // Daily Hisab logs for this date already contain ALL income (Cash Orders, Khata Payments)
     const dayHisabsList = dailyHisabs.filter(h => h.date === dateStr);
-    const hisabAmount = dayHisabsList.reduce((sum, h) => sum + (h.isProfit ? h.amount : 0), 0);
+    const totalRojKaIncome = dayHisabsList
+        .filter(h => h.isProfit && !h.isPending && !(h.expenseDescription || '').includes('PENDING'))
+        .reduce((sum, h) => sum + h.amount, 0);
 
-    const totalRojKaIncome = cashEarnings + paidEarnings + hisabAmount;
     return { name: dayName, amount: totalRojKaIncome };
   });
 

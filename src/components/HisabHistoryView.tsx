@@ -146,7 +146,16 @@ export const HisabHistoryView: React.FC = () => {
   const todayCashEarnings = todayOrdersTotal + todayKhataPaidTotal + todayHisabsPaidTotal;
 
   const handleDelete = (id: number) => {
-    if (window.confirm(language === 'hi' ? 'क्या आप इस हिसाब एंट्री को मिटाना चाहते हैं?' : 'Are you sure you want to delete this log?')) {
+    const hisab = dailyHisabs.find(h => h.id === id);
+    if (!hisab) return;
+    const udharInfo = getUdharDetails(hisab);
+    let msg = language === 'hi' ? 'क्या आप इस हिसाब एंट्री को मिटाना चाहते हैं?' : 'Are you sure you want to delete this log?';
+    if (udharInfo.isUdhar && !isHisabPending(hisab)) {
+      msg = language === 'hi' 
+        ? '⚠️ चेतावनी: यह एक उधार एंट्री है! इसे यहाँ से मिटाने पर भी ग्राहक के खाते (Khata) से उधार कम नहीं होगा। क्या आप फिर भी इसे मिटाना चाहते हैं?' 
+        : '⚠️ WARNING: This is an Udhar entry! Deleting it here will NOT remove the due amount from the customer\'s Khata. Continue anyway?';
+    }
+    if (window.confirm(msg)) {
       deleteDailyHisab(id);
     }
   };
@@ -291,7 +300,7 @@ export const HisabHistoryView: React.FC = () => {
           <div className="flex items-start gap-3">
             <button
               type="button"
-              onClick={() => setActiveView('dashboard')}
+              onClick={() => setActiveView('daily-hisab')}
               className="mt-1 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               aria-label="Go back"
             >

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import QRCode from 'qrcode';
 import { useApp } from '../context/AppContext';
-import { SearchIcon, PlusIcon, CheckIcon, CloseIcon, KhataIcon, WhatsAppIcon, QrCodeIcon, PotaliIcon } from './Icons';
+import { SearchIcon, PlusIcon, CheckIcon, CloseIcon, KhataIcon, WhatsAppIcon, QrCodeIcon, PotaliIcon, ArrowLeftIcon } from './Icons';
 import { Customer, Order, CreditRecord } from '../types';
 import { UpiPaymentCard } from './UpiPaymentCard';
 import { CustomerQrModal } from './CustomerQrModal';
@@ -249,9 +249,39 @@ export const CustomersView: React.FC = () => {
       upiString = `\n\n💳 *UPI ID:* *${upiId}*`;
     }
 
+    // Get latest pending hisabs for this customer
+    const pendingHisabs = dailyHisabs
+      .filter(h => h.isPending && (h.incomeDescription === customer.name || h.notes === customer.name))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    // Get latest credit orders for this customer
+    const custOrders = orders
+      .filter(o => o.customerId === customer.id && o.paymentType === 'CREDIT')
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    let detailsString = '';
+    if (custOrders.length > 0 || pendingHisabs.length > 0) {
+      detailsString = '\n\n*विवरण (Details):*\n';
+      let count = 0;
+      
+      for (const o of custOrders) {
+        if (count >= 5) break;
+        const d = new Date(o.createdAt);
+        const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+        detailsString += `📅 ${dateStr} - ⚖️ ${o.weight}kg ${o.grainType} (₹${o.totalAmount})\n`;
+        count++;
+      }
+      
+      for (const h of pendingHisabs) {
+        if (count >= 5) break;
+        detailsString += `📅 ${h.date} - ⚖️ ${h.wheatWeight}kg ${h.grainType} (₹${h.amount})\n`;
+        count++;
+      }
+    }
+
     const message = language === 'hi'
-      ? `🌾 *विश्वकर्मा आटा चक्की*\n\nनमस्ते ${customer.name},\nआपका कुल बकाया उधारी: *₹${formattedDue}* है।${upiString}\n\nकृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
-      : `🌾 *Vishwakarma Atta Chakki*\n\nHello ${customer.name},\nYour total outstanding balance is: *₹${formattedDue}*.${upiString}\n\nPlease clear it at your earliest convenience. Thank you! 🙏`;
+      ? `🌾 *विश्वकर्मा आटा चक्की*\n\nनमस्ते ${customer.name},\nआपका कुल बकाया उधारी: *₹${formattedDue}* है।${detailsString}${upiString}\n\nकृपया इसे जल्द ही क्लियर करें। धन्यवाद! 🙏`
+      : `🌾 *Vishwakarma Atta Chakki*\n\nHello ${customer.name},\nYour total outstanding balance is: *₹${formattedDue}*.${detailsString}${upiString}\n\nPlease clear it at your earliest convenience. Thank you! 🙏`;
 
     // Generate Payment QR Image if UPI ID exists
     let qrDataUrl = '';
@@ -295,6 +325,32 @@ export const CustomersView: React.FC = () => {
 
     window.open(waUrl, '_blank');
   };
+
+  const customerStats = useMemo(() => {
+    const stats: Record<number, { pendingAmount: number; pendingWeight: number; totalAmount: number; totalWeight: number }> = {};
+    customers.forEach(c => {
+      stats[c.id] = { pendingAmount: 0, pendingWeight: 0, totalAmount: 0, totalWeight: 0 };
+    });
+    
+    dailyHisabs.forEach(h => {
+      if (h.isPending) {
+        const cust = customers.find(c => c.name === h.incomeDescription || c.name === h.notes);
+        if (cust) {
+          stats[cust.id].pendingAmount += (h.amount || h.revenue || 0);
+          stats[cust.id].pendingWeight += (h.wheatWeight || 0);
+        }
+      }
+    });
+
+    orders.forEach(o => {
+      if (stats[o.customerId]) {
+        stats[o.customerId].totalAmount += (o.totalAmount || 0);
+        stats[o.customerId].totalWeight += (o.weight || 0);
+      }
+    });
+
+    return stats;
+  }, [customers, dailyHisabs, orders]);
 
   const filteredCustomers: Customer[] = customers
     .filter(
@@ -449,10 +505,19 @@ export const CustomersView: React.FC = () => {
       {!selectedCustomer && (
         <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 flex flex-col h-auto md:h-full shadow-sm overflow-hidden min-h-[350px] max-w-4xl mx-auto w-full animate-fade-in">
         {/* Header Actions */}
-        <div className="mb-4">
-          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">
-            {t('customerList')}
-          </h3>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setActiveView('hisab-history')}
+              className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
+              aria-label="Go back to hisab history"
+            >
+              <ArrowLeftIcon size={20} />
+            </button>
+            <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">
+              {t('customerList')}
+            </h3>
+          </div>
         </div>
 
         {/* Search Input */}
@@ -477,21 +542,11 @@ export const CustomersView: React.FC = () => {
             </div>
           ) : (
             filteredCustomers.map((cust) => {
-              const custPending = dailyHisabs
-                .filter(h => h.isPending && (h.incomeDescription === cust.name || h.notes === cust.name))
-                .reduce((sum, h) => sum + (h.amount || h.revenue || 0), 0);
-              
-              const custPendingWeight = dailyHisabs
-                .filter(h => h.isPending && (h.incomeDescription === cust.name || h.notes === cust.name))
-                .reduce((sum, h) => sum + (h.wheatWeight || 0), 0);
-              
-              const custTotalAmount = orders
-                .filter(o => o.customerId === cust.id)
-                .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-                
-              const custTotalWeight = orders
-                .filter(o => o.customerId === cust.id)
-                .reduce((sum, o) => sum + (o.weight || 0), 0);
+              const stats = customerStats[cust.id] || { pendingAmount: 0, pendingWeight: 0, totalAmount: 0, totalWeight: 0 };
+              const custPending = stats.pendingAmount;
+              const custPendingWeight = stats.pendingWeight;
+              const custTotalAmount = stats.totalAmount;
+              const custTotalWeight = stats.totalWeight;
                 
               return (
                 <div

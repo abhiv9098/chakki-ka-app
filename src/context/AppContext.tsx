@@ -80,6 +80,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [grainRates, setGrainRatesState] = useState<Record<string, number>>(defaultGrainRatesMap);
 
+  const refreshData = () => {
+    const custs = dbService.getCustomers();
+    setCustomers(custs);
+    setOrders(dbService.getOrders());
+    setCreditRecords(dbService.getCreditRecords());
+    setDailyHisabs(dbService.getDailyHisabs());
+
+    setSelectedCustomer(prev => {
+      if (!prev) return null;
+      return custs.find(c => c.id === prev.id) || null;
+    });
+  };
+
   // Load language and theme preference from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -161,18 +174,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const refreshData = () => {
-    const custs = dbService.getCustomers();
-    setCustomers(custs);
-    setOrders(dbService.getOrders());
-    setCreditRecords(dbService.getCreditRecords());
-    setDailyHisabs(dbService.getDailyHisabs());
-
-    setSelectedCustomer(prev => {
-      if (!prev) return null;
-      return custs.find(c => c.id === prev.id) || null;
-    });
-  };
 
   const addDailyHisab = (hisab: Omit<DailyHisab, 'id' | 'createdAt'>) => {
     const newHisab = dbService.saveDailyHisab(hisab);

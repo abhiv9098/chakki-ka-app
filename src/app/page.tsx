@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Sidebar } from '@/components/Sidebar';
-import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon, FontSizeIcon, WhatsAppIcon, ArrowLeftIcon } from '@/components/Icons';
+import { MenuIcon, ProfileIcon, EyeIcon, EyeOffIcon, QrCodeIcon, FontSizeIcon, WhatsAppIcon } from '@/components/Icons';
 import { DashboardView } from '@/components/DashboardView';
 import { SettingsView } from '@/components/SettingsView';
 import { DailyHisabView } from '@/components/DailyHisabView';
@@ -134,15 +134,6 @@ export default function Home() {
               <MenuIcon size={20} />
             </button>
             
-            {['customers', 'settings'].includes(activeView) && (
-              <button
-                onClick={() => setActiveView('dashboard')}
-                className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-sm flex items-center justify-center cursor-pointer shrink-0"
-                aria-label="Go back to dashboard"
-              >
-                <ArrowLeftIcon size={20} />
-              </button>
-            )}
 
             <h2 className="text-lg md:text-xl font-black tracking-tight text-slate-800 dark:text-slate-100 uppercase truncate">
               {t(activeView as any)}
