@@ -35,26 +35,29 @@ export const UpiPaymentCard: React.FC<UpiPaymentCardProps> = ({
     : '';
 
   useEffect(() => {
-    if (!upiId || amount <= 0) {
-      setQrDataUrl('');
-      return;
-    }
-
     let isMounted = true;
-    QRCode.toDataURL(upiString, {
-      width: 250,
-      margin: 1,
-      color: {
-        dark: '#0f172a',
-        light: '#ffffff',
-      },
-    })
-      .then((url) => {
+
+    const generateQr = async () => {
+      if (!upiId || amount <= 0) {
+        if (isMounted) setQrDataUrl('');
+        return;
+      }
+      try {
+        const url = await QRCode.toDataURL(upiString, {
+          width: 250,
+          margin: 1,
+          color: {
+            dark: '#0f172a',
+            light: '#ffffff',
+          },
+        });
         if (isMounted) setQrDataUrl(url);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('Error generating UPI QR code:', err);
-      });
+      }
+    };
+
+    generateQr();
 
     return () => {
       isMounted = false;

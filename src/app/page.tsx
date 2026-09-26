@@ -18,6 +18,7 @@ export default function Home() {
   const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
 
   useEffect(() => {
+
     // Check if lang preference has been set previously
     const hasLang = localStorage.getItem('chakkimitra_lang');
     if (!hasLang) {
@@ -54,6 +55,7 @@ export default function Home() {
     }
   }, []);
 
+
   const selectLanguageAndContinue = (lang: 'en' | 'hi') => {
     setLanguage(lang);
     setShowLanguageOnboarding(false);
@@ -66,8 +68,6 @@ export default function Home() {
         return <DashboardView />;
       case 'settings':
         return <SettingsView />;
-      case 'daily-hisab':
-        return <DailyHisabView />;
       case 'hisab-history':
         return <HisabHistoryView />;
       case 'customers':
@@ -77,7 +77,7 @@ export default function Home() {
     }
   };
 
-  // First-launch Language Selector Overlay
+
   if (showLanguageOnboarding) {
     return (
       <main className="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-50">

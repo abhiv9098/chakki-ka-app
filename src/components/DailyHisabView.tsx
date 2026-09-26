@@ -28,7 +28,7 @@ const grainLabels: Record<string, { hi: string; en: string }> = {
   Other: { hi: "Other (अन्य)", en: "Other" }
 };
 
-export const DailyHisabView: React.FC = () => {
+export const DailyHisabView: React.FC<{ isDashboard?: boolean }> = ({ isDashboard }) => {
   const { addDailyHisab, dailyHisabs, updateDailyHisab, deleteDailyHisab, customers, updateCustomerPotaliStatus, t, language, defaultGrindingRate, grainRates, setActiveView, addCustomer, recordManualDue, recordPayment, addOrder, selectedCustomer } = useApp();
 
   // Calculate today and 30 days ago date strings for date picker range restriction
@@ -74,7 +74,7 @@ export const DailyHisabView: React.FC = () => {
     const nameQuery = customerNaam.trim().toLowerCase();
     const phoneQuery = customerPhone.trim();
 
-    if (nameQuery.length >= 3) {
+    if (nameQuery.length >= 1) {
       match = customers.find(c => c.name.toLowerCase() === nameQuery);
     }
     if (!match && phoneQuery.length >= 10) {
@@ -83,10 +83,6 @@ export const DailyHisabView: React.FC = () => {
     
     if (match) {
       setMatchedCustomer(match);
-      if (autoOpenTriggered !== match.id) {
-        setShowProfileSidebar(true);
-        setAutoOpenTriggered(match.id);
-      }
     } else {
       setMatchedCustomer(null);
     }
@@ -243,27 +239,31 @@ export const DailyHisabView: React.FC = () => {
   const pendingCount = pendingHisabsList.length;
 
   return (
-    <div className="space-y-6 max-w-xl mx-auto pb-12 animate-fade-in px-1 sm:px-0">
+    <div className={`space-y-6 max-w-xl mx-auto ${isDashboard ? 'pb-2' : 'pb-12'} animate-fade-in px-1 sm:px-0`}>
       {/* Form Panel */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl space-y-6 overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-start gap-3">
-            <button
-              type="button"
-              onClick={() => setActiveView('dashboard')}
-              className="mt-1 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeftIcon size={20} />
-            </button>
-            <div>
-              <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg sm:text-xl tracking-tight">
-                {language === 'hi' ? 'डेली पिसाई दर्ज करें' : 'Daily Entry'}
-              </h3>
-              <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
-                {language === 'hi' ? 'आज की कुल पिसाई व बिक्री दर्ज करें' : 'Record daily grinding entry'}
-              </p>
-            </div>
+            {!isDashboard && (
+              <button
+                type="button"
+                onClick={() => setActiveView('dashboard')}
+                className="mt-1 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                aria-label="Go back"
+              >
+                <ArrowLeftIcon size={20} />
+              </button>
+            )}
+            {!isDashboard && (
+              <div>
+                <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg sm:text-xl tracking-tight">
+                  {language === 'hi' ? 'डेली पिसाई दर्ज करें' : 'Daily Entry'}
+                </h3>
+                <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+                  {language === 'hi' ? 'आज की कुल पिसाई व बिक्री दर्ज करें' : 'Record daily grinding entry'}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
@@ -396,10 +396,7 @@ export const DailyHisabView: React.FC = () => {
               value={customerNaam}
               onChange={(e) => {
                 setCustomerNaam(e.target.value);
-                setShowSuggestions(true);
               }}
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               onKeyDown={handleKeyDown}
               className={`w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/40 border rounded-xl text-base focus:outline-none text-slate-800 dark:text-slate-100 font-semibold ${
                 paymentMode === 'UDHAR'
@@ -407,27 +404,25 @@ export const DailyHisabView: React.FC = () => {
                   : 'border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500'
               }`}
             />
-            {/* Auto-complete suggestions */}
-            {showSuggestions && suggestedCustomers.length > 0 && (
-              <div className="absolute z-50 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg top-[70px] max-h-48 overflow-y-auto">
-                {suggestedCustomers.map(cust => (
-                  <div
-                    key={cust.id}
-                    onClick={() => {
-                      setCustomerNaam(cust.name);
-                      setCustomerPhone(cust.phone !== 'N/A' ? cust.phone : '');
-                      setPaymentMode('PENDING');
-                      setShowSuggestions(false);
-                    }}
-                    className="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-100 dark:border-slate-700 last:border-0"
-                  >
-                    <div className="font-bold text-slate-800 dark:text-slate-100">{cust.name}</div>
-                    {cust.phone && cust.phone !== 'N/A' && <div className="text-xs text-slate-500">{cust.phone}</div>}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
+
+          {/* Inline Profile Card */}
+          {matchedCustomer && (
+            <div className="p-3 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl flex items-center justify-between animate-fade-in -mt-2">
+              <div>
+                <p className="text-xs font-black text-slate-700 dark:text-slate-200">{matchedCustomer.name}</p>
+                {matchedCustomer.phone && matchedCustomer.phone !== 'N/A' && (
+                  <p className="text-[10px] font-bold text-slate-500">📞 {matchedCustomer.phone}</p>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{language === 'hi' ? 'कुल बाकी' : 'Total Due'}</p>
+                <p className={`text-sm font-black ${matchedCustomer.outstandingBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                  ₹{matchedCustomer.outstandingBalance || 0}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Mobile Number */}
           <div className="space-y-1">
@@ -656,9 +651,23 @@ export const DailyHisabView: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-rose-100 dark:border-rose-900/30">
-                        <span className="text-[10px] font-extrabold text-slate-400 mr-auto">
-                          {language === 'hi' ? 'पिसाई पूर्ण होने पर:' : 'Mark Complete:'}
-                        </span>
+                        <div className="flex items-center mr-auto gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(language === 'hi' ? 'क्या आप इस पेंडिंग एंट्री को डिलीट करना चाहते हैं?' : 'Delete this pending entry?')) {
+                                deleteDailyHisab(h.id);
+                              }
+                            }}
+                            className="p-1.5 bg-rose-100 hover:bg-rose-200 dark:bg-rose-900/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 rounded-lg text-sm font-black transition-all cursor-pointer"
+                            title="Delete Pending Entry"
+                          >
+                            🗑️
+                          </button>
+                          <span className="text-[10px] font-extrabold text-slate-400 ml-1">
+                            {language === 'hi' ? 'पिसाई पूर्ण होने पर:' : 'Mark Complete:'}
+                          </span>
+                        </div>
 
                         <button
                           type="button"

@@ -16,12 +16,68 @@ const getMockData = () => {
   return { mockCustomers, mockOrders, mockCreditRecords };
 };
 
+export const syncToServer = async () => {
+  if (typeof window === 'undefined') return;
+  try {
+    const data = {
+      customers: JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOMERS) || '[]'),
+      orders: JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]'),
+      creditRecords: JSON.parse(localStorage.getItem(STORAGE_KEYS.CREDIT_RECORDS) || '[]'),
+      dailyHisabs: JSON.parse(localStorage.getItem(STORAGE_KEYS.DAILY_HISAB) || '[]')
+    };
+    await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch (e) {
+    console.error("Sync to server failed", e);
+  }
+};
+
+export const syncFromServer = async () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const res = await fetch('/api/sync');
+    const json = await res.json();
+    if (json.success && json.data) {
+      if (json.data.customers) localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(json.data.customers));
+      if (json.data.orders) localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(json.data.orders));
+      if (json.data.creditRecords) localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(json.data.creditRecords));
+      if (json.data.dailyHisabs) localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(json.data.dailyHisabs));
+      
+      // Dispatch an event so React context knows data changed
+      window.dispatchEvent(new Event('db-synced'));
+      return true;
+    }
+  } catch (e) {
+    console.error("Fetch from server failed", e);
+  }
+  return false;
+};
+
+const saveToStorage = (key: string, value: string) => {
+  localStorage.setItem(key, value);
+  if ((window as any)._syncTimer) clearTimeout((window as any)._syncTimer);
+  (window as any)._syncTimer = setTimeout(() => {
+    syncToServer();
+  }, 500);
+};
+
 let isInitialized = false;
 
 export const dbService = {
   init: () => {
     if (typeof window === 'undefined' || isInitialized) return;
     isInitialized = true;
+    
+    // Attempt to sync from server in the background
+    syncFromServer().then(success => {
+      if (!success) {
+        // If server empty/failed, sync our local data TO the server just in case
+        syncToServer();
+      }
+    });
 
     // Check version to handle migration/clearance of old mock data
     const version = localStorage.getItem('chakkimitra_db_version');
@@ -39,9 +95,9 @@ export const dbService = {
 
     if (!customers || !orders || !credits) {
       const { mockCustomers, mockOrders, mockCreditRecords } = getMockData();
-      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(mockCustomers));
-      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
-      localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(mockCreditRecords));
+      saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(mockCustomers));
+      saveToStorage(STORAGE_KEYS.ORDERS, JSON.stringify(mockOrders));
+      saveToStorage(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(mockCreditRecords));
     }
 
     // Auto-fix: Remove duplicate entries caused by double-tap bug (within 2 seconds)
@@ -122,7 +178,7 @@ export const dbService = {
       createdAt: Date.now()
     };
     customers.push(newCustomer);
-    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+    saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
     return newCustomer;
   },
 
@@ -131,11 +187,11 @@ export const dbService = {
     const index = customers.findIndex(c => c.id === customerId);
     if (index !== -1) {
       customers[index].outstandingBalance = parseFloat(updatedBalance.toFixed(2));
-      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+      saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
     }
   },
 
-  updateCustomerDetails: (customerId: number, name: string, phone: string): Customer | null => {
+  updateCustomerDetails: (customerId: number, name: string, phone: string, email?: string, password?: string): Customer | null => {
     const customers = dbService.getCustomers();
     const index = customers.findIndex(c => c.id === customerId);
     if (index !== -1) {
@@ -144,7 +200,9 @@ export const dbService = {
       const trimmedPhone = phone.trim();
       customers[index].name = trimmedName;
       customers[index].phone = trimmedPhone;
-      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+      if (email !== undefined) customers[index].email = email.trim();
+      if (password !== undefined) customers[index].password = password;
+      saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
       
       // Update name in orders to keep data consistent
       const orders = dbService.getOrders();
@@ -156,7 +214,7 @@ export const dbService = {
         }
       });
       if (ordersUpdated) {
-        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+        saveToStorage(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
       }
 
       // Update name in daily hisab to prevent detachment
@@ -173,7 +231,7 @@ export const dbService = {
         }
       });
       if (hisabsUpdated) {
-        localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
+        saveToStorage(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
       }
 
       return customers[index];
@@ -187,7 +245,7 @@ export const dbService = {
     if (index !== -1) {
       customers[index].potaliStatus = status;
       customers[index].potaliUpdatedAt = Date.now();
-      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+      saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
       return customers[index];
     }
     return null;
@@ -199,13 +257,13 @@ export const dbService = {
     if (!customer) return;
 
     const filteredCustomers = customers.filter(c => c.id !== customerId);
-    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(filteredCustomers));
+    saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(filteredCustomers));
 
     const orders = dbService.getOrders().filter(o => o.customerId !== customerId);
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+    saveToStorage(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
 
     const creditRecords = dbService.getCreditRecords().filter(r => r.customerId !== customerId);
-    localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(creditRecords));
+    saveToStorage(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(creditRecords));
 
     const dailyHisabs = dbService.getDailyHisabs().filter(h => {
       // Only delete PENDING hisabs for this customer.
@@ -222,7 +280,7 @@ export const dbService = {
                       name2 === `customer: ${cName}`;
       return !isMatch; // delete if it's a match AND isPending
     });
-    localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(dailyHisabs));
+    saveToStorage(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(dailyHisabs));
   },
 
   getOrders: (): Order[] => {
@@ -247,7 +305,7 @@ export const dbService = {
     const index = customers.findIndex(c => c.id === customerId);
     if (index !== -1) {
       customers[index].outstandingBalance = rounded;
-      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+      saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
     }
     return rounded;
   },
@@ -273,7 +331,7 @@ export const dbService = {
     });
 
     if (updated) {
-      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
+      saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customers));
     }
   },
 
@@ -286,7 +344,7 @@ export const dbService = {
       createdAt: Date.now()
     };
     orders.push(newOrder);
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
+    saveToStorage(STORAGE_KEYS.ORDERS, JSON.stringify(orders));
 
     if (order.paymentType === 'CREDIT') {
       dbService.saveCreditRecord({
@@ -321,7 +379,7 @@ export const dbService = {
       createdAt: Date.now()
     };
     records.push(newRecord);
-    localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(records));
+    saveToStorage(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(records));
     return newRecord;
   },
 
@@ -356,9 +414,9 @@ export const dbService = {
     try {
       const parsed = JSON.parse(jsonStr);
       if (parsed.version && parsed.data && parsed.data.customers && parsed.data.orders && parsed.data.creditRecords) {
-        localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(parsed.data.customers));
-        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(parsed.data.orders));
-        localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(parsed.data.creditRecords));
+        saveToStorage(STORAGE_KEYS.CUSTOMERS, JSON.stringify(parsed.data.customers));
+        saveToStorage(STORAGE_KEYS.ORDERS, JSON.stringify(parsed.data.orders));
+        saveToStorage(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(parsed.data.creditRecords));
         return true;
       }
       return false;
@@ -398,13 +456,13 @@ export const dbService = {
       createdAt: Date.now()
     };
     hisabs.push(newHisab);
-    localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
+    saveToStorage(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
     return newHisab;
   },
 
   deleteDailyHisab: (id: number): void => {
     const hisabs = dbService.getDailyHisabs().filter(h => h.id !== id);
-    localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
+    saveToStorage(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
   },
 
   updateDailyHisab: (updatedHisab: DailyHisab): void => {
@@ -412,7 +470,7 @@ export const dbService = {
     const idx = hisabs.findIndex(h => h.id === updatedHisab.id);
     if (idx !== -1) {
       hisabs[idx] = updatedHisab;
-      localStorage.setItem(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
+      saveToStorage(STORAGE_KEYS.DAILY_HISAB, JSON.stringify(hisabs));
     }
   },
 
@@ -422,7 +480,7 @@ export const dbService = {
     if (!targetOrder) return;
 
     const updatedOrders = orders.filter(o => o.id !== orderId);
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updatedOrders));
+    saveToStorage(STORAGE_KEYS.ORDERS, JSON.stringify(updatedOrders));
 
     // If order was a CREDIT order, delete corresponding credit record and update balance
     if (targetOrder.paymentType === 'CREDIT') {
@@ -430,7 +488,7 @@ export const dbService = {
       const updatedRecords = records.filter(
         r => !(r.customerId === targetOrder.customerId && r.type === 'DUE' && r.description.includes(`Order #${orderId}`))
       );
-      localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(updatedRecords));
+      saveToStorage(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(updatedRecords));
       dbService.recalculateCustomerBalance(targetOrder.customerId);
     }
   },
@@ -441,7 +499,7 @@ export const dbService = {
     if (!targetRecord) return;
 
     const updatedRecords = records.filter(r => r.id !== recordId);
-    localStorage.setItem(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(updatedRecords));
+    saveToStorage(STORAGE_KEYS.CREDIT_RECORDS, JSON.stringify(updatedRecords));
     dbService.recalculateCustomerBalance(targetRecord.customerId);
   }
 };

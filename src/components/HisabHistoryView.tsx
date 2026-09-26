@@ -302,7 +302,7 @@ export const HisabHistoryView: React.FC = () => {
               type="button"
               onClick={() => setActiveView('daily-hisab')}
               className="mt-1 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Go back"
+              aria-label="Go back to daily hisab"
             >
               <ArrowLeftIcon size={20} />
             </button>

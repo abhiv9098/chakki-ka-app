@@ -1,0 +1,238 @@
+{
+  "customers": [
+    {
+      "name": "AN",
+      "phone": "0399393394",
+      "id": 1,
+      "outstandingBalance": 61,
+      "createdAt": 1786467792984,
+      "potaliStatus": "delivered",
+      "potaliUpdatedAt": 1786467808212
+    },
+    {
+      "name": "nn",
+      "phone": "",
+      "id": 2,
+      "outstandingBalance": 0,
+      "createdAt": 1786468105206,
+      "potaliStatus": "delivered",
+      "potaliUpdatedAt": 1786468111043
+    },
+    {
+      "name": "e",
+      "phone": "",
+      "id": 3,
+      "outstandingBalance": 60,
+      "createdAt": 1786469019177,
+      "potaliStatus": "delivered",
+      "potaliUpdatedAt": 1786469032971
+    },
+    {
+      "name": "dd",
+      "phone": "",
+      "id": 4,
+      "outstandingBalance": 99,
+      "createdAt": 1786469609294,
+      "potaliStatus": "delivered",
+      "potaliUpdatedAt": 1786469624144
+    },
+    {
+      "name": "oo",
+      "phone": "",
+      "id": 5,
+      "outstandingBalance": 0,
+      "createdAt": 1786469650093,
+      "potaliStatus": "delivered",
+      "potaliUpdatedAt": 1786469663431
+    },
+    {
+      "name": "a",
+      "phone": "3",
+      "id": 6,
+      "outstandingBalance": 0,
+      "createdAt": 1788881578339,
+      "potaliStatus": "received",
+      "potaliUpdatedAt": 1788882374669
+    },
+    {
+      "name": "aa",
+      "phone": "",
+      "id": 8,
+      "outstandingBalance": 0,
+      "createdAt": 1788882382569,
+      "potaliStatus": "received",
+      "potaliUpdatedAt": 1788882382569
+    }
+  ],
+  "orders": [
+    {
+      "customerId": 1,
+      "customerName": "AN",
+      "grainType": "Wheat",
+      "weight": 23,
+      "rate": 3,
+      "totalAmount": 69,
+      "paymentType": "CREDIT",
+      "potaliStatus": "delivered",
+      "id": 1,
+      "createdAt": 1786467808213
+    },
+    {
+      "customerId": 3,
+      "customerName": "e",
+      "grainType": "Wheat",
+      "weight": 20,
+      "rate": 3,
+      "totalAmount": 60,
+      "paymentType": "CREDIT",
+      "potaliStatus": "delivered",
+      "id": 2,
+      "createdAt": 1786469032972
+    },
+    {
+      "customerId": 4,
+      "customerName": "dd",
+      "grainType": "Wheat",
+      "weight": 33,
+      "rate": 3,
+      "totalAmount": 99,
+      "paymentType": "CREDIT",
+      "potaliStatus": "delivered",
+      "id": 3,
+      "createdAt": 1786469624146
+    },
+    {
+      "customerId": 5,
+      "customerName": "oo",
+      "grainType": "Wheat",
+      "weight": 39,
+      "rate": 3,
+      "totalAmount": 117,
+      "paymentType": "PAYTM",
+      "potaliStatus": "delivered",
+      "id": 4,
+      "createdAt": 1786469663431
+    }
+  ],
+  "creditRecords": [
+    {
+      "customerId": 3,
+      "amount": 60,
+      "type": "DUE",
+      "description": "Grinding - Wheat 20kg",
+      "id": 5,
+      "createdAt": 1786469032973
+    },
+    {
+      "customerId": 1,
+      "amount": 8,
+      "type": "PAID",
+      "description": "Cash",
+      "id": 3,
+      "createdAt": 1786467813672
+    },
+    {
+      "customerId": 1,
+      "amount": 69,
+      "type": "DUE",
+      "description": "Grinding - Wheat 23kg",
+      "id": 2,
+      "createdAt": 1786467808214
+    },
+    {
+      "customerId": 4,
+      "amount": 99,
+      "type": "DUE",
+      "description": "Order #3 Wheat Grinding",
+      "id": 6,
+      "createdAt": 1786469624147
+    }
+  ],
+  "dailyHisabs": [
+    {
+      "date": "2026-08-11",
+      "grainType": "Wheat",
+      "wheatWeight": 23,
+      "rate": 3,
+      "revenue": 69,
+      "expenses": 0,
+      "expenseDescription": "UDHAR (Jama: ₹0, Udhar: ₹69)",
+      "extraIncome": 0,
+      "incomeDescription": "AN",
+      "isProfit": true,
+      "amount": 69,
+      "notes": "AN",
+      "isPending": false,
+      "id": 1,
+      "createdAt": 1786467792983
+    },
+    {
+      "date": "2026-08-11",
+      "grainType": "Wheat",
+      "wheatWeight": 3,
+      "rate": 3,
+      "revenue": 9,
+      "expenses": 0,
+      "expenseDescription": "CASH",
+      "extraIncome": 0,
+      "incomeDescription": "nn",
+      "isProfit": true,
+      "amount": 9,
+      "notes": "nn",
+      "isPending": false,
+      "id": 2,
+      "createdAt": 1786468105205
+    },
+    {
+      "date": "2026-08-11",
+      "grainType": "Wheat",
+      "wheatWeight": 20,
+      "rate": 3,
+      "revenue": 60,
+      "expenses": 0,
+      "expenseDescription": "UDHAR (Jama: ₹0, Udhar: ₹60)",
+      "extraIncome": 0,
+      "incomeDescription": "e",
+      "isProfit": true,
+      "amount": 60,
+      "notes": "e",
+      "isPending": false,
+      "id": 3,
+      "createdAt": 1786469019175
+    },
+    {
+      "date": "2026-08-11",
+      "grainType": "Wheat",
+      "wheatWeight": 33,
+      "rate": 3,
+      "revenue": 99,
+      "expenses": 0,
+      "expenseDescription": "UDHAR (Jama: ₹0, Udhar: ₹99)",
+      "extraIncome": 0,
+      "incomeDescription": "dd",
+      "isProfit": true,
+      "amount": 99,
+      "notes": "dd",
+      "isPending": false,
+      "id": 4,
+      "createdAt": 1786469609293
+    },
+    {
+      "date": "2026-08-11",
+      "grainType": "Wheat",
+      "wheatWeight": 39,
+      "rate": 3,
+      "revenue": 117,
+      "expenses": 0,
+      "expenseDescription": "PAYTM",
+      "extraIncome": 0,
+      "incomeDescription": "oo",
+      "isProfit": true,
+      "amount": 117,
+      "notes": "oo",
+      "isPending": false,
+      "id": 5,
+      "createdAt": 1786469650092
+    }
+  ]
+}

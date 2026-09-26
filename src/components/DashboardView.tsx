@@ -8,6 +8,8 @@ import { QrScannerModal } from './QrScannerModal';
 import { ExpenseLossModal } from './ExpenseLossModal';
 import { GrindingKgModal } from './GrindingKgModal';
 import { PaymentSummaryModal } from './PaymentSummaryModal';
+import { DailyHisabView } from './DailyHisabView';
+import { CustomersView } from './CustomersView';
 import { Order } from '../types';
 
 export const DashboardView: React.FC = () => {
@@ -159,6 +161,11 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      {/* Daily Entry Form directly on Dashboard */}
+      <div className="-mx-1 sm:mx-0">
+        <DailyHisabView isDashboard={true} />
+      </div>
+
       {/* Grid Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {stats.map((s, idx) => {
@@ -272,60 +279,9 @@ export const DashboardView: React.FC = () => {
         })()}
       </div>
 
-      {/* Quick Actions & Recent Orders Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column: Quick Actions */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Quick Actions Panel */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 space-y-3 shadow-sm">
-            <div>
-              <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-base">
-                {t('quickActions')}
-              </h3>
-              <p className="text-[10px] text-slate-400 dark:text-slate-550 font-medium">Common daily operations</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2.5">
-              <button
-                onClick={() => setActiveView('daily-hisab')}
-                className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer h-20 border border-emerald-400/20"
-              >
-                <div className="p-1.5 rounded-lg bg-white/20 text-white">
-                  <FileTextIcon size={16} />
-                </div>
-                <span className="text-[10px] leading-tight text-center font-bold">
-                  {language === 'hi' ? 'डेली हिसाब (Daily Log)' : 'Daily Log'}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('hisab-history')}
-                className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-20"
-              >
-                <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-500">
-                  <KhataIcon size={16} />
-                </div>
-                <span className="text-[10px] leading-tight text-center font-bold">
-                  {t('hisab-history' as any)}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('customers')}
-                className="flex flex-col items-center justify-center gap-1.5 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-150 dark:border-slate-800/80 text-slate-750 dark:text-slate-200 font-extrabold transition-all active:scale-95 cursor-pointer h-20"
-              >
-                <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-500">
-                  <CustomersIcon size={16} />
-                </div>
-                <span className="text-[10px] leading-tight text-center font-bold">
-                  {t('customers')}
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Orders Panel */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between">
+      {/* Recent Orders Panel */}
+      <div className="w-full">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3 border-b border-slate-50 dark:border-slate-800/40 pb-2.5">
               <div>

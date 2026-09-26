@@ -6,13 +6,15 @@ import { useApp } from '../context/AppContext';
 export const ReportsView: React.FC = () => {
   const { orders, dailyHisabs, t, hideAmounts } = useApp();
 
-  const now = Date.now();
+  const now = React.useMemo(() => Date.now(), []);
   const oneDay = 24 * 60 * 60 * 1000;
 
   // 1. Calculations for Daily, Weekly, Monthly Totals
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const startOfToday = todayStart.getTime();
+  const startOfToday = React.useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }, []);
   const startOfLast7Days = now - 7 * oneDay;
   const startOfLast30Days = now - 30 * oneDay;
 

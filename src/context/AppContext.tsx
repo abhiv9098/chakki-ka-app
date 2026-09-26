@@ -23,8 +23,8 @@ interface AppContextType {
   selectedCustomer: Customer | null;
   setSelectedCustomer: (customer: Customer | null) => void;
   refreshData: () => void;
-  addCustomer: (name: string, phone: string) => Customer;
-  updateCustomer: (customerId: number, name: string, phone: string) => Customer | null;
+  addCustomer: (name: string, phone: string, email?: string, password?: string) => Customer;
+  updateCustomer: (customerId: number, name: string, phone: string, email?: string, password?: string) => Customer | null;
   updateCustomerPotaliStatus: (customerId: number, status: 'none' | 'received' | 'delivered') => void;
   cycleCustomerPotaliStatus: (customerId: number) => void;
   deleteCustomer: (customerId: number) => void;
@@ -139,6 +139,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Initialize DB & load initial data
       dbService.init();
       refreshData();
+
+      // Listen for background syncs
+      const handleDbSync = () => {
+        refreshData();
+      };
+      window.addEventListener('db-synced', handleDbSync);
+
+      return () => {
+        window.removeEventListener('db-synced', handleDbSync);
+      };
     }
   }, []);
 
@@ -191,14 +201,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshData();
   };
 
-  const addCustomer = (name: string, phone: string) => {
-    const newCust = dbService.saveCustomer({ name, phone });
+  const addCustomer = (name: string, phone: string, email?: string, password?: string) => {
+    const newCust = dbService.saveCustomer({ name, phone, email, password });
     refreshData();
     return newCust;
   };
 
-  const updateCustomer = (customerId: number, name: string, phone: string) => {
-    const updated = dbService.updateCustomerDetails(customerId, name, phone);
+  const updateCustomer = (customerId: number, name: string, phone: string, email?: string, password?: string) => {
+    const updated = dbService.updateCustomerDetails(customerId, name, phone, email, password);
     refreshData();
     if (selectedCustomer && selectedCustomer.id === customerId) {
       setSelectedCustomer(updated);
